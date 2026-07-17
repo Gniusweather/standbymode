@@ -2112,49 +2112,57 @@
     text-overflow: ellipsis;
   }
 
-  /* Reminder overlay: shows regardless of which internal tab is active */
+  /* Reminder card: lives in normal flow under the clock in .lf-homeleft, not
+     as a floating overlay — it used to be position:absolute pinned near the
+     bottom of the whole face, which in portrait (face rotated 90deg) landed
+     it right on top of the Bonaire conditions card at the screen edge, so a
+     real tap could easily land on the card underneath instead of Done/Skip.
+     Collapses to zero height via max-height when hidden, so it doesn't
+     reserve empty space above the status pill the rest of the time. */
   .f-life { position: relative; }
   .f-life .lf-reminder {
-    position: absolute;
-    left: 50%;
-    bottom: clamp(8px, 2.4cqh, 20px);
-    transform: translateX(-50%) translateY(12px);
-    z-index: 15;
     display: flex;
-    align-items: center;
-    gap: clamp(6px, 1.6cqw, 14px);
-    max-width: min(94%, 640px);
+    flex-direction: column;
+    gap: clamp(5px, 1.2cqh, 10px);
+    width: 100%;
+    max-height: 0;
     background: linear-gradient(160deg, rgba(20,50,55,0.94), rgba(8,26,32,0.94));
     border: 1px solid rgba(94,230,200,0.35);
-    border-radius: 999px;
-    padding: clamp(6px, 1.4cqh, 12px) clamp(8px, 1.8cqw, 18px);
+    border-radius: clamp(12px, 2.2cqh, 20px);
     box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
     font-size: clamp(9px, 2.1cqh, 16px);
     font-weight: 600;
     color: var(--lf-ink);
     opacity: 0;
+    overflow: hidden;
     pointer-events: none;
-    transition: opacity 0.35s ease, transform 0.35s ease;
-    white-space: nowrap;
+    padding: 0 clamp(8px, 1.8cqw, 18px);
+    border-width: 0;
+    transition: opacity 0.3s ease, max-height 0.35s ease, padding 0.35s ease, border-width 0.35s ease;
   }
   .f-life .lf-reminder.show {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    max-height: clamp(90px, 22cqh, 170px);
     pointer-events: auto;
+    padding: clamp(8px, 1.8cqh, 16px) clamp(8px, 1.8cqw, 18px);
+    border-width: 1px;
   }
+  .f-life .lf-rem-row { display: flex; align-items: center; gap: clamp(6px, 1.4cqw, 12px); }
   .f-life .lf-rem-ico { font-size: 1.3em; flex-shrink: 0; }
-  .f-life .lf-rem-txt { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .f-life .lf-rem-txt { flex: 1 1 auto; min-width: 0; }
+  .f-life .lf-rem-btns { display: flex; gap: clamp(6px, 1.4cqw, 12px); }
   .f-life .lf-rem-btn {
-    flex-shrink: 0;
-    /* Roomier hit area — the reminder pill is rotated to a thin strip in
-       portrait, so give the buttons as much tappable size as possible. */
-    padding: clamp(7px, 1.8cqh, 13px) clamp(12px, 2.6cqw, 22px);
+    /* Roomier hit area now that each button gets half the card's width,
+       instead of being squeezed into a thin edge-of-screen pill. */
+    flex: 1 1 0;
+    text-align: center;
+    padding: clamp(8px, 1.8cqh, 14px) clamp(8px, 1.6cqw, 14px);
     border-radius: 999px;
     background: rgba(255,255,255,0.12);
     color: var(--lf-ink);
     cursor: pointer;
     font-weight: 700;
-    font-size: 0.98em;
+    font-size: 0.95em;
   }
   .f-life .lf-rem-btn:active { transform: scale(0.94); }
   .f-life .lf-rem-btn.primary {
@@ -3078,16 +3086,6 @@
           <div class="lf-tab" data-lftab="settings">Settings</div>
         </div>
 
-        <!-- Reminder overlay: shows above whichever tab is active, since a
-             water/bathroom reminder can become due while on Timeline/Stats/
-             Settings, not just Home. -->
-        <div class="lf-reminder" id="lf-reminder">
-          <span class="lf-rem-ico" id="lf-rem-ico">&#x1F4A7;</span>
-          <span class="lf-rem-txt" id="lf-rem-txt">Time to drink water</span>
-          <span class="lf-rem-btn primary" id="lf-rem-done">&#x2713; Done</span>
-          <span class="lf-rem-btn" id="lf-rem-skip">Skip</span>
-        </div>
-
         <!-- Home -->
         <div class="lf-view active" id="lf-view-home">
           <div class="lf-home">
@@ -3095,6 +3093,23 @@
               <div class="lf-greeting" id="lf-greeting">Good Morning</div>
               <div class="lf-clock"><span class="j-hh">--</span>:<span class="j-mm">--</span></div>
               <div class="lf-date"><span class="j-dow">---</span> &middot; <span class="j-fulldate">---</span></div>
+
+              <!-- Reminder card: sits under the clock in its own column, so
+                   it never overlaps the dashboard cards. It's only reachable
+                   from the Home tab (where the clock lives) — a reminder
+                   that becomes due while on Timeline/Stats/Settings simply
+                   waits here until the user returns to Home. -->
+              <div class="lf-reminder" id="lf-reminder">
+                <div class="lf-rem-row">
+                  <span class="lf-rem-ico" id="lf-rem-ico">&#x1F4A7;</span>
+                  <span class="lf-rem-txt" id="lf-rem-txt">Time to drink water</span>
+                </div>
+                <div class="lf-rem-btns">
+                  <span class="lf-rem-btn primary" id="lf-rem-done">&#x2713; Done</span>
+                  <span class="lf-rem-btn" id="lf-rem-skip">Skip</span>
+                </div>
+              </div>
+
               <div class="lf-statuspill sleep" id="lf-statuspill">
                 <span class="lf-statusdot"></span><span id="lf-statustxt">Sleeping</span>
               </div>
