@@ -278,9 +278,12 @@ function stopRem(){if(remTimer)clearInterval(remTimer);remTimer=null;$('rem').cl
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&S.awake)checkRem();});
 
 // ======================= ntfy push (delayed) =======================
+// Title/tags/delay go in the query string, not headers: header values must
+// be ASCII and the titles contain emoji, which made fetch() reject the
+// request client-side before anything was sent.
 function ntfy(msg,title,delaySec,tags){if(!S.ntfyEnabled||!S.ntfyTopic)return Promise.resolve(false);
-  var h={Title:title||'Lifestyle'};if(tags)h.Tags=tags;if(delaySec&&delaySec>5)h.Delay=Math.round(delaySec)+'s';
-  return fetch((S.ntfyServer||'https://ntfy.sh')+'/'+encodeURIComponent(S.ntfyTopic),{method:'POST',body:msg,headers:h}).then(function(r){return r.ok;}).catch(function(){return false;});}
+  var qs=['title='+encodeURIComponent(title||'Lifestyle')];if(tags)qs.push('tags='+encodeURIComponent(tags));if(delaySec&&delaySec>5)qs.push('delay='+Math.round(delaySec)+'s');
+  try{return fetch((S.ntfyServer||'https://ntfy.sh')+'/'+encodeURIComponent(S.ntfyTopic)+'?'+qs.join('&'),{method:'POST',body:msg}).then(function(r){return r.ok;}).catch(function(){return false;});}catch(e){return Promise.resolve(false);}}
 function schedDayNtfy(){if(!S.ntfyEnabled||!S.ntfyTopic)return;var key=new Date().toDateString();if(S.ntfyScheduledDate===key)return;
   var now=Date.now(),sp=hm(S.sleepTime),sleepT=at(new Date(),sp[0],sp[1]).getTime();if(sleepT<=now)sleepT+=864e5;var horizon=Math.min(sleepT,now+3*864e5);
   for(var t=now+S.waterIntervalMin*60000;t<horizon;t+=S.waterIntervalMin*60000)ntfy('Time to drink water','💧 Water',(t-now)/1000,'droplet');

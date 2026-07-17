@@ -5058,12 +5058,22 @@
     // while the app is open, so they still fire after it closes.
     function ntfyPublish(message, title, delaySec, tags){
       if(!S.ntfyEnabled || !S.ntfyTopic) return Promise.resolve(false);
-      var headers = { 'Title': title || 'StandBy' };
-      if(tags) headers['Tags'] = tags;
-      if(delaySec && delaySec > 5) headers['Delay'] = Math.round(delaySec) + 's';
-      return fetch((S.ntfyServer || 'https://ntfy.sh') + '/' + encodeURIComponent(S.ntfyTopic), {
-        method: 'POST', body: message, headers: headers
-      }).then(function(r){ return r.ok; }).catch(function(){ return false; });
+      // Title/tags/delay travel as query parameters, NOT headers: HTTP
+      // header values must be ASCII, and every title here starts with an
+      // emoji, so fetch() rejected the request outright ("Failed to fetch")
+      // before anything went on the wire — no push ever went out. ntfy
+      // reads the same fields from the query string as URL-encoded UTF-8,
+      // and a header-free text POST is a "simple" CORS request (no
+      // preflight), so this is also one less round-trip.
+      var qs = [];
+      if(title) qs.push('title=' + encodeURIComponent(title));
+      if(tags) qs.push('tags=' + encodeURIComponent(tags));
+      if(delaySec && delaySec > 5) qs.push('delay=' + Math.round(delaySec) + 's');
+      var url = (S.ntfyServer || 'https://ntfy.sh') + '/' + encodeURIComponent(S.ntfyTopic) + (qs.length ? '?' + qs.join('&') : '');
+      try{
+        return fetch(url, { method: 'POST', body: message })
+          .then(function(r){ return r.ok; }).catch(function(){ return false; });
+      }catch(e){ return Promise.resolve(false); }
     }
     // Queue every remaining water/bathroom reminder for today as delayed ntfy
     // pushes, once per day. Because ntfy can't cancel a queued message, an
