@@ -5182,8 +5182,15 @@
         }
       }
     }
+    // Guards against a stale response clobbering the display: a rapid
+    // double-tap on Water/Bathroom fires two overlapping reads, and without
+    // this only the *last-started* read's result is allowed to land, even
+    // if an earlier one's promise chain happens to resolve after it.
+    var totalsReqSeq = 0;
     function refreshTodayTotals(){
+      var seq = ++totalsReqSeq;
       getEventsInRange(startOfToday(), Date.now()).then(function(events){
+        if(seq !== totalsReqSeq) return; // superseded by a newer call — discard
         var waterTaps = events.filter(function(e){ return e.type === 'water' && !e.skipped; }).length;
         var bathVisits = events.filter(function(e){ return e.type === 'bath' && !e.skipped; }).length;
         var mlDrunk = waterTaps * S.waterPortionMl;
@@ -5322,41 +5329,60 @@
     }
 
     // ---------- Stats tab: daily/weekly/monthly aggregates, streaks, calendar ----------
-    // Sequential pairing of fastStart/fastEnd within a slice of events —
-    // shared by the daily card, the weekly/monthly chart, and the streak
-    // and calendar computations, so "how much was fasted" is defined once.
-    function fastedStatsFor(events){
+    // Pairs fastStart/fastEnd across the WHOLE fetched range, not clipped to
+    // a single calendar day. The default eating window (11:00-19:00) makes
+    // fasting run overnight (19:00 to 11:00 the next day), so every normal
+    // completed fast spans midnight — pairing per-day would split it across
+    // two buckets and it would never register as "completed" in either one.
+    // Each finished interval is attributed to the day it ENDED on, i.e. the
+    // day the fast was actually broken.
+    function pairFastIntervals(events){
       var transitions = events.filter(function(e){ return e.type==='fastStart' || e.type==='fastEnd'; })
         .sort(function(a,b){ return a.ts - b.ts; });
-      var openStart = null, totalMs = 0, completed = false;
+      var openStart = null, intervals = [];
       transitions.forEach(function(e){
         if(e.type === 'fastStart') openStart = e.ts;
-        else if(e.type === 'fastEnd' && openStart != null){ totalMs += (e.ts - openStart); openStart = null; completed = true; }
+        else if(e.type === 'fastEnd' && openStart != null){ intervals.push({ start: openStart, end: e.ts }); openStart = null; }
       });
-      return { fastedMs: totalMs, completed: completed };
+      return intervals;
     }
-    function dayStatsFor(events){
-      var f = fastedStatsFor(events);
+    // Shared by the daily card, the weekly/monthly/yearly chart, and the
+    // streak and calendar computations, so "how much was fasted" is defined
+    // once. Takes a bucket (from bucketedEvents), not a raw event array,
+    // since fasting completion is resolved globally rather than per-day.
+    function dayStatsFor(bucket){
       return {
-        waterCount: events.filter(function(e){ return e.type==='water' && !e.skipped; }).length,
-        bathCount:  events.filter(function(e){ return e.type==='bath'  && !e.skipped; }).length,
-        fastedHours: f.fastedMs / 3600000,
-        completedFast: f.completed
+        waterCount: bucket.events.filter(function(e){ return e.type==='water' && !e.skipped; }).length,
+        bathCount:  bucket.events.filter(function(e){ return e.type==='bath'  && !e.skipped; }).length,
+        fastedHours: bucket.fast.fastedMs / 3600000,
+        completedFast: bucket.fast.completed
       };
     }
     // Fetches everything once for the requested day-count and slices it
     // client-side into per-day buckets, rather than issuing one IndexedDB
-    // query per day.
+    // query per day. Water/bath are simple per-timestamp events so a plain
+    // per-day filter is enough for those; fasting is paired globally first
+    // (see pairFastIntervals) since a completed fast can cross midnight.
     function bucketedEvents(days){
       var todayStart = startOfToday();
       var rangeStart = todayStart - (days-1)*86400000;
       return getEventsInRange(rangeStart, Date.now() + 1).then(function(events){
+        var fastByDay = {};
+        pairFastIntervals(events).forEach(function(iv){
+          var d = new Date(iv.end); d.setHours(0,0,0,0);
+          var key = d.getTime();
+          var cur = fastByDay[key] || { completed: false, fastedMs: 0 };
+          cur.completed = true;
+          cur.fastedMs += (iv.end - iv.start);
+          fastByDay[key] = cur;
+        });
         var buckets = [];
         for(var i=days-1;i>=0;i--){
           var dStart = todayStart - i*86400000, dEnd = dStart + 86400000;
           buckets.push({
             start: dStart,
-            events: events.filter(function(e){ return e.ts >= dStart && e.ts < dEnd; })
+            events: events.filter(function(e){ return e.ts >= dStart && e.ts < dEnd; }),
+            fast: fastByDay[dStart] || { completed: false, fastedMs: 0 }
           });
         }
         return buckets;
@@ -5365,7 +5391,7 @@
     function computeStreak(buckets){
       var streak = 0;
       for(var i=buckets.length-1;i>=0;i--){
-        var completed = dayStatsFor(buckets[i].events).completedFast;
+        var completed = dayStatsFor(buckets[i]).completedFast;
         if(completed) streak++;
         else if(i === buckets.length-1) continue; // today not finished yet — doesn't break the streak
         else break;
@@ -5373,7 +5399,7 @@
       return streak;
     }
     function renderDailyStats(buckets){
-      var today = dayStatsFor(buckets[buckets.length-1].events);
+      var today = dayStatsFor(buckets[buckets.length-1]);
       var pct = Math.min(100, Math.round((today.waterCount * S.waterPortionMl / S.waterGoalMl) * 100));
       var elWater = document.getElementById('lf-st-water'); if(elWater) elWater.textContent = pct + '%';
       var elBath = document.getElementById('lf-st-bath'); if(elBath) elBath.textContent = String(today.bathCount);
@@ -5384,22 +5410,29 @@
       if(homeStreak) homeStreak.textContent = '\u{1F525} ' + streak + '-day streak';
     }
     function renderCharts(buckets){
-      var waterVals = buckets.map(function(b){ return dayStatsFor(b.events).waterCount * S.waterPortionMl / 1000; });
-      var bathVals  = buckets.map(function(b){ return dayStatsFor(b.events).bathCount; });
-      var fastVals  = buckets.map(function(b){ return dayStatsFor(b.events).fastedHours; });
+      var waterVals = buckets.map(function(b){ return dayStatsFor(b).waterCount * S.waterPortionMl / 1000; });
+      var bathVals  = buckets.map(function(b){ return dayStatsFor(b).bathCount; });
+      var fastVals  = buckets.map(function(b){ return dayStatsFor(b).fastedHours; });
       buildSpark('lf-chart-water', waterVals, waterVals.length-1);
       buildSpark('lf-chart-bath', bathVals, bathVals.length-1);
       buildSpark('lf-chart-fast', fastVals, fastVals.length-1);
     }
     var lfStatsRange = 7;
+    // Same stale-response guard as refreshTodayTotals: rapidly tapping
+    // Week/Month/Year fires overlapping bucketedEvents() queries (heavier
+    // ones for Year), so without this an earlier, slower request can
+    // resolve after a newer one and repaint the charts with the wrong range.
+    var statsReqSeq = 0;
     function renderStats(){
       var view = document.getElementById('lf-view-stats');
       if(!view) return;
+      var seq = ++statsReqSeq;
       // Always look back at least 42 days so the streak/calendar are accurate
       // regardless of which chart range is selected; the Year range needs the
       // full 365 days fetched here too, since the chart just slices this same
       // bucket list down to lfStatsRange rather than re-querying.
       bucketedEvents(Math.max(42, lfStatsRange)).then(function(all){
+        if(seq !== statsReqSeq) return; // superseded by a newer call — discard
         renderDailyStats(all);
         renderCharts(all.slice(all.length - lfStatsRange));
         renderCalendar(all);
@@ -5424,7 +5457,7 @@
       var monthEl = document.getElementById('lf-cal-month');
       if(!grid) return;
       var byDay = {};
-      last42Buckets.forEach(function(b){ byDay[b.start] = dayStatsFor(b.events).completedFast; });
+      last42Buckets.forEach(function(b){ byDay[b.start] = dayStatsFor(b).completedFast; });
       var now = new Date();
       if(monthEl) monthEl.textContent = now.toLocaleDateString([], {month:'long', year:'numeric'});
       var year = now.getFullYear(), month = now.getMonth(), today = now.getDate();
@@ -5492,6 +5525,15 @@
         el.classList.toggle('selected', parseInt(el.dataset.mood, 10) === value);
       });
     }
+    // Reflects today's actual logged mood (or none) — shared by the initial
+    // load and the day-rollover check below, so a fresh day always clears
+    // yesterday's selection rather than leaving it visually stuck.
+    function refreshMoodDisplay(){
+      getEventsInRange(startOfToday(), Date.now() + 1).then(function(events){
+        var existing = events.filter(function(e){ return e.type === 'mood'; })[0];
+        updateMoodRowDisplay(existing ? existing.value : null);
+      });
+    }
     function initMoodButtons(){
       var row = document.getElementById('lf-mood-row');
       if(!row) return;
@@ -5501,11 +5543,7 @@
           logMood(v).then(function(){ updateMoodRowDisplay(v); });
         });
       });
-      // Reflect today's mood (if already logged, e.g. after a reload) on load
-      getEventsInRange(startOfToday(), Date.now() + 1).then(function(events){
-        var existing = events.filter(function(e){ return e.type === 'mood'; })[0];
-        if(existing) updateMoodRowDisplay(existing.value);
-      });
+      refreshMoodDisplay();
     }
     var MOOD_EMOJI = { 1:'\u{1F61E}', 2:'\u{1F641}', 3:'\u{1F610}', 4:'\u{1F642}', 5:'\u{1F604}' };
     function renderMoodStrip(buckets){
@@ -5655,6 +5693,26 @@
         });
       });
     }
+
+    // ---------- Day rollover ----------
+    // StandBy is meant to stay on a bedside table with the screen on for
+    // days at a stretch, so the page itself may never reload across a
+    // midnight boundary. Without this, "today's" water/bathroom/medicine
+    // counts, mood selection, and the streak/calendar would all just keep
+    // showing yesterday's numbers until the next tap or tab switch.
+    var lastKnownDayKey = new Date().toDateString();
+    function checkDayRollover(){
+      var key = new Date().toDateString();
+      if(key === lastKnownDayKey) return;
+      lastKnownDayKey = key;
+      refreshTodayTotals();
+      refreshMedCards();
+      refreshMoodDisplay();
+      renderStats();
+      var timelineView = document.getElementById('lf-view-timeline');
+      if(timelineView && timelineView.classList.contains('active')) renderTimeline();
+    }
+    setInterval(checkDayRollover, 60000);
 
     function init(){
       if(!faceEl) return;
