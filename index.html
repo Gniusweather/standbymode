@@ -2102,6 +2102,15 @@
     line-height: 1;
   }
   .f-life .lf-fasttxt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .f-life .lf-fast-streak {
+    margin-top: clamp(2px, 0.6cqh, 6px);
+    font-size: clamp(7px, 1.7cqh, 14px);
+    font-weight: 700;
+    color: var(--lf-warm);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
   /* Reminder overlay: shows regardless of which internal tab is active */
   .f-life { position: relative; }
@@ -2168,6 +2177,14 @@
     text-overflow: ellipsis;
   }
   .f-life #lf-card-bath .lf-tap-hint { color: var(--lf-warm); }
+  /* Medicine tiles: tap to mark today's dose taken (tap again to undo) */
+  .f-life .lf-card.taken { border-color: rgba(94,230,200,0.5); }
+  .f-life .lf-card.taken .lf-card-val { color: var(--lf-teal); }
+  .f-life .lf-card.taken .lf-tap-hint { color: var(--lf-muted); }
+  /* Bathroom over-frequency flag */
+  .f-life .lf-card.flag { border-color: rgba(255,107,122,0.55); }
+  .f-life .lf-card.flag .lf-card-val { color: var(--lf-red); }
+  .f-life .lf-card.flag .lf-card-sub { color: var(--lf-red); }
   .f-life .lf-cond-best {
     margin-top: clamp(2px, 0.6cqh, 5px);
     font-size: clamp(8px, 2cqh, 16px);
@@ -2233,7 +2250,7 @@
     flex: 0 0 auto;
     display: flex;
     gap: 6px;
-    width: clamp(140px, 24cqw, 220px);
+    width: clamp(160px, 32cqw, 300px);
     margin-bottom: clamp(6px, 1.4cqh, 12px);
   }
   .f-life .lf-rangetab { padding: clamp(4px, 1cqh, 8px) clamp(4px, 1cqw, 8px); font-size: clamp(8px, 1.8cqh, 14px); }
@@ -3103,6 +3120,7 @@
                   <div class="lf-card-val teal" id="lf-fast-state">&mdash;</div>
                   <div class="lf-card-sub" id="lf-fast-sub">&mdash;</div>
                   <div class="lf-card-sub" id="lf-fast-remain">&mdash;</div>
+                  <div class="lf-fast-streak" id="lf-fast-streak">&#x1F525; 0-day streak</div>
                 </div>
               </div>
               <div class="lf-card lf-tappable" id="lf-card-water" role="button" tabindex="0">
@@ -3122,11 +3140,6 @@
                 <div class="lf-card-val warm" id="lf-next-val">&mdash;</div>
                 <div class="lf-card-sub" id="lf-next-sub">&mdash;</div>
               </div>
-              <div class="lf-card" id="lf-card-streak">
-                <div class="lf-card-hd">&#x1F525; Streak</div>
-                <div class="lf-card-val warm" id="lf-streak-val">0</div>
-                <div class="lf-card-sub">days fasting goal met</div>
-              </div>
               <div class="lf-card" id="lf-card-mood">
                 <div class="lf-card-hd">&#x1F642; Mood</div>
                 <div class="lf-mood-row" id="lf-mood-row">
@@ -3136,6 +3149,18 @@
                   <span class="lf-mood-emoji" data-mood="4">&#x1F642;</span>
                   <span class="lf-mood-emoji" data-mood="5">&#x1F604;</span>
                 </div>
+              </div>
+              <div class="lf-card lf-tappable" id="lf-card-med-morning" role="button" tabindex="0">
+                <div class="lf-card-hd">&#x1F305; Morning meds</div>
+                <div class="lf-card-val" id="lf-med-morning-val">&mdash;</div>
+                <div class="lf-card-sub" id="lf-med-morning-sub">Not yet</div>
+                <div class="lf-tap-hint" id="lf-med-morning-hint">+ Tap when taken</div>
+              </div>
+              <div class="lf-card lf-tappable" id="lf-card-med-evening" role="button" tabindex="0">
+                <div class="lf-card-hd">&#x1F319; Evening meds</div>
+                <div class="lf-card-val" id="lf-med-evening-val">&mdash;</div>
+                <div class="lf-card-sub" id="lf-med-evening-sub">Not yet</div>
+                <div class="lf-tap-hint" id="lf-med-evening-hint">+ Tap when taken</div>
               </div>
               <div class="lf-card wide" id="lf-card-conditions">
                 <div class="lf-card-hd">&#x1F30A; Bonaire &middot; outdoors &amp; swim</div>
@@ -3165,6 +3190,7 @@
           <div class="lf-stats-toggle">
             <div class="lf-rangetab active" data-lfrange="7">Week</div>
             <div class="lf-rangetab" data-lfrange="30">Month</div>
+            <div class="lf-rangetab" data-lfrange="365">Year</div>
           </div>
           <div class="lf-stats-charts" id="lf-stats-charts">
             <div class="lf-chart-card">
@@ -3209,6 +3235,7 @@
             <div class="lf-set-row"><span class="lf-set-lbl">Water goal</span><input type="number" min="0.5" max="10" step="0.1" id="lf-set-waterGoalL" class="lf-set-input lf-set-num"><span class="lf-set-unit">L</span></div>
             <div class="lf-set-row"><span class="lf-set-lbl">Water portion / tap</span><input type="number" min="50" max="1000" step="50" id="lf-set-waterPortionMl" class="lf-set-input lf-set-num"><span class="lf-set-unit">mL</span></div>
             <div class="lf-set-row"><span class="lf-set-lbl">Bathroom reminder every</span><input type="number" min="10" max="240" id="lf-set-bathIntervalMin" class="lf-set-input lf-set-num"><span class="lf-set-unit">min</span></div>
+            <div class="lf-set-row"><span class="lf-set-lbl">Flag bathroom if over</span><input type="number" min="3" max="30" id="lf-set-bathFlagThreshold" class="lf-set-input lf-set-num"><span class="lf-set-unit">/day</span></div>
             <div class="lf-set-row">
               <span class="lf-set-lbl">Notifications</span>
               <div class="lf-notif-toggle" id="lf-set-notifications"><span class="lf-notif-knob"></span></div>
@@ -4730,6 +4757,8 @@
       waterSkipSnoozeMin: 15,
       bathIntervalMin: 60,
       bathSkipSnoozeMin: 10,
+      bathFlagThreshold: 8,   // visits/day above this are flagged (typical adult range is ~6-8/day)
+      bathFlagNotifiedDate: '',
       notifications: true,
       theme: 'dark',       // 'dark' | 'light' | 'auto'
       awake: false,
@@ -5134,6 +5163,25 @@
 
     // ---------- Today's totals (water / bathroom dashboard cards) ----------
     function startOfToday(){ var d = new Date(); d.setHours(0,0,0,0); return d.getTime(); }
+    // Flags the Bathroom tile (and sends one push, once per day) once today's
+    // visit count crosses the configured threshold. Default of 8/day sits at
+    // the upper edge of typical adult urinary frequency — a gentle heads-up
+    // rather than a diagnosis, and fully adjustable in Settings.
+    function checkBathFlag(bathVisits){
+      var card = document.getElementById('lf-card-bath');
+      var sub = document.getElementById('lf-bath-sub');
+      var over = bathVisits >= S.bathFlagThreshold;
+      if(card) card.classList.toggle('flag', over);
+      if(sub) sub.textContent = over ? 'visits today — ⚠️ frequent' : 'visits today';
+      if(over){
+        var todayKey = new Date().toDateString();
+        if(S.bathFlagNotifiedDate !== todayKey){
+          S.bathFlagNotifiedDate = todayKey;
+          saveSettings();
+          notify('\u{1F6BD} Frequent bathroom visits', 'That’s ' + bathVisits + ' today — worth keeping an eye on.');
+        }
+      }
+    }
     function refreshTodayTotals(){
       getEventsInRange(startOfToday(), Date.now()).then(function(events){
         var waterTaps = events.filter(function(e){ return e.type === 'water' && !e.skipped; }).length;
@@ -5144,6 +5192,7 @@
         var ws = document.getElementById('lf-water-sub');
         if(ws) ws.textContent = (mlDrunk/1000).toFixed(1) + ' / ' + (S.waterGoalMl/1000).toFixed(1) + ' L';
         var bv = document.getElementById('lf-bath-val'); if(bv) bv.textContent = String(bathVisits);
+        checkBathFlag(bathVisits);
       });
       updateNextReminderCard();
     }
@@ -5331,7 +5380,8 @@
       var elFasted = document.getElementById('lf-st-fasted'); if(elFasted) elFasted.textContent = today.fastedHours.toFixed(1) + 'h';
       var streak = computeStreak(buckets);
       var elStreak = document.getElementById('lf-st-streak'); if(elStreak) elStreak.textContent = String(streak);
-      var homeStreak = document.getElementById('lf-streak-val'); if(homeStreak) homeStreak.textContent = String(streak);
+      var homeStreak = document.getElementById('lf-fast-streak');
+      if(homeStreak) homeStreak.textContent = '\u{1F525} ' + streak + '-day streak';
     }
     function renderCharts(buckets){
       var waterVals = buckets.map(function(b){ return dayStatsFor(b.events).waterCount * S.waterPortionMl / 1000; });
@@ -5345,10 +5395,11 @@
     function renderStats(){
       var view = document.getElementById('lf-view-stats');
       if(!view) return;
-      // Always look back 42 days so the streak/calendar are accurate
-      // regardless of whether the Week or Month chart range is selected;
-      // only the charts themselves slice down to the chosen range.
-      bucketedEvents(42).then(function(all){
+      // Always look back at least 42 days so the streak/calendar are accurate
+      // regardless of which chart range is selected; the Year range needs the
+      // full 365 days fetched here too, since the chart just slices this same
+      // bucket list down to lfStatsRange rather than re-querying.
+      bucketedEvents(Math.max(42, lfStatsRange)).then(function(all){
         renderDailyStats(all);
         renderCharts(all.slice(all.length - lfStatsRange));
         renderCalendar(all);
@@ -5392,7 +5443,7 @@
 
     // ---------- Settings tab ----------
     function populateSettingsUI(){
-      ['wakeTime','sleepTime','eatStart','eatEnd','waterIntervalMin','waterPortionMl','bathIntervalMin'].forEach(function(key){
+      ['wakeTime','sleepTime','eatStart','eatEnd','waterIntervalMin','waterPortionMl','bathIntervalMin','bathFlagThreshold'].forEach(function(key){
         var el = document.getElementById('lf-set-' + key);
         if(el) el.value = S[key];
       });
@@ -5471,6 +5522,57 @@
       strip.innerHTML = html;
     }
 
+    // ---------- Medicine tracker (Morning / Evening) ----------
+    // A tile is a simple daily checkbox, not a counter: tapping logs one
+    // 'medMorning'/'medEvening' event for today, tapping again removes it
+    // (undo a mis-tap). Same event-log store as everything else, so these
+    // just add two more `type` values alongside water/bath/mood.
+    var MED_TYPES = { morning: 'medMorning', evening: 'medEvening' };
+    function toggleMed(slot){
+      var type = MED_TYPES[slot];
+      getEventsInRange(startOfToday(), Date.now() + 1, type).then(function(evs){
+        if(evs.length){
+          openDb().then(function(db){
+            var tx = db.transaction('events', 'readwrite');
+            var store = tx.objectStore('events');
+            evs.forEach(function(e){ store.delete(e.id); });
+            tx.oncomplete = function(){ refreshMedCards(); };
+          });
+        } else {
+          logEvent(type).then(refreshMedCards);
+        }
+      });
+    }
+    function refreshMedCards(){
+      getEventsInRange(startOfToday(), Date.now() + 1).then(function(events){
+        Object.keys(MED_TYPES).forEach(function(slot){
+          var ev = events.filter(function(e){ return e.type === MED_TYPES[slot]; })[0];
+          var card = document.getElementById('lf-card-med-' + slot);
+          var val = document.getElementById('lf-med-' + slot + '-val');
+          var sub = document.getElementById('lf-med-' + slot + '-sub');
+          var hint = document.getElementById('lf-med-' + slot + '-hint');
+          if(ev){
+            if(val) val.textContent = '✓';
+            if(sub) sub.textContent = 'Taken ' + new Date(ev.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            if(hint) hint.textContent = 'Tap to undo';
+            if(card) card.classList.add('taken');
+          } else {
+            if(val) val.textContent = '—';
+            if(sub) sub.textContent = 'Not yet';
+            if(hint) hint.textContent = '+ Tap when taken';
+            if(card) card.classList.remove('taken');
+          }
+        });
+      });
+    }
+    function initMedButtons(){
+      var morningCard = document.getElementById('lf-card-med-morning');
+      var eveningCard = document.getElementById('lf-card-med-evening');
+      if(morningCard) morningCard.addEventListener('click', function(){ toggleMed('morning'); });
+      if(eveningCard) eveningCard.addEventListener('click', function(){ toggleMed('evening'); });
+      refreshMedCards();
+    }
+
     function initSettingsUI(){
       populateSettingsUI();
       ['wakeTime','sleepTime','eatStart','eatEnd'].forEach(function(key){
@@ -5481,13 +5583,13 @@
           updateFastingRing();
         });
       });
-      ['waterIntervalMin','waterPortionMl','bathIntervalMin'].forEach(function(key){
+      ['waterIntervalMin','waterPortionMl','bathIntervalMin','bathFlagThreshold'].forEach(function(key){
         var el = document.getElementById('lf-set-' + key);
         if(el) el.addEventListener('change', function(){
           var v = parseFloat(el.value);
           if(!isNaN(v) && v > 0) S[key] = v;
           saveSettings();
-          updateNextReminderCard();
+          refreshTodayTotals(); // also re-evaluates the bathroom flag under the new threshold
         });
       });
       var goalEl = document.getElementById('lf-set-waterGoalL');
@@ -5562,11 +5664,15 @@
       initStatsToggle();
       initSettingsUI();
       initMoodButtons();
+      initMedButtons();
       updateGreeting();
       updateStatusPill();
       updateFastingRing();
       updateConditionsCard();
       refreshTodayTotals();
+      // Populate the streak badge on the Fasting card immediately, rather
+      // than leaving it at 0 until the user visits the Stats tab once.
+      renderStats();
       // Resume reminder scheduling across a page reload if still awake
       if(S.awake) startReminders();
       // Theme attribute reflects saved settings immediately
