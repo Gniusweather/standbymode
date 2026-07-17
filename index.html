@@ -5022,7 +5022,16 @@
       S[meta.dueKey] = Date.now() + mins*60000;
       saveSettings();
     }
-    function notify(title, body){
+    function notify(title, body, ntfyTags){
+      // Alerts that pass ntfyTags also push through the ntfy app immediately.
+      // This leg runs before the Notification-permission guard below on
+      // purpose: on iOS the web-notification permission is rarely granted,
+      // so ntfy is the path that actually reaches the phone. Water/bathroom
+      // due reminders deliberately DON'T pass tags — they're already queued
+      // as delayed ntfy pushes for the whole day by scheduleDayNtfy(), and
+      // an immediate publish here would just double-ping. ntfyPublish is a
+      // no-op unless the ntfy toggle is on and a topic is set.
+      if(ntfyTags) ntfyPublish(body || title, title, 0, ntfyTags);
       if(!S.notifications || !('Notification' in window) || Notification.permission !== 'granted') return;
       // iOS Safari (even installed PWAs) does NOT support the `new Notification()`
       // constructor — it only shows notifications via the service worker's
@@ -5193,7 +5202,7 @@
         if(S.bathFlagNotifiedDate !== todayKey){
           S.bathFlagNotifiedDate = todayKey;
           saveSettings();
-          notify('\u{1F6BD} Frequent bathroom visits', 'That’s ' + bathVisits + ' today — worth keeping an eye on.');
+          notify('\u{1F6BD} Frequent bathroom visits', 'That’s ' + bathVisits + ' today — worth keeping an eye on.', 'toilet,warning');
         }
       }
     }
