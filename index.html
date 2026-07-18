@@ -2809,6 +2809,18 @@
       calc(env(safe-area-inset-bottom) + clamp(6px, 2cqh, 20px))
       calc(env(safe-area-inset-left) + clamp(8px, 1.8cqw, 28px));
   }
+  /* Life's own top row is a row of tappable tabs, unlike every other face
+     (a passive clock/weather display), so it needs real clearance from the
+     status bar — the shared padding above is tuned for content you just
+     look at, not press. Also hide the global "data freshness" pill: it's a
+     fixed-position indicator meant for the OTHER (weather) faces and,
+     pinned near the top-left of the true screen, it was landing right
+     under/behind these tabs once Life stopped being rotated out of that
+     corner. */
+  html.life-portrait #face-life {
+    padding-top: calc(env(safe-area-inset-top) + clamp(28px, 6cqh, 52px));
+  }
+  html.life-portrait #data-fresh { display: none; }
 
   /* Loading shimmer: gently pulse value placeholders until the first weather
      fetch settles. Only normal-coloured values are targeted — never the
@@ -4481,7 +4493,12 @@
   // face this used to assume sat at a fixed index.
   const LIFE_FACE_INDEX = Array.from(carousel.children).findIndex(function(f){ return f.id === 'face-life'; });
   var NIGHT_FACE_INDEX = Array.from(carousel.children).findIndex(function(f){ return f.id === 'face-night'; });
-  let index = Math.min(FACES-1, Math.max(0, parseInt(localStorage.getItem('faceIndex')||'0',10) || 0));
+  // Always opens on the first face (Life) rather than resuming wherever a
+  // previous session left off — this is the primary dashboard, and a
+  // StandBy display that reloads (recovers from sleep, gets a new build,
+  // etc.) should come back to it rather than a face someone happened to be
+  // swiped to.
+  let index = 0;
 
   // The stage is force-landscape: in portrait it is rotated 90deg and sized to
   // fill the screen. ALL sizing/rotation now lives in CSS (the
@@ -4694,7 +4711,6 @@
 
   function goTo(i){
     index = Math.min(FACES-1, Math.max(0, i));
-    localStorage.setItem('faceIndex', index);
     render(0);
     markActive();
     // Night Weather (night/sky) shows weather for the user's local location
