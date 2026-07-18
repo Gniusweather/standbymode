@@ -2847,362 +2847,7 @@
   <div class="stage" id="stage">
     <div class="carousel" id="carousel">
 
-      <!-- Face 1: Classic -->
-      <section class="face f-classic">
-        <div class="clock">
-          <div class="time">
-            <span class="j-hh">5</span><span class="colon">:</span><span class="j-mm">13</span><span class="ampm j-ampm">AM</span>
-          </div>
-          <div class="cl-secwrap"><div class="cl-secfill js-secfill"></div></div>
-        </div>
-        <div class="side">
-          <div class="date"><span class="day j-dow">WED</span><span class="j-dom">26</span></div>
-          <div class="fulldate j-fulldate">August 26, 2026</div>
-          <div class="temp"><span class="ico j-wico">&#x26C5;</span><span class="j-temp">--&deg;</span></div>
-          <div class="place j-place">Locating&hellip;</div>
-          <div class="place" style="font-size: 0.85em; margin-top: -2px; opacity: 0.6;">Actual <span class="j-actualtemp">--&deg;</span></div>
-          <div class="extra">
-            <span class="extra-item"><span class="extra-ico">&#x1F4A8;</span><span class="j-wind">-- kt</span></span>
-            <span class="extra-item"><span class="extra-ico">&#x2600;&#xFE0F;</span><span>UV&nbsp;<span class="j-uv">--</span></span></span>
-            <span class="extra-item"><span class="extra-ico">&#x1F32B;&#xFE0F;</span><span class="j-dust">-- &micro;g</span></span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Face 2: Glass Weather -->
-      <section class="face f-glass">
-        <div class="fg-wstrip">
-          <span class="fg-wstrip-ico j-wico">&#x26C5;</span>
-          <span class="fg-wstrip-temp j-temp">--&deg;</span>
-          <span class="fg-wstrip-cond j-wtext">Loading&hellip;</span>
-          <span class="fg-wstrip-sep"></span>
-          <span class="fg-wstrip-place">&#x1F4CD; <span class="j-place">Locating&hellip;</span></span>
-        </div>
-        <div class="fg-clock">
-          <div class="fg-time"><span class="j-hh">05</span><span class="colon">:</span><span class="j-mm">13</span><span class="fg-ampm j-ampm">AM</span></div>
-          <div class="fg-date"><span class="j-dow">WED</span> &middot; <span class="j-fulldate">June 13, 2026</span></div>
-          <div class="fg-secwrap"><div class="fg-secfill js-secfill"></div></div>
-        </div>
-        <div class="fg-stats">
-          <div class="fg-stat s-wind">
-            <div class="fg-stat-ico">&#x1F4A8;</div>
-            <div class="fg-stat-val j-wind">-- kt</div>
-            <div class="fg-stat-lbl">Wind</div>
-          </div>
-          <div class="fg-stat s-humid">
-            <div class="fg-stat-ico">&#x1F4A7;</div>
-            <div class="fg-stat-val j-rh">--%</div>
-            <div class="fg-stat-lbl">Humidity</div>
-          </div>
-          <div class="fg-stat s-rain">
-            <div class="fg-stat-ico">&#x1F327;&#xFE0F;</div>
-            <div class="fg-stat-val j-precip">-- mm</div>
-            <div class="fg-stat-lbl">Rain</div>
-          </div>
-          <div class="fg-stat s-cloud">
-            <div class="fg-stat-ico">&#x2601;&#xFE0F;</div>
-            <div class="fg-stat-val j-cloud">--</div>
-            <div class="fg-stat-lbl">Cloud</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Face 3: Analog -->
-      <section class="face f-analog">
-        <div class="dial" id="dial">
-          <div class="hand h" id="hand-h"></div>
-          <div class="hand m" id="hand-m"></div>
-          <div class="hand s" id="hand-s"></div>
-          <div class="pin"></div>
-        </div>
-        <div class="side">
-          <div class="date"><span class="day j-dow">WED</span><span class="j-dom">26</span></div>
-          <div class="fulldate j-fulldate">August 26, 2026</div>
-          <div class="temp"><span class="ico j-wico">&#x26C5;</span><span class="j-temp">--&deg;</span></div>
-          <div class="place j-place">Locating&hellip;</div>
-          <div class="place" style="font-size: 0.85em; margin-top: -2px; opacity: 0.6;">Actual <span class="j-actualtemp">--&deg;</span></div>
-        </div>
-      </section>
-
-      <!-- Face 4: Weather Dashboard -->
-      <section class="face f-weather">
-        <!-- Top row: time (left) + weather summary (right) -->
-        <div class="fw-top">
-          <div class="fw-timediv">
-            <div class="fw-st-time"><span class="j-hh">05</span><span class="fw-st-colon">:</span><span class="j-mm">13</span><span class="fw-st-ampm j-ampm">AM</span></div>
-            <div class="fw-st-date"><span class="j-dow">FRI</span> &middot; <span class="j-fulldate">June 14, 2026</span></div>
-          </div>
-          <div class="fw-vdiv"></div>
-          <div class="fw-hero">
-            <span class="fw-bigico j-wico">&#x26C5;</span>
-            <div class="fw-heroright">
-              <span class="fw-bigtemp j-temp">--&deg;</span>
-              <span class="fw-cond j-wtext">&nbsp;</span>
-              <span class="fw-meta"><span class="j-place">Locating&hellip;</span><span class="fw-sep j-obssep"> &middot; </span><span class="j-obstime"></span><span class="fw-sep"> &middot; </span>Actual <span class="j-actualtemp">--&deg;</span></span>
-            </div>
-          </div>
-        </div>
-        <!-- 6×2 data grid -->
-        <div class="fw-grid">
-          <div class="fw-tile">
-            <span class="fw-tval j-wind">--</span>
-            <span class="fw-tsub j-windbft">&nbsp;</span>
-            <div class="fw-bar"><div class="fw-bfill j-bwind"></div></div>
-            <span class="fw-tlbl">&#x1F4A8; Wind</span>
-          </div>
-          <div class="fw-tile t-warm">
-            <span class="fw-tval warm j-gust">--</span>
-            <span class="fw-tsub j-gustsub">&nbsp;</span>
-            <div class="fw-bar"><div class="fw-bfill warm j-bgust"></div></div>
-            <span class="fw-tlbl">&#x26A1; Gust</span>
-          </div>
-          <div class="fw-tile t-muted">
-            <span class="fw-tval"><span class="fw-arrow j-warrow">&#x2193;</span> <span class="j-winddir">--</span></span>
-            <span class="fw-tsub j-winddeg">&nbsp;</span>
-            <span class="fw-tlbl">&#x1F9ED; Direction</span>
-          </div>
-          <div class="fw-tile t-blue">
-            <span class="fw-tval blue j-rh">--%</span>
-            <div class="fw-bar"><div class="fw-bfill blue j-brh"></div></div>
-            <span class="fw-tlbl">&#x1F4A7; Humidity</span>
-          </div>
-          <div class="fw-tile t-blue">
-            <span class="fw-tval j-dew">--&deg;</span>
-            <span class="fw-tsub j-feels">&nbsp;</span>
-            <span class="fw-tlbl">&#x1F4A6; Dewpoint</span>
-          </div>
-          <div class="fw-tile t-muted">
-            <span class="fw-tval j-slp">--</span>
-            <span class="fw-tsub j-slpstate">&nbsp;</span>
-            <span class="fw-tlbl">&#x1F321;&#xFE0F; Pressure</span>
-          </div>
-          <div class="fw-tile t-muted">
-            <span class="fw-tval j-vis">--</span>
-            <span class="fw-tsub j-visqual">&nbsp;</span>
-            <span class="fw-tlbl">&#x1F441;&#xFE0F; Visibility</span>
-          </div>
-          <div class="fw-tile t-muted">
-            <span class="fw-tval j-cloud">--</span>
-            <div class="fw-octa j-octa"></div>
-            <span class="fw-tlbl">&#x2601;&#xFE0F; Cloud</span>
-          </div>
-          <div class="fw-tile t-blue">
-            <span class="fw-tval blue j-precip">--</span>
-            <div class="fw-bar"><div class="fw-bfill blue j-bprecip"></div></div>
-            <span class="fw-tlbl">&#x1F327; Rain/10m</span>
-          </div>
-          <div class="fw-tile t-warm">
-            <span class="fw-tval warm j-rad">--</span>
-            <span class="fw-tsub j-radsub">&nbsp;</span>
-            <div class="fw-bar"><div class="fw-bfill warm j-brad"></div></div>
-            <span class="fw-tlbl">&#x2600;&#xFE0F; Radiation</span>
-          </div>
-          <div class="fw-tile t-warm">
-            <span class="fw-tval warm j-uv">--</span>
-            <span class="fw-tsub j-uvsub">&nbsp;</span>
-            <div class="fw-bar"><div class="fw-bfill warm j-buv"></div></div>
-            <span class="fw-tlbl">&#x2600;&#xFE0F; UV Index</span>
-          </div>
-          <div class="fw-tile t-purple">
-            <span class="fw-tval j-dust">--</span>
-            <span class="fw-tsub j-dustsub">&nbsp;</span>
-            <div class="fw-bar"><div class="fw-bfill j-bdust"></div></div>
-            <span class="fw-tlbl">&#x1F32B;&#xFE0F; Dust</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Face 5: Calendar -->
-      <section class="face f-cal">
-        <div class="fc-left">
-          <div class="fc-ring" id="fc-ring"></div>
-          <div class="fc-time"><span class="j-hh24">17</span><span class="fc-colon">:</span><span class="j-mm">56</span></div>
-        </div>
-        <div class="fc-right">
-          <div class="fc-monthrow">
-            <span class="fc-month j-cal-month">JANUARY</span>
-            <span class="fc-monthsub" id="fc-monthsub"></span>
-          </div>
-          <div class="fc-grid" id="fc-grid"></div>
-        </div>
-      </section>
-
-      <!-- Face 6: Night Weather (3D) -->
-      <section class="face f-night">
-        <div class="fn-stars" id="fn-stars"></div>
-        <div class="fn-hero">
-          <div class="fn-ico jn-ico">&#x1F319;</div>
-          <div class="fn-city jn-city">BONAIRE</div>
-          <div class="fn-nearyou"><span class="fn-neardot"></span>Near you</div>
-          <div class="fn-temp jn-temp">--&deg;</div>
-          <div class="fn-cond jn-cond">Mostly Clear</div>
-          <div class="fn-datetime">
-            <div class="fn-dt-time"><span class="j-hh">--</span><span class="fn-dt-colon">:</span><span class="j-mm">--</span><span class="fn-dt-ampm j-ampm">AM</span></div>
-            <div class="fn-dt-date"><span class="j-dow">---</span> &middot; <span class="j-fulldate">---</span></div>
-          </div>
-        </div>
-        <div class="fn-grid">
-          <div class="fn-card">
-            <div class="fn-card-hd"><span class="fn-cico">&#x2600;&#xFE0F;</span> UV INDEX</div>
-            <div class="fn-card-val warm jn-uv">--</div>
-            <div class="fn-card-sub jn-uvsub">&nbsp;</div>
-            <div class="fn-bar"><div class="fn-bfill warm jn-buv"></div></div>
-          </div>
-          <div class="fn-card fn-card-wind">
-            <div class="fn-card-hd"><span class="fn-cico">&#x1F4A8;</span> WIND</div>
-            <div class="fn-compass">
-              <span class="fn-cdir fn-cN">N</span>
-              <span class="fn-cdir fn-cE">E</span>
-              <span class="fn-cdir fn-cS">S</span>
-              <span class="fn-cdir fn-cW">W</span>
-              <div class="fn-needle jn-windneedle"></div>
-              <div class="fn-compass-val"><span class="jn-wind">--</span></div>
-            </div>
-          </div>
-          <div class="fn-card">
-            <div class="fn-card-hd"><span class="fn-cico">&#x1F4A7;</span> HUMIDITY</div>
-            <div class="fn-card-val blue jn-rh">--%</div>
-            <div class="fn-card-sub">Dew point <span class="jn-dew">--&deg;</span></div>
-          </div>
-          <div class="fn-card">
-            <div class="fn-card-hd"><span class="fn-cico">&#x1F321;&#xFE0F;</span> FEELS LIKE</div>
-            <div class="fn-card-val jn-feelsbig">--&deg;</div>
-            <div class="fn-card-sub jn-feelssub">--</div>
-          </div>
-          <div class="fn-card">
-            <div class="fn-card-hd"><span class="fn-cico">&#x1F32B;&#xFE0F;</span> DUST</div>
-            <div class="fn-card-val jn-dust">--</div>
-            <div class="fn-card-sub jn-dustsub">&nbsp;</div>
-          </div>
-          <div class="fn-card">
-            <div class="fn-card-hd"><span class="fn-cico">&#x1F327;&#xFE0F;</span> RAINFALL</div>
-            <div class="fn-card-val blue jn-precip">--</div>
-            <div class="fn-card-sub">in the last 10 min</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Face 7: Sun & Moon -->
-      <section class="face f-astro">
-        <div class="fa-moon">
-          <svg class="fa-moondisc" viewBox="-50 -50 100 100" aria-hidden="true">
-            <defs>
-              <radialGradient id="fa-moonlit" cx="38%" cy="34%" r="78%">
-                <stop offset="0%" stop-color="#fffdf3"/>
-                <stop offset="62%" stop-color="#e7eaf4"/>
-                <stop offset="100%" stop-color="#b4bace"/>
-              </radialGradient>
-            </defs>
-            <circle r="48" fill="#0e111b"/>
-            <path id="fa-moonlitpath" d="" fill="url(#fa-moonlit)"/>
-            <circle r="48" fill="none" stroke="rgba(180,190,220,0.22)" stroke-width="1"/>
-          </svg>
-          <div class="fa-moonname ja-moonname">&mdash;</div>
-          <div class="fa-moonpct"><span class="ja-moonpct">--</span>% illuminated</div>
-        </div>
-        <div class="fa-main">
-          <div class="fa-clockrow">
-            <div class="fa-time"><span class="j-hh">--</span><span class="fa-colon">:</span><span class="j-mm">--</span><span class="fa-ampm j-ampm">AM</span></div>
-            <div class="fa-date"><span class="j-dow">---</span> &middot; <span class="j-fulldate">---</span></div>
-          </div>
-          <div class="fa-arcwrap">
-            <svg class="fa-arc" viewBox="0 0 200 72" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="fa-arcgrad" x1="0" y1="0" x2="200" y2="0" gradientUnits="userSpaceOnUse">
-                  <stop offset="0" stop-color="#ff9d6e"/>
-                  <stop offset="0.5" stop-color="#ffe08a"/>
-                  <stop offset="1" stop-color="#ff8e6e"/>
-                </linearGradient>
-              </defs>
-              <path class="fa-arc-track" d="M6,66 A105.17,105.17 0 0,1 194,66"/>
-              <path class="fa-arc-fill" id="fa-arcfill" d="M6,66 A105.17,105.17 0 0,1 194,66"/>
-            </svg>
-            <div class="fa-horizon"></div>
-            <div class="fa-sun" id="fa-sun">&#x2600;&#xFE0F;</div>
-          </div>
-          <div class="fa-countdown">
-            <span class="fa-cd-lbl ja-nextlbl">&mdash;</span>
-            <span class="fa-cd-val ja-countdown">--</span>
-          </div>
-          <div class="fa-chips">
-            <div class="fa-chip" id="fa-chip-sunrise"><span class="fa-chip-ico">&#x1F305;</span><span class="fa-chip-val ja-sunrise">--:--</span><span class="fa-chip-lbl">Sunrise</span></div>
-            <div class="fa-chip" id="fa-chip-sunset"><span class="fa-chip-ico">&#x1F307;</span><span class="fa-chip-val ja-sunset">--:--</span><span class="fa-chip-lbl">Sunset</span></div>
-            <div class="fa-chip"><span class="fa-chip-ico">&#x23F3;</span><span class="fa-chip-val ja-daylen">--</span><span class="fa-chip-lbl">Daylight</span></div>
-            <div class="fa-chip"><span class="fa-chip-ico ja-nowico">&#x1F327;&#xFE0F;</span><span class="fa-chip-val ja-nowcast">--</span><span class="fa-chip-lbl">Nowcast</span></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Face 8: Marine / Dive -->
-      <section class="face f-marine loading">
-        <div class="fm-dialwrap">
-          <div class="fm-uvring">
-            <svg class="fm-uvsvg" viewBox="0 0 120 120">
-              <circle class="fm-uvtrack" cx="60" cy="60" r="52"/>
-              <circle class="fm-uvfill jm-uvfill" cx="60" cy="60" r="52"/>
-            </svg>
-            <div class="fm-center">
-              <span class="fm-wind jm-uv">--</span>
-              <span class="fm-windunit">UV INDEX</span>
-            </div>
-          </div>
-          <div class="fm-bft jm-uvlevel">&mdash;</div>
-          <div class="fm-gust">Sea <span class="jm-watertemp">--</span>&deg; &middot; feels <span class="jm-feels">--</span>&deg;</div>
-        </div>
-        <div class="fm-main">
-          <div class="fm-verdict">
-            <span class="fm-verdict-ico jm-verdicon">&#x1F3D6;&#xFE0F;</span>
-            <div class="fm-verdict-txt">
-              <span class="fm-verdict-hd jm-verdict-hd">&mdash;</span>
-              <span class="fm-verdict-sub jm-verdict-sub">&mdash;</span>
-            </div>
-          </div>
-          <div class="fm-best">
-            <span class="fm-best-ico">&#x1F551;</span>
-            <div class="fm-best-txt">
-              <span class="fm-best-lbl">Best time to go outside</span>
-              <span class="fm-best-val jm-besttime">&mdash;</span>
-              <span class="fm-best-sub jm-bestsub">&mdash;</span>
-              <div class="fm-best-spark">
-                <svg class="fm-spark-svg" viewBox="0 0 300 56" preserveAspectRatio="none">
-                  <polygon class="fm-spark-area warm" id="fm-bestspark-fill" points=""/>
-                  <polyline class="fm-spark-line warm" id="fm-bestspark" points=""/>
-                  <circle class="fm-spark-dot warm" id="fm-bestspark-dot" r="4" cx="-10" cy="-10"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-          <div class="fm-spark">
-            <div class="fm-spark-hd"><span>&#x2600;&#xFE0F; UV index &middot; today</span><span class="jm-uvrange">--</span></div>
-            <svg class="fm-spark-svg" viewBox="0 0 300 56" preserveAspectRatio="none">
-              <polygon class="fm-spark-area warm" id="fm-uvspark-fill" points=""/>
-              <polyline class="fm-spark-line warm" id="fm-uvspark" points=""/>
-              <circle class="fm-spark-dot warm" id="fm-uvspark-dot" r="3.5" cx="-10" cy="-10"/>
-            </svg>
-          </div>
-          <div class="fm-spark">
-            <div class="fm-spark-hd"><span>&#x1F4A8; Wind &middot; 24h</span><span class="jm-windrange">--</span></div>
-            <svg class="fm-spark-svg" viewBox="0 0 300 56" preserveAspectRatio="none">
-              <polygon class="fm-spark-area teal" id="fm-windspark-fill" points=""/>
-              <polyline class="fm-spark-line teal" id="fm-windspark" points=""/>
-              <circle class="fm-spark-dot teal" id="fm-windspark-dot" r="3.5" cx="-10" cy="-10"/>
-            </svg>
-          </div>
-        </div>
-      </section>
-
-      <!-- Face 9: Galaxy AOD (Samsung-style Always-On Display) -->
-      <section class="face f-galaxy" id="face-galaxy">
-        <div class="fgx-drift">
-          <div class="fgx-clock">
-            <span class="j-hh">05</span><span class="fgx-colon">:</span><span class="j-mm">13</span><span class="fgx-ampm j-ampm">AM</span>
-          </div>
-          <div class="fgx-date"><span class="j-dow">WED</span> &middot; <span class="j-fulldate">June 20, 2026</span></div>
-          <div class="fgx-secbar-wrap"><div class="fgx-secbar" id="fgx-secbar"></div></div>
-        </div>
-      </section>
-
-      <!-- Face 10: Life (Smart Daily Dashboard & Health Assistant) -->
+      <!-- Face 1: Life (Smart Daily Dashboard & Health Assistant) -->
       <section class="face f-life" id="face-life" data-theme="dark">
         <div class="lf-tabs">
           <div class="lf-tab active" data-lftab="home">Home</div>
@@ -3430,6 +3075,361 @@
         </div>
       </section>
 
+      <!-- Face 2: Galaxy AOD (Samsung-style Always-On Display) -->
+      <section class="face f-galaxy" id="face-galaxy">
+        <div class="fgx-drift">
+          <div class="fgx-clock">
+            <span class="j-hh">05</span><span class="fgx-colon">:</span><span class="j-mm">13</span><span class="fgx-ampm j-ampm">AM</span>
+          </div>
+          <div class="fgx-date"><span class="j-dow">WED</span> &middot; <span class="j-fulldate">June 20, 2026</span></div>
+          <div class="fgx-secbar-wrap"><div class="fgx-secbar" id="fgx-secbar"></div></div>
+        </div>
+      </section>
+
+      <!-- Face 3: Classic -->
+      <section class="face f-classic">
+        <div class="clock">
+          <div class="time">
+            <span class="j-hh">5</span><span class="colon">:</span><span class="j-mm">13</span><span class="ampm j-ampm">AM</span>
+          </div>
+          <div class="cl-secwrap"><div class="cl-secfill js-secfill"></div></div>
+        </div>
+        <div class="side">
+          <div class="date"><span class="day j-dow">WED</span><span class="j-dom">26</span></div>
+          <div class="fulldate j-fulldate">August 26, 2026</div>
+          <div class="temp"><span class="ico j-wico">&#x26C5;</span><span class="j-temp">--&deg;</span></div>
+          <div class="place j-place">Locating&hellip;</div>
+          <div class="place" style="font-size: 0.85em; margin-top: -2px; opacity: 0.6;">Actual <span class="j-actualtemp">--&deg;</span></div>
+          <div class="extra">
+            <span class="extra-item"><span class="extra-ico">&#x1F4A8;</span><span class="j-wind">-- kt</span></span>
+            <span class="extra-item"><span class="extra-ico">&#x2600;&#xFE0F;</span><span>UV&nbsp;<span class="j-uv">--</span></span></span>
+            <span class="extra-item"><span class="extra-ico">&#x1F32B;&#xFE0F;</span><span class="j-dust">-- &micro;g</span></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Face 4: Glass Weather -->
+      <section class="face f-glass">
+        <div class="fg-wstrip">
+          <span class="fg-wstrip-ico j-wico">&#x26C5;</span>
+          <span class="fg-wstrip-temp j-temp">--&deg;</span>
+          <span class="fg-wstrip-cond j-wtext">Loading&hellip;</span>
+          <span class="fg-wstrip-sep"></span>
+          <span class="fg-wstrip-place">&#x1F4CD; <span class="j-place">Locating&hellip;</span></span>
+        </div>
+        <div class="fg-clock">
+          <div class="fg-time"><span class="j-hh">05</span><span class="colon">:</span><span class="j-mm">13</span><span class="fg-ampm j-ampm">AM</span></div>
+          <div class="fg-date"><span class="j-dow">WED</span> &middot; <span class="j-fulldate">June 13, 2026</span></div>
+          <div class="fg-secwrap"><div class="fg-secfill js-secfill"></div></div>
+        </div>
+        <div class="fg-stats">
+          <div class="fg-stat s-wind">
+            <div class="fg-stat-ico">&#x1F4A8;</div>
+            <div class="fg-stat-val j-wind">-- kt</div>
+            <div class="fg-stat-lbl">Wind</div>
+          </div>
+          <div class="fg-stat s-humid">
+            <div class="fg-stat-ico">&#x1F4A7;</div>
+            <div class="fg-stat-val j-rh">--%</div>
+            <div class="fg-stat-lbl">Humidity</div>
+          </div>
+          <div class="fg-stat s-rain">
+            <div class="fg-stat-ico">&#x1F327;&#xFE0F;</div>
+            <div class="fg-stat-val j-precip">-- mm</div>
+            <div class="fg-stat-lbl">Rain</div>
+          </div>
+          <div class="fg-stat s-cloud">
+            <div class="fg-stat-ico">&#x2601;&#xFE0F;</div>
+            <div class="fg-stat-val j-cloud">--</div>
+            <div class="fg-stat-lbl">Cloud</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Face 5: Analog -->
+      <section class="face f-analog">
+        <div class="dial" id="dial">
+          <div class="hand h" id="hand-h"></div>
+          <div class="hand m" id="hand-m"></div>
+          <div class="hand s" id="hand-s"></div>
+          <div class="pin"></div>
+        </div>
+        <div class="side">
+          <div class="date"><span class="day j-dow">WED</span><span class="j-dom">26</span></div>
+          <div class="fulldate j-fulldate">August 26, 2026</div>
+          <div class="temp"><span class="ico j-wico">&#x26C5;</span><span class="j-temp">--&deg;</span></div>
+          <div class="place j-place">Locating&hellip;</div>
+          <div class="place" style="font-size: 0.85em; margin-top: -2px; opacity: 0.6;">Actual <span class="j-actualtemp">--&deg;</span></div>
+        </div>
+      </section>
+
+      <!-- Face 6: Weather Dashboard -->
+      <section class="face f-weather">
+        <!-- Top row: time (left) + weather summary (right) -->
+        <div class="fw-top">
+          <div class="fw-timediv">
+            <div class="fw-st-time"><span class="j-hh">05</span><span class="fw-st-colon">:</span><span class="j-mm">13</span><span class="fw-st-ampm j-ampm">AM</span></div>
+            <div class="fw-st-date"><span class="j-dow">FRI</span> &middot; <span class="j-fulldate">June 14, 2026</span></div>
+          </div>
+          <div class="fw-vdiv"></div>
+          <div class="fw-hero">
+            <span class="fw-bigico j-wico">&#x26C5;</span>
+            <div class="fw-heroright">
+              <span class="fw-bigtemp j-temp">--&deg;</span>
+              <span class="fw-cond j-wtext">&nbsp;</span>
+              <span class="fw-meta"><span class="j-place">Locating&hellip;</span><span class="fw-sep j-obssep"> &middot; </span><span class="j-obstime"></span><span class="fw-sep"> &middot; </span>Actual <span class="j-actualtemp">--&deg;</span></span>
+            </div>
+          </div>
+        </div>
+        <!-- 6×2 data grid -->
+        <div class="fw-grid">
+          <div class="fw-tile">
+            <span class="fw-tval j-wind">--</span>
+            <span class="fw-tsub j-windbft">&nbsp;</span>
+            <div class="fw-bar"><div class="fw-bfill j-bwind"></div></div>
+            <span class="fw-tlbl">&#x1F4A8; Wind</span>
+          </div>
+          <div class="fw-tile t-warm">
+            <span class="fw-tval warm j-gust">--</span>
+            <span class="fw-tsub j-gustsub">&nbsp;</span>
+            <div class="fw-bar"><div class="fw-bfill warm j-bgust"></div></div>
+            <span class="fw-tlbl">&#x26A1; Gust</span>
+          </div>
+          <div class="fw-tile t-muted">
+            <span class="fw-tval"><span class="fw-arrow j-warrow">&#x2193;</span> <span class="j-winddir">--</span></span>
+            <span class="fw-tsub j-winddeg">&nbsp;</span>
+            <span class="fw-tlbl">&#x1F9ED; Direction</span>
+          </div>
+          <div class="fw-tile t-blue">
+            <span class="fw-tval blue j-rh">--%</span>
+            <div class="fw-bar"><div class="fw-bfill blue j-brh"></div></div>
+            <span class="fw-tlbl">&#x1F4A7; Humidity</span>
+          </div>
+          <div class="fw-tile t-blue">
+            <span class="fw-tval j-dew">--&deg;</span>
+            <span class="fw-tsub j-feels">&nbsp;</span>
+            <span class="fw-tlbl">&#x1F4A6; Dewpoint</span>
+          </div>
+          <div class="fw-tile t-muted">
+            <span class="fw-tval j-slp">--</span>
+            <span class="fw-tsub j-slpstate">&nbsp;</span>
+            <span class="fw-tlbl">&#x1F321;&#xFE0F; Pressure</span>
+          </div>
+          <div class="fw-tile t-muted">
+            <span class="fw-tval j-vis">--</span>
+            <span class="fw-tsub j-visqual">&nbsp;</span>
+            <span class="fw-tlbl">&#x1F441;&#xFE0F; Visibility</span>
+          </div>
+          <div class="fw-tile t-muted">
+            <span class="fw-tval j-cloud">--</span>
+            <div class="fw-octa j-octa"></div>
+            <span class="fw-tlbl">&#x2601;&#xFE0F; Cloud</span>
+          </div>
+          <div class="fw-tile t-blue">
+            <span class="fw-tval blue j-precip">--</span>
+            <div class="fw-bar"><div class="fw-bfill blue j-bprecip"></div></div>
+            <span class="fw-tlbl">&#x1F327; Rain/10m</span>
+          </div>
+          <div class="fw-tile t-warm">
+            <span class="fw-tval warm j-rad">--</span>
+            <span class="fw-tsub j-radsub">&nbsp;</span>
+            <div class="fw-bar"><div class="fw-bfill warm j-brad"></div></div>
+            <span class="fw-tlbl">&#x2600;&#xFE0F; Radiation</span>
+          </div>
+          <div class="fw-tile t-warm">
+            <span class="fw-tval warm j-uv">--</span>
+            <span class="fw-tsub j-uvsub">&nbsp;</span>
+            <div class="fw-bar"><div class="fw-bfill warm j-buv"></div></div>
+            <span class="fw-tlbl">&#x2600;&#xFE0F; UV Index</span>
+          </div>
+          <div class="fw-tile t-purple">
+            <span class="fw-tval j-dust">--</span>
+            <span class="fw-tsub j-dustsub">&nbsp;</span>
+            <div class="fw-bar"><div class="fw-bfill j-bdust"></div></div>
+            <span class="fw-tlbl">&#x1F32B;&#xFE0F; Dust</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Face 7: Calendar -->
+      <section class="face f-cal">
+        <div class="fc-left">
+          <div class="fc-ring" id="fc-ring"></div>
+          <div class="fc-time"><span class="j-hh24">17</span><span class="fc-colon">:</span><span class="j-mm">56</span></div>
+        </div>
+        <div class="fc-right">
+          <div class="fc-monthrow">
+            <span class="fc-month j-cal-month">JANUARY</span>
+            <span class="fc-monthsub" id="fc-monthsub"></span>
+          </div>
+          <div class="fc-grid" id="fc-grid"></div>
+        </div>
+      </section>
+
+      <!-- Face 8: Night Weather (3D) -->
+      <section class="face f-night" id="face-night">
+        <div class="fn-stars" id="fn-stars"></div>
+        <div class="fn-hero">
+          <div class="fn-ico jn-ico">&#x1F319;</div>
+          <div class="fn-city jn-city">BONAIRE</div>
+          <div class="fn-nearyou"><span class="fn-neardot"></span>Near you</div>
+          <div class="fn-temp jn-temp">--&deg;</div>
+          <div class="fn-cond jn-cond">Mostly Clear</div>
+          <div class="fn-datetime">
+            <div class="fn-dt-time"><span class="j-hh">--</span><span class="fn-dt-colon">:</span><span class="j-mm">--</span><span class="fn-dt-ampm j-ampm">AM</span></div>
+            <div class="fn-dt-date"><span class="j-dow">---</span> &middot; <span class="j-fulldate">---</span></div>
+          </div>
+        </div>
+        <div class="fn-grid">
+          <div class="fn-card">
+            <div class="fn-card-hd"><span class="fn-cico">&#x2600;&#xFE0F;</span> UV INDEX</div>
+            <div class="fn-card-val warm jn-uv">--</div>
+            <div class="fn-card-sub jn-uvsub">&nbsp;</div>
+            <div class="fn-bar"><div class="fn-bfill warm jn-buv"></div></div>
+          </div>
+          <div class="fn-card fn-card-wind">
+            <div class="fn-card-hd"><span class="fn-cico">&#x1F4A8;</span> WIND</div>
+            <div class="fn-compass">
+              <span class="fn-cdir fn-cN">N</span>
+              <span class="fn-cdir fn-cE">E</span>
+              <span class="fn-cdir fn-cS">S</span>
+              <span class="fn-cdir fn-cW">W</span>
+              <div class="fn-needle jn-windneedle"></div>
+              <div class="fn-compass-val"><span class="jn-wind">--</span></div>
+            </div>
+          </div>
+          <div class="fn-card">
+            <div class="fn-card-hd"><span class="fn-cico">&#x1F4A7;</span> HUMIDITY</div>
+            <div class="fn-card-val blue jn-rh">--%</div>
+            <div class="fn-card-sub">Dew point <span class="jn-dew">--&deg;</span></div>
+          </div>
+          <div class="fn-card">
+            <div class="fn-card-hd"><span class="fn-cico">&#x1F321;&#xFE0F;</span> FEELS LIKE</div>
+            <div class="fn-card-val jn-feelsbig">--&deg;</div>
+            <div class="fn-card-sub jn-feelssub">--</div>
+          </div>
+          <div class="fn-card">
+            <div class="fn-card-hd"><span class="fn-cico">&#x1F32B;&#xFE0F;</span> DUST</div>
+            <div class="fn-card-val jn-dust">--</div>
+            <div class="fn-card-sub jn-dustsub">&nbsp;</div>
+          </div>
+          <div class="fn-card">
+            <div class="fn-card-hd"><span class="fn-cico">&#x1F327;&#xFE0F;</span> RAINFALL</div>
+            <div class="fn-card-val blue jn-precip">--</div>
+            <div class="fn-card-sub">in the last 10 min</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Face 9: Sun & Moon -->
+      <section class="face f-astro">
+        <div class="fa-moon">
+          <svg class="fa-moondisc" viewBox="-50 -50 100 100" aria-hidden="true">
+            <defs>
+              <radialGradient id="fa-moonlit" cx="38%" cy="34%" r="78%">
+                <stop offset="0%" stop-color="#fffdf3"/>
+                <stop offset="62%" stop-color="#e7eaf4"/>
+                <stop offset="100%" stop-color="#b4bace"/>
+              </radialGradient>
+            </defs>
+            <circle r="48" fill="#0e111b"/>
+            <path id="fa-moonlitpath" d="" fill="url(#fa-moonlit)"/>
+            <circle r="48" fill="none" stroke="rgba(180,190,220,0.22)" stroke-width="1"/>
+          </svg>
+          <div class="fa-moonname ja-moonname">&mdash;</div>
+          <div class="fa-moonpct"><span class="ja-moonpct">--</span>% illuminated</div>
+        </div>
+        <div class="fa-main">
+          <div class="fa-clockrow">
+            <div class="fa-time"><span class="j-hh">--</span><span class="fa-colon">:</span><span class="j-mm">--</span><span class="fa-ampm j-ampm">AM</span></div>
+            <div class="fa-date"><span class="j-dow">---</span> &middot; <span class="j-fulldate">---</span></div>
+          </div>
+          <div class="fa-arcwrap">
+            <svg class="fa-arc" viewBox="0 0 200 72" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="fa-arcgrad" x1="0" y1="0" x2="200" y2="0" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stop-color="#ff9d6e"/>
+                  <stop offset="0.5" stop-color="#ffe08a"/>
+                  <stop offset="1" stop-color="#ff8e6e"/>
+                </linearGradient>
+              </defs>
+              <path class="fa-arc-track" d="M6,66 A105.17,105.17 0 0,1 194,66"/>
+              <path class="fa-arc-fill" id="fa-arcfill" d="M6,66 A105.17,105.17 0 0,1 194,66"/>
+            </svg>
+            <div class="fa-horizon"></div>
+            <div class="fa-sun" id="fa-sun">&#x2600;&#xFE0F;</div>
+          </div>
+          <div class="fa-countdown">
+            <span class="fa-cd-lbl ja-nextlbl">&mdash;</span>
+            <span class="fa-cd-val ja-countdown">--</span>
+          </div>
+          <div class="fa-chips">
+            <div class="fa-chip" id="fa-chip-sunrise"><span class="fa-chip-ico">&#x1F305;</span><span class="fa-chip-val ja-sunrise">--:--</span><span class="fa-chip-lbl">Sunrise</span></div>
+            <div class="fa-chip" id="fa-chip-sunset"><span class="fa-chip-ico">&#x1F307;</span><span class="fa-chip-val ja-sunset">--:--</span><span class="fa-chip-lbl">Sunset</span></div>
+            <div class="fa-chip"><span class="fa-chip-ico">&#x23F3;</span><span class="fa-chip-val ja-daylen">--</span><span class="fa-chip-lbl">Daylight</span></div>
+            <div class="fa-chip"><span class="fa-chip-ico ja-nowico">&#x1F327;&#xFE0F;</span><span class="fa-chip-val ja-nowcast">--</span><span class="fa-chip-lbl">Nowcast</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Face 10: Marine / Dive -->
+      <section class="face f-marine loading">
+        <div class="fm-dialwrap">
+          <div class="fm-uvring">
+            <svg class="fm-uvsvg" viewBox="0 0 120 120">
+              <circle class="fm-uvtrack" cx="60" cy="60" r="52"/>
+              <circle class="fm-uvfill jm-uvfill" cx="60" cy="60" r="52"/>
+            </svg>
+            <div class="fm-center">
+              <span class="fm-wind jm-uv">--</span>
+              <span class="fm-windunit">UV INDEX</span>
+            </div>
+          </div>
+          <div class="fm-bft jm-uvlevel">&mdash;</div>
+          <div class="fm-gust">Sea <span class="jm-watertemp">--</span>&deg; &middot; feels <span class="jm-feels">--</span>&deg;</div>
+        </div>
+        <div class="fm-main">
+          <div class="fm-verdict">
+            <span class="fm-verdict-ico jm-verdicon">&#x1F3D6;&#xFE0F;</span>
+            <div class="fm-verdict-txt">
+              <span class="fm-verdict-hd jm-verdict-hd">&mdash;</span>
+              <span class="fm-verdict-sub jm-verdict-sub">&mdash;</span>
+            </div>
+          </div>
+          <div class="fm-best">
+            <span class="fm-best-ico">&#x1F551;</span>
+            <div class="fm-best-txt">
+              <span class="fm-best-lbl">Best time to go outside</span>
+              <span class="fm-best-val jm-besttime">&mdash;</span>
+              <span class="fm-best-sub jm-bestsub">&mdash;</span>
+              <div class="fm-best-spark">
+                <svg class="fm-spark-svg" viewBox="0 0 300 56" preserveAspectRatio="none">
+                  <polygon class="fm-spark-area warm" id="fm-bestspark-fill" points=""/>
+                  <polyline class="fm-spark-line warm" id="fm-bestspark" points=""/>
+                  <circle class="fm-spark-dot warm" id="fm-bestspark-dot" r="4" cx="-10" cy="-10"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="fm-spark">
+            <div class="fm-spark-hd"><span>&#x2600;&#xFE0F; UV index &middot; today</span><span class="jm-uvrange">--</span></div>
+            <svg class="fm-spark-svg" viewBox="0 0 300 56" preserveAspectRatio="none">
+              <polygon class="fm-spark-area warm" id="fm-uvspark-fill" points=""/>
+              <polyline class="fm-spark-line warm" id="fm-uvspark" points=""/>
+              <circle class="fm-spark-dot warm" id="fm-uvspark-dot" r="3.5" cx="-10" cy="-10"/>
+            </svg>
+          </div>
+          <div class="fm-spark">
+            <div class="fm-spark-hd"><span>&#x1F4A8; Wind &middot; 24h</span><span class="jm-windrange">--</span></div>
+            <svg class="fm-spark-svg" viewBox="0 0 300 56" preserveAspectRatio="none">
+              <polygon class="fm-spark-area teal" id="fm-windspark-fill" points=""/>
+              <polyline class="fm-spark-line teal" id="fm-windspark" points=""/>
+              <circle class="fm-spark-dot teal" id="fm-windspark-dot" r="3.5" cx="-10" cy="-10"/>
+            </svg>
+          </div>
+        </div>
+      </section>
+
     </div>
     <div class="dots" id="dots"></div>
   </div>
@@ -3487,16 +3487,16 @@
     handM.style.transform = 'rotate(' + (m * 6) + 'deg)';
     handH.style.transform = 'rotate(' + (h * 30) + 'deg)';
 
-    // Faces 7 & 8: live sun position, countdown, moon (cheap, guarded)
+    // Sun & Moon / Marine: live sun position, countdown, moon (cheap, guarded)
     if(typeof updateAstroLive === 'function') updateAstroLive();
 
-    // Face 9: colon blink synced to clock tick
+    // Galaxy AOD: colon blink synced to clock tick
     if(fgxColonEl){
       fgxColonEl.style.opacity = '1';
       setTimeout(function(){ fgxColonEl.style.opacity = '0.18'; }, 680);
     }
 
-    // Face 9: seconds progress bar, gradient spans full container width
+    // Galaxy AOD: seconds progress bar, gradient spans full container width
     if(fgxSecBarEl){
       if(!fgxSecBarEl._gradInit){
         var ww = (fgxSecBarEl.parentElement || {}).offsetWidth;
@@ -3827,7 +3827,7 @@
     if(octa<=5) return 'Mostly cloudy';
     return 'Overcast';
   }
-  // Drive Face 6 background class from live weather + time of day
+  // Drive the Night Weather face's background class from live weather + time of day
   function setSkyMood(octa, precip){
     var h = new Date().getHours();
     var night = h < 6 || h >= 19;
@@ -4435,8 +4435,8 @@
     document.body.classList.remove('data-loading');
     // Faces 7 & 8 (Sun/Moon + Marine) pull Bonaire sun/hourly/nowcast data
     loadAstroMarine();
-    // Face 6 shows the user's local location — keep it fresh too when active
-    if(typeof index !== 'undefined' && index === 5) loadLocalWeather();
+    // Night Weather shows the user's local location — keep it fresh too when active
+    if(typeof index !== 'undefined' && typeof NIGHT_FACE_INDEX !== 'undefined' && index === NIGHT_FACE_INDEX) loadLocalWeather();
     updateFreshness();
     setTimeout(function(){ loaderEl.classList.remove('active'); }, 300);
   }
@@ -4476,7 +4476,11 @@
   const carousel = document.getElementById('carousel');
   const dotsEl = document.getElementById('dots');
   const FACES = carousel.children.length;
-  const LIFE_FACE_INDEX = FACES - 1;
+  // Looked up by id/class rather than a hardcoded position, so the faces
+  // can be freely reordered in the HTML without silently breaking whichever
+  // face this used to assume sat at a fixed index.
+  const LIFE_FACE_INDEX = Array.from(carousel.children).findIndex(function(f){ return f.id === 'face-life'; });
+  var NIGHT_FACE_INDEX = Array.from(carousel.children).findIndex(function(f){ return f.id === 'face-night'; });
   let index = Math.min(FACES-1, Math.max(0, parseInt(localStorage.getItem('faceIndex')||'0',10) || 0));
 
   // The stage is force-landscape: in portrait it is rotated 90deg and sized to
@@ -4556,10 +4560,13 @@
   }
   const dots = Array.from(dotsEl.children);
 
-  // Accent colour of each face, used to tint the active carousel dot
-  const FACE_ACCENTS = ['#6db8ff','#a78bfa','#ffb45e','#5ee6c8','#ff5a6e','#5ea8ff','#ffcf6e','#5ee6c8','#9b7bff'];
+  // Accent colour of each face, used to tint the active carousel dot.
+  // Indexed to match the current face order: Life, Galaxy, Classic, Glass,
+  // Analog, Weather, Calendar, Night, Astro, Marine. Life has no accent of
+  // its own here (falls back to white below) — same as before the reorder.
+  const FACE_ACCENTS = [undefined,'#9b7bff','#6db8ff','#a78bfa','#ffb45e','#5ee6c8','#ff5a6e','#5ea8ff','#ffcf6e','#5ee6c8'];
   // Every other face is landscape-designed and relies on the shared
-  // `.stage` rotation to fill a portrait screen. The Life face (last one)
+  // `.stage` rotation to fill a portrait screen. The Life face
   // is the exception: its dashboard reads naturally upright, so once it's
   // fully settled as the active face (never mid-drag — see pointerdown
   // below) on a portrait device, this flips `.stage` out of the rotation
@@ -4690,8 +4697,8 @@
     localStorage.setItem('faceIndex', index);
     render(0);
     markActive();
-    // Face 6 (night/sky) shows weather for the user's local location
-    if(index === 5){
+    // Night Weather (night/sky) shows weather for the user's local location
+    if(index === NIGHT_FACE_INDEX){
       loadLocalWeather();
     }
   }
@@ -4926,7 +4933,7 @@
   })();
 
   // ======================================================================
-  // Face 10: Life — Smart Daily Dashboard & Health Assistant
+  // Life — Smart Daily Dashboard & Health Assistant
   // ======================================================================
   var Life = (function(){
     // ---------- Settings (localStorage, matches app-wide convention) ----------
