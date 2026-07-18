@@ -2056,6 +2056,60 @@
     text-overflow: ellipsis;
   }
   .f-life .lf-card.wide { grid-column: span 3; }
+
+  /* ---------- Life face: true-portrait layout ----------
+     The rules above assume the wide landscape box the rotation hack
+     provides (a 34%/66% side-by-side split makes sense there). In true
+     portrait (html.life-portrait, see the media-query section above) the
+     box is narrow and tall instead, so Home restacks into one scrolling
+     column, top to bottom: greeting/clock/status/buttons, then the card
+     grid — the same reading order lifestyle.html (the standalone
+     portrait-native version of this same dashboard) already uses. Higher
+     specificity than the plain rules above wins this regardless of
+     source order. */
+  html.life-portrait #face-life .lf-view.active { overflow-y: auto; overflow-x: hidden; }
+  html.life-portrait #face-life .lf-home {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(10px, 2.4cqh, 22px);
+    overflow: visible;
+  }
+  html.life-portrait #face-life .lf-homeleft {
+    flex: 0 0 auto;
+    justify-content: flex-start;
+  }
+  html.life-portrait #face-life .lf-cards {
+    flex: 0 0 auto;
+    grid-auto-rows: auto;
+    overflow: visible;
+  }
+  html.life-portrait #face-life .lf-card { min-height: clamp(74px, 17cqh, 132px); }
+  /* Labels sized off cqh (container HEIGHT) inflate a lot once the box is
+     truly tall instead of the thin rotated strip they were tuned for, and
+     then don't fit the still-narrow WIDTH — "SETTINGS"/"BATHROOM" etc. got
+     ellipsis-truncated. Re-base these specific labels on cqw instead, since
+     width is what actually constrains them here. */
+  html.life-portrait #face-life .lf-tab,
+  html.life-portrait #face-life .lf-rangetab {
+    font-size: clamp(8px, 2.6cqw, 13px);
+  }
+  html.life-portrait #face-life .lf-card-hd {
+    font-size: clamp(7px, 2.4cqw, 12px);
+  }
+  /* Same story for the numeric Settings inputs: taller container inflated
+     the (cqh-based) font past what their (cqw-based) width fit, clipping
+     the value. Widen them rather than shrink the text further. */
+  html.life-portrait #face-life .lf-set-input.lf-set-num { width: clamp(60px, 16cqw, 100px); }
+  /* The Week/Month/Year toggle had a narrow width cap sized for the old
+     rotated cqw base (~900px canvas) — far too small now that cqw is based
+     on the true ~400-430px width, squeezing "Month" to "Mo...". There's
+     real width to spare in portrait, so just use it. Same story for the 4
+     stat chips and 3 chart cards: give them 2 and 1 columns respectively
+     instead of cramming into the row width the rotated layout had room
+     for. */
+  html.life-portrait #face-life .lf-stats-toggle { width: 100%; }
+  html.life-portrait #face-life .lf-stats-daily { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  html.life-portrait #face-life .lf-stats-charts { grid-template-columns: 1fr; }
   .f-life .lf-card-last {
     font-size: clamp(6px, 1.5cqh, 12px);
     color: var(--lf-muted);
@@ -2732,6 +2786,28 @@
         calc(env(safe-area-inset-left) + clamp(6px, 2cqh, 20px))
         calc(env(safe-area-inset-top) + clamp(8px, 1.8cqw, 28px));
     }
+  }
+
+  /* Life face exception: while it's the settled, active face on a portrait
+     device (`html.life-portrait`, toggled in JS — see updateLifePortraitMode)
+     the rotation hack above is cancelled and the stage reverts to a true,
+     unrotated portrait box, since this one dashboard is designed to be read
+     upright rather than as a rotated landscape face. Higher specificity than
+     the plain `.stage`/`.face` rules above, so it wins regardless of source
+     order. Only ever applied at rest (never mid-drag), so every swipe
+     gesture still plays out in one consistent (rotated) geometry. */
+  html.life-portrait .stage {
+    width: 100vw; height: 100vh;
+    width: 100dvw; height: 100dvh;
+    transform: none;
+    left: 0; top: 0; right: auto; bottom: auto;
+  }
+  html.life-portrait .face {
+    padding:
+      calc(env(safe-area-inset-top) + clamp(6px, 2cqh, 20px))
+      calc(env(safe-area-inset-right) + clamp(8px, 1.8cqw, 28px))
+      calc(env(safe-area-inset-bottom) + clamp(6px, 2cqh, 20px))
+      calc(env(safe-area-inset-left) + clamp(8px, 1.8cqw, 28px));
   }
 
   /* Loading shimmer: gently pulse value placeholders until the first weather
@@ -4400,6 +4476,7 @@
   const carousel = document.getElementById('carousel');
   const dotsEl = document.getElementById('dots');
   const FACES = carousel.children.length;
+  const LIFE_FACE_INDEX = FACES - 1;
   let index = Math.min(FACES-1, Math.max(0, parseInt(localStorage.getItem('faceIndex')||'0',10) || 0));
 
   // The stage is force-landscape: in portrait it is rotated 90deg and sized to
@@ -4425,6 +4502,9 @@
     }
     // Container size may have changed: let the seconds-bar gradient re-fit.
     if(fgxSecBarEl) fgxSecBarEl._gradInit = false;
+    // A physical rotation (not a swipe) can also flip whether the Life
+    // face should be in its unrotated portrait mode.
+    if(typeof updateLifePortraitMode === 'function') updateLifePortraitMode();
   }
   layoutStage();
   window.addEventListener('resize', layoutStage);
@@ -4478,6 +4558,20 @@
 
   // Accent colour of each face, used to tint the active carousel dot
   const FACE_ACCENTS = ['#6db8ff','#a78bfa','#ffb45e','#5ee6c8','#ff5a6e','#5ea8ff','#ffcf6e','#5ee6c8','#9b7bff'];
+  // Every other face is landscape-designed and relies on the shared
+  // `.stage` rotation to fill a portrait screen. The Life face (last one)
+  // is the exception: its dashboard reads naturally upright, so once it's
+  // fully settled as the active face (never mid-drag — see pointerdown
+  // below) on a portrait device, this flips `.stage` out of the rotation
+  // hack entirely via the `life-portrait` class, and CSS restacks the
+  // face's own layout for a true narrow/tall box instead of the rotated
+  // landscape one. Toggling only on a settled `render(0)` (not a live drag
+  // frame) means a swipe gesture always plays out in one consistent
+  // (rotated) geometry; the flip to/from portrait happens as a single
+  // instantaneous snap right when the gesture completes.
+  function updateLifePortraitMode(){
+    document.documentElement.classList.toggle('life-portrait', index === LIFE_FACE_INDEX && stageIsPortrait);
+  }
   function render(dx){
     carousel.style.transform = 'translateX(calc(' + (-index*100) + '% + ' + (dx||0) + 'px))';
     dots.forEach(function(d,i){
@@ -4486,6 +4580,7 @@
       d.style.background = active ? (FACE_ACCENTS[i] || '#fff') : '';
       d.style.boxShadow = active ? '0 0 10px ' + (FACE_ACCENTS[i] || '#fff') : '';
     });
+    if(!dx) updateLifePortraitMode();
   }
 
   // Faces 6 & 7: weather for the user's location, falling back to Bonaire
@@ -4622,6 +4717,10 @@
   let dragStart = null, dragDx = 0, dragT = 0, dragStartTarget = null;
   stage.addEventListener('pointerdown', function(ev){
     if(ev.target.closest && ev.target.closest(STAGE_TAP_TARGETS)) return;
+    // A genuine carousel drag always plays out in the normal rotated
+    // geometry shared by every face, even if it starts (or will end) on
+    // the Life face — see updateLifePortraitMode above.
+    document.documentElement.classList.remove('life-portrait');
     dragStart = axisPos(ev);
     dragDx = 0;
     dragT = Date.now();
