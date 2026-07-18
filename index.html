@@ -2056,6 +2056,16 @@
     text-overflow: ellipsis;
   }
   .f-life .lf-card.wide { grid-column: span 3; }
+  .f-life .lf-card-last {
+    font-size: clamp(6px, 1.5cqh, 12px);
+    color: var(--lf-muted);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 1em;
+  }
   .f-life .lf-notice {
     font-size: clamp(7px, 1.6cqh, 13px);
     color: var(--lf-muted);
@@ -2285,6 +2295,34 @@
   .f-life .fm-spark-area.teal { fill: rgba(94,230,200,0.12); }
   .f-life .fm-spark-dot.warm { fill: var(--lf-warm); filter: drop-shadow(0 0 5px rgba(255,180,94,0.8)); }
   .f-life .fm-spark-dot.teal { fill: var(--lf-teal); filter: drop-shadow(0 0 5px rgba(94,230,200,0.8)); }
+  /* Today's logged times on Stats (one row per tracked type) */
+  .f-life .lf-today-log {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2px, 0.6cqh, 6px);
+    margin-bottom: clamp(6px, 1.4cqh, 12px);
+  }
+  .f-life .lf-today-row {
+    display: flex;
+    align-items: baseline;
+    gap: clamp(5px, 1.2cqw, 10px);
+    font-size: clamp(8px, 1.9cqh, 15px);
+    font-weight: 600;
+    color: var(--lf-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .f-life .lf-today-row .ico { flex: 0 0 auto; }
+  .f-life .lf-today-row .times { font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; }
+  /* CSV export buttons on Stats */
+  .f-life .lf-export-btns {
+    flex: 0 0 auto;
+    display: flex;
+    gap: clamp(6px, 1.4cqw, 12px);
+    margin-top: clamp(6px, 1.4cqh, 12px);
+  }
+  .f-life .lf-export-btn { flex: 1 1 0; text-align: center; }
   .f-life .lf-cal-wrap { flex: 1 1 auto; min-height: 0; overflow: hidden; }
   .f-life .lf-cal-month {
     font-size: clamp(9px, 2.2cqh, 18px);
@@ -3142,12 +3180,14 @@
                 <div class="lf-card-hd">&#x1F4A7; Water</div>
                 <div class="lf-card-val blue" id="lf-water-val">0%</div>
                 <div class="lf-card-sub" id="lf-water-sub">0 / 3.0 L</div>
+                <div class="lf-card-last" id="lf-water-last"></div>
                 <div class="lf-tap-hint">+ Tap to log a glass</div>
               </div>
               <div class="lf-card lf-tappable" id="lf-card-bath" role="button" tabindex="0">
                 <div class="lf-card-hd">&#x1F6BD; Bathroom</div>
                 <div class="lf-card-val" id="lf-bath-val">0</div>
                 <div class="lf-card-sub" id="lf-bath-sub">visits today</div>
+                <div class="lf-card-last" id="lf-bath-last"></div>
                 <div class="lf-tap-hint">+ Tap to log a visit</div>
               </div>
               <div class="lf-card" id="lf-card-next">
@@ -3201,6 +3241,7 @@
             <div class="lf-stat-chip"><div class="lf-card-hd">Fasted today</div><div class="lf-card-val teal" id="lf-st-fasted">0h</div></div>
             <div class="lf-stat-chip"><div class="lf-card-hd">Streak</div><div class="lf-card-val warm" id="lf-st-streak">0</div></div>
           </div>
+          <div class="lf-today-log" id="lf-today-log"></div>
           <div class="lf-mood-strip" id="lf-mood-strip"></div>
           <div class="lf-stats-toggle">
             <div class="lf-rangetab active" data-lfrange="7">Week</div>
@@ -3236,6 +3277,10 @@
           <div class="lf-cal-wrap">
             <div class="lf-cal-month" id="lf-cal-month">&mdash;</div>
             <div class="lf-cal-grid" id="lf-cal-grid"></div>
+          </div>
+          <div class="lf-export-btns">
+            <div class="lf-themebtn lf-export-btn" id="lf-export-summary">&#x2B07;&#xFE0F; Summary CSV</div>
+            <div class="lf-themebtn lf-export-btn" id="lf-export-log">&#x2B07;&#xFE0F; Full log CSV</div>
           </div>
         </div>
 
@@ -5200,18 +5245,27 @@
     // this only the *last-started* read's result is allowed to land, even
     // if an earlier one's promise chain happens to resolve after it.
     var totalsReqSeq = 0;
+    function fmtClock(ts){ return new Date(ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }
     function refreshTodayTotals(){
       var seq = ++totalsReqSeq;
       getEventsInRange(startOfToday(), Date.now()).then(function(events){
         if(seq !== totalsReqSeq) return; // superseded by a newer call — discard
-        var waterTaps = events.filter(function(e){ return e.type === 'water' && !e.skipped; }).length;
-        var bathVisits = events.filter(function(e){ return e.type === 'bath' && !e.skipped; }).length;
+        var waters = events.filter(function(e){ return e.type === 'water' && !e.skipped; });
+        var baths = events.filter(function(e){ return e.type === 'bath' && !e.skipped; });
+        var waterTaps = waters.length;
+        var bathVisits = baths.length;
         var mlDrunk = waterTaps * S.waterPortionMl;
         var pct = Math.min(100, Math.round((mlDrunk / S.waterGoalMl) * 100));
         var wv = document.getElementById('lf-water-val'); if(wv) wv.textContent = pct + '%';
         var ws = document.getElementById('lf-water-sub');
         if(ws) ws.textContent = (mlDrunk/1000).toFixed(1) + ' / ' + (S.waterGoalMl/1000).toFixed(1) + ' L';
         var bv = document.getElementById('lf-bath-val'); if(bv) bv.textContent = String(bathVisits);
+        // Small stamp of the most recent log on each tile (blank until the
+        // first tap of the day)
+        var wl = document.getElementById('lf-water-last');
+        if(wl) wl.textContent = waters.length ? ('Last ' + fmtClock(waters[waters.length-1].ts)) : '';
+        var bl = document.getElementById('lf-bath-last');
+        if(bl) bl.textContent = baths.length ? ('Last ' + fmtClock(baths[baths.length-1].ts)) : '';
         checkBathFlag(bathVisits);
       });
       updateNextReminderCard();
@@ -5450,6 +5504,7 @@
         renderCharts(all.slice(all.length - lfStatsRange));
         renderCalendar(all);
         renderMoodStrip(all);
+        renderTodayLog(all);
       });
     }
     function initStatsToggle(){
@@ -5571,6 +5626,84 @@
         return '<div class="lf-mood-strip-day"><span>' + (v ? MOOD_EMOJI[v] : '—') + '</span><span class="lf-mood-strip-lbl">' + lbl + '</span></div>';
       }).join('');
       strip.innerHTML = html;
+    }
+
+    // ---------- Today's logged times (Stats) ----------
+    function renderTodayLog(buckets){
+      var el = document.getElementById('lf-today-log');
+      if(!el) return;
+      var todayEvents = buckets[buckets.length-1].events;
+      function timesFor(type){
+        return todayEvents.filter(function(e){ return e.type === type && !e.skipped; })
+          .map(function(e){ return fmtClock(e.ts); }).join(' · ');
+      }
+      var rows = [
+        { ico: '\u{1F4A7}', times: timesFor('water') },
+        { ico: '\u{1F6BD}', times: timesFor('bath') }
+      ];
+      el.innerHTML = rows.map(function(r){
+        return '<div class="lf-today-row"><span class="ico">' + r.ico + '</span><span class="times">' + (r.times || '— no logs yet today') + '</span></div>';
+      }).join('');
+    }
+
+    // ---------- CSV export (Summary per day / Full log with times) ----------
+    function csvEscape(v){
+      var s = String(v == null ? '' : v);
+      return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }
+    function downloadCsv(filename, rows){
+      var text = rows.map(function(r){ return r.map(csvEscape).join(','); }).join('\r\n');
+      // BOM so Excel opens it as UTF-8 (emoji-free content, but locale-safe)
+      var blob = new Blob(['﻿' + text], { type: 'text/csv;charset=utf-8' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    }
+    function isoDay(ts){
+      var d = new Date(ts);
+      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    }
+    function rangeLabel(){ return lfStatsRange === 7 ? 'week' : lfStatsRange === 30 ? 'month' : 'year'; }
+    // One row per day over the currently selected range (Week/Month/Year):
+    // the same aggregates the Stats charts show, plus mood and med checkoffs.
+    function exportSummaryCsv(){
+      bucketedEvents(lfStatsRange).then(function(buckets){
+        var rows = [['Date','Water glasses','Water L','Bathroom visits','Fasted h','Fast completed','Mood (1-5)','Morning meds','Evening meds']];
+        buckets.forEach(function(b){
+          var st = dayStatsFor(b);
+          var moods = b.events.filter(function(e){ return e.type === 'mood'; });
+          var mood = moods.length ? moods[moods.length-1].value : '';
+          var mm = b.events.some(function(e){ return e.type === 'medMorning'; }) ? 'yes' : '';
+          var me = b.events.some(function(e){ return e.type === 'medEvening'; }) ? 'yes' : '';
+          rows.push([isoDay(b.start), st.waterCount, (st.waterCount*S.waterPortionMl/1000).toFixed(2),
+            st.bathCount, st.fastedHours.toFixed(2), st.completedFast ? 'yes' : '', mood, mm, me]);
+        });
+        downloadCsv('standby-summary-' + rangeLabel() + '-' + isoDay(Date.now()) + '.csv', rows);
+      });
+    }
+    // Every raw event in the selected range with its exact date and time —
+    // this is the "when exactly did I log" record.
+    var LOG_LABELS = { water:'Water', bath:'Bathroom', wake:'Wake up', sleep:'Sleep',
+      fastStart:'Fasting started', fastEnd:'Fasting ended', mood:'Mood', medMorning:'Morning meds', medEvening:'Evening meds' };
+    function exportLogCsv(){
+      var start = startOfToday() - (lfStatsRange-1)*86400000;
+      getEventsInRange(start, Date.now() + 1).then(function(events){
+        var rows = [['Date','Time','Event','Value','Skipped']];
+        events.forEach(function(e){
+          rows.push([isoDay(e.ts), fmtClock(e.ts), LOG_LABELS[e.type] || e.type,
+            e.value != null ? e.value : '', e.skipped ? 'yes' : '']);
+        });
+        downloadCsv('standby-log-' + rangeLabel() + '-' + isoDay(Date.now()) + '.csv', rows);
+      });
+    }
+    function initExportButtons(){
+      var sumBtn = document.getElementById('lf-export-summary');
+      var logBtn = document.getElementById('lf-export-log');
+      if(sumBtn) sumBtn.addEventListener('click', exportSummaryCsv);
+      if(logBtn) logBtn.addEventListener('click', exportLogCsv);
     }
 
     // ---------- Medicine tracker (Morning / Evening) ----------
@@ -5731,6 +5864,7 @@
       initButtons();
       initReminderButtons();
       initStatsToggle();
+      initExportButtons();
       initSettingsUI();
       initMoodButtons();
       initMedButtons();
