@@ -2412,6 +2412,17 @@
   }
   .f-life .lf-notif-toggle.on .lf-notif-knob { transform: translateX(calc(clamp(36px, 7cqw, 52px) - clamp(20px, 4cqh, 28px))); }
   .f-life .lf-themerow { display: flex; gap: 6px; }
+  /* Quick-pick chips under the interval fields, so common cadences don't
+     need typing on a number keypad — the field above still accepts any
+     custom value, this is just a shortcut. */
+  .f-life .lf-quickpick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(4px, 1cqw, 8px);
+    margin: clamp(-4px, -0.8cqh, -2px) 0 clamp(2px, 0.6cqh, 6px) 0;
+    padding-left: clamp(2px, 0.6cqw, 6px);
+  }
+  .f-life .lf-qp-btn { padding: clamp(3px, 0.8cqh, 6px) clamp(7px, 1.4cqw, 12px); font-size: clamp(7px, 1.6cqh, 12px); }
   .f-life .lf-themebtn {
     padding: clamp(4px, 1cqh, 8px) clamp(8px, 1.6cqw, 14px);
     border-radius: 999px;
@@ -3292,9 +3303,23 @@
             <div class="lf-set-row"><span class="lf-set-lbl">Eating window opens</span><input type="time" id="lf-set-eatStart" class="lf-set-input"></div>
             <div class="lf-set-row"><span class="lf-set-lbl">Eating window closes</span><input type="time" id="lf-set-eatEnd" class="lf-set-input"></div>
             <div class="lf-set-row"><span class="lf-set-lbl">Water reminder every</span><input type="number" min="10" max="240" id="lf-set-waterIntervalMin" class="lf-set-input lf-set-num"><span class="lf-set-unit">min</span></div>
+            <div class="lf-quickpick" id="lf-quickpick-waterIntervalMin">
+              <div class="lf-themebtn lf-qp-btn" data-min="30">30m</div>
+              <div class="lf-themebtn lf-qp-btn" data-min="45">45m</div>
+              <div class="lf-themebtn lf-qp-btn" data-min="60">1h</div>
+              <div class="lf-themebtn lf-qp-btn" data-min="90">1h30</div>
+              <div class="lf-themebtn lf-qp-btn" data-min="120">2h</div>
+            </div>
             <div class="lf-set-row"><span class="lf-set-lbl">Water goal</span><input type="number" min="0.5" max="10" step="0.1" id="lf-set-waterGoalL" class="lf-set-input lf-set-num"><span class="lf-set-unit">L</span></div>
             <div class="lf-set-row"><span class="lf-set-lbl">Water portion / tap</span><input type="number" min="50" max="1000" step="50" id="lf-set-waterPortionMl" class="lf-set-input lf-set-num"><span class="lf-set-unit">mL</span></div>
             <div class="lf-set-row"><span class="lf-set-lbl">Bathroom reminder every</span><input type="number" min="10" max="240" id="lf-set-bathIntervalMin" class="lf-set-input lf-set-num"><span class="lf-set-unit">min</span></div>
+            <div class="lf-quickpick" id="lf-quickpick-bathIntervalMin">
+              <div class="lf-themebtn lf-qp-btn" data-min="30">30m</div>
+              <div class="lf-themebtn lf-qp-btn" data-min="45">45m</div>
+              <div class="lf-themebtn lf-qp-btn" data-min="60">1h</div>
+              <div class="lf-themebtn lf-qp-btn" data-min="90">1h30</div>
+              <div class="lf-themebtn lf-qp-btn" data-min="120">2h</div>
+            </div>
             <div class="lf-set-row"><span class="lf-set-lbl">Flag bathroom if over</span><input type="number" min="3" max="30" id="lf-set-bathFlagThreshold" class="lf-set-input lf-set-num"><span class="lf-set-unit">/day</span></div>
             <div class="lf-set-row">
               <span class="lf-set-lbl">Notifications</span>
@@ -5550,6 +5575,13 @@
       });
       var goalEl = document.getElementById('lf-set-waterGoalL');
       if(goalEl) goalEl.value = (S.waterGoalMl/1000).toFixed(1);
+      ['waterIntervalMin', 'bathIntervalMin'].forEach(function(key){
+        var qp = document.getElementById('lf-quickpick-' + key);
+        if(!qp) return;
+        qp.querySelectorAll('.lf-qp-btn').forEach(function(b){
+          b.classList.toggle('active', parseInt(b.dataset.min, 10) === S[key]);
+        });
+      });
       var notifEl = document.getElementById('lf-set-notifications');
       if(notifEl) notifEl.classList.toggle('on', !!S.notifications);
       var themeRow = document.getElementById('lf-set-theme');
@@ -5773,7 +5805,22 @@
           var v = parseFloat(el.value);
           if(!isNaN(v) && v > 0) S[key] = v;
           saveSettings();
+          populateSettingsUI(); // syncs the quick-pick chip highlight to the typed value
           refreshTodayTotals(); // also re-evaluates the bathroom flag under the new threshold
+        });
+      });
+      // Quick-pick chips (30m/45m/1h/1h30/2h) are a shortcut onto the same
+      // interval fields above — clicking one just fills in that number.
+      ['waterIntervalMin', 'bathIntervalMin'].forEach(function(key){
+        var qp = document.getElementById('lf-quickpick-' + key);
+        if(!qp) return;
+        qp.querySelectorAll('.lf-qp-btn').forEach(function(b){
+          b.addEventListener('click', function(){
+            S[key] = parseInt(b.dataset.min, 10);
+            saveSettings();
+            populateSettingsUI();
+            refreshTodayTotals();
+          });
         });
       });
       var goalEl = document.getElementById('lf-set-waterGoalL');
