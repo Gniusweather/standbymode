@@ -4061,8 +4061,12 @@
   function rainNowcast(){
     if(!astroData || !astroData.m15times) return { txt:'No data', rain:false };
     var times = astroData.m15times, vals = astroData.m15precip, now = Date.now();
-    var start = 0;
+    var start = -1;
     for(var i=0;i<times.length;i++){ if(new Date(times[i]).getTime() >= now){ start = i; break; } }
+    // Every provided timestamp is already in the past (stale/offline for a
+    // while) — report "no data" rather than silently nowcasting off old
+    // precipitation values as if they were upcoming.
+    if(start < 0) return { txt:'No data', rain:false };
     for(var k=0;k<8 && start+k<vals.length;k++){
       if(vals[start+k] > 0.1){
         if(k === 0) return { txt:'Raining', rain:true };
@@ -4174,7 +4178,11 @@
   function hourIndexNow(times){
     var now = Date.now();
     for(var i=0;i<times.length;i++){ if(new Date(times[i]).getTime() >= now - 3600000) return i; }
-    return 0;
+    // Every provided hour is already stale — return past the end so callers
+    // (bestOutsideWindow, bestWindowComfort, renderMarine's spark slices)
+    // see an empty range and report "no data" instead of scoring/charting
+    // yesterday's hours as if they were upcoming.
+    return times.length;
   }
   function buildSpark(elId, vals, nowIdx){
     var el = document.getElementById(elId);
@@ -4913,8 +4921,10 @@
       localStorage.setItem('installNudgeDismissed', '1');
     }
     if(closeBtn) closeBtn.addEventListener('click', dismiss);
-    // A tap anywhere else on the nudge also counts as "seen" once shown
-    nudge.addEventListener('click', function(ev){ if(ev.target === closeBtn) return; });
+    // A tap anywhere else on the nudge also counts as "seen" once shown.
+    // (The close button has its own listener above, which would double-fire
+    // dismiss() harmlessly since it's idempotent — but skip it anyway.)
+    nudge.addEventListener('click', function(ev){ if(ev.target === closeBtn) return; dismiss(); });
   })();
 
   // ---------- First-launch swipe hint: nudge the carousel a few px and back
