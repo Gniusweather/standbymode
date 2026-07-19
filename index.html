@@ -3054,6 +3054,8 @@
               <div class="lf-themebtn lf-qp-btn" data-min="120">2h</div>
             </div>
             <div class="lf-set-row"><span class="lf-set-lbl">Flag bathroom if over</span><input type="number" min="3" max="30" id="lf-set-bathFlagThreshold" class="lf-set-input lf-set-num"><span class="lf-set-unit">/day</span></div>
+            <div class="lf-set-row"><span class="lf-set-lbl">Morning meds at</span><input type="time" id="lf-set-medMorningTime" class="lf-set-input"></div>
+            <div class="lf-set-row"><span class="lf-set-lbl">Evening meds at</span><input type="time" id="lf-set-medEveningTime" class="lf-set-input"></div>
             <div class="lf-set-row">
               <span class="lf-set-lbl">Notifications</span>
               <div class="lf-notif-toggle" id="lf-set-notifications"><span class="lf-notif-knob"></span></div>
@@ -4966,6 +4968,10 @@
       bathSkipSnoozeMin: 10,
       bathFlagThreshold: 8,   // visits/day above this are flagged (typical adult range is ~6-8/day)
       bathFlagNotifiedDate: '',
+      medMorningTime: '08:00',
+      medEveningTime: '20:00',
+      nextMedMorningDueTs: 0,
+      nextMedEveningDueTs: 0,
       notifications: true,
       theme: 'dark',       // 'dark' | 'light' | 'auto'
       awake: false,
@@ -5204,6 +5210,15 @@
       water: { ico: '\u{1F4A7}', txt: 'Time to drink water.', intervalKey: 'waterIntervalMin', snoozeKey: 'waterSkipSnoozeMin', dueKey: 'nextWaterDueTs', doneLabel: '✓ Drank', ntfyTags: 'droplet' },
       bath:  { ico: '\u{1F6BD}', txt: 'Bathroom Break', intervalKey: 'bathIntervalMin', snoozeKey: 'bathSkipSnoozeMin', dueKey: 'nextBathDueTs', doneLabel: 'Done', ntfyTags: 'toilet' }
     };
+    // Medicine reminders fire once at a fixed clock time (not on a repeating
+    // interval like water/bath), and only if that dose isn't already logged
+    // for today — see checkReminders below, which checks the event log
+    // before showing/pushing anything.
+    var MED_REM_META = {
+      medMorning: { ico: '\u{1F305}', txt: 'Time for morning meds', timeKey: 'medMorningTime', dueKey: 'nextMedMorningDueTs', doneLabel: '✓ Taken', ntfyTags: 'pill', label: 'Morning meds' },
+      medEvening: { ico: '\u{1F319}', txt: 'Time for evening meds', timeKey: 'medEveningTime', dueKey: 'nextMedEveningDueTs', doneLabel: '✓ Taken', ntfyTags: 'pill', label: 'Evening meds' }
+    };
+    function remMetaFor(type){ return REM_META[type] || MED_REM_META[type]; }
     var remQueue = [];
     var remActive = null;
     var remCheckTimer = null;
@@ -5212,6 +5227,16 @@
       var meta = REM_META[type];
       var mins = minutesOverride != null ? minutesOverride : S[meta.intervalKey];
       S[meta.dueKey] = Date.now() + mins*60000;
+      saveSettings();
+    }
+    // Medicine's "next due" is the next occurrence of its clock time — today
+    // if that time hasn't passed yet, otherwise tomorrow.
+    function scheduleNextMedTime(type){
+      var meta = MED_REM_META[type];
+      var p = timeStrParts(S[meta.timeKey]);
+      var t = dateAt(new Date(), p[0], p[1]).getTime();
+      if(t <= Date.now()) t += 86400000;
+      S[meta.dueKey] = t;
       saveSettings();
     }
     function notify(title, body, ntfyTags){
@@ -5296,11 +5321,17 @@
       for(var b = now + S.bathIntervalMin*60000; b < horizon; b += S.bathIntervalMin*60000){
         ntfyPublish('Bathroom break', '🚽 Bathroom reminder', (b-now)/1000, 'toilet');
       }
+      Object.keys(MED_REM_META).forEach(function(type){
+        var meta = MED_REM_META[type];
+        var p = timeStrParts(S[meta.timeKey]);
+        var t2 = dateAt(new Date(), p[0], p[1]).getTime();
+        if(t2 > now && t2 < horizon) ntfyPublish(meta.txt, meta.ico + ' Medicine reminder', (t2-now)/1000, meta.ntfyTags);
+      });
       S.ntfyScheduledDate = todayKey;
       saveSettings();
     }
     function showReminder(type){
-      var meta = REM_META[type];
+      var meta = remMetaFor(type);
       remActive = type;
       var el = document.getElementById('lf-reminder');
       var icoEl = document.getElementById('lf-rem-ico');
@@ -5326,6 +5357,16 @@
     function resolveReminder(action){
       if(!remActive) return;
       var type = remActive;
+      if(MED_REM_META[type]){
+        // "Done" marks the dose taken via the same path as tapping the
+        // tile; either way the dose doesn't get asked about again until
+        // tomorrow (meds aren't re-prompted later the same day like a
+        // snoozed water/bathroom reminder).
+        if(action !== 'skip') toggleMed(type === 'medMorning' ? 'morning' : 'evening');
+        scheduleNextMedTime(type);
+        hideReminderAndAdvance();
+        return;
+      }
       var meta = REM_META[type];
       logEvent(type, { skipped: action === 'skip' });
       scheduleNext(type, action === 'skip' ? S[meta.snoozeKey] : null);
@@ -5371,6 +5412,18 @@
             if(remActive === null) showReminder(type); else remQueue.push(type);
           }
         });
+        Object.keys(MED_REM_META).forEach(function(type){
+          if(S[MED_REM_META[type].dueKey] && now >= S[MED_REM_META[type].dueKey] && remActive !== type && remQueue.indexOf(type) === -1){
+            S[MED_REM_META[type].dueKey] = 0;
+            saveSettings();
+            // Only alert if today's dose isn't already logged — e.g. taken
+            // early straight from the tile, well before the reminder time.
+            getEventsInRange(startOfToday(), Date.now() + 1, type).then(function(evs){
+              if(evs.length){ scheduleNextMedTime(type); return; }
+              if(remActive === null) showReminder(type); else remQueue.push(type);
+            });
+          }
+        });
       }
       updateNextReminderCard();
     }
@@ -5380,6 +5433,8 @@
       // from the persisted due timestamps.
       if(!S.nextWaterDueTs) scheduleNext('water');
       if(!S.nextBathDueTs) scheduleNext('bath');
+      if(!S.nextMedMorningDueTs) scheduleNextMedTime('medMorning');
+      if(!S.nextMedEveningDueTs) scheduleNextMedTime('medEvening');
       if(remCheckTimer) clearInterval(remCheckTimer);
       remCheckTimer = setInterval(checkReminders, 60000);
       checkReminders(); // catch anything already overdue right away
@@ -5456,6 +5511,8 @@
       var candidates = [];
       if(S.nextWaterDueTs) candidates.push({ type:'Water', ts:S.nextWaterDueTs });
       if(S.nextBathDueTs) candidates.push({ type:'Bathroom', ts:S.nextBathDueTs });
+      if(S.nextMedMorningDueTs) candidates.push({ type:MED_REM_META.medMorning.label, ts:S.nextMedMorningDueTs });
+      if(S.nextMedEveningDueTs) candidates.push({ type:MED_REM_META.medEvening.label, ts:S.nextMedEveningDueTs });
       if(!candidates.length){ nv.textContent = '—'; ns.textContent = 'Scheduling…'; return; }
       candidates.sort(function(a,b){ return a.ts - b.ts; });
       var mins = Math.max(0, Math.round((candidates[0].ts - Date.now())/60000));
@@ -5722,7 +5779,7 @@
 
     // ---------- Settings tab ----------
     function populateSettingsUI(){
-      ['wakeTime','sleepTime','eatStart','eatEnd','waterIntervalMin','waterPortionMl','bathIntervalMin','bathFlagThreshold'].forEach(function(key){
+      ['wakeTime','sleepTime','eatStart','eatEnd','waterIntervalMin','waterPortionMl','bathIntervalMin','bathFlagThreshold','medMorningTime','medEveningTime'].forEach(function(key){
         var el = document.getElementById('lf-set-' + key);
         if(el) el.value = S[key];
       });
@@ -5908,7 +5965,16 @@
             tx.oncomplete = function(){ refreshMedCards(); };
           });
         } else {
-          logEvent(type).then(refreshMedCards);
+          logEvent(type).then(function(){
+            refreshMedCards();
+            // Taking it straight from the tile also resolves a reminder
+            // banner currently showing for this same dose (called directly
+            // rather than via resolveReminder, which would call back into
+            // toggleMed and recurse), so it doesn't linger after being
+            // handled a different way.
+            if(remActive === type){ scheduleNextMedTime(type); hideReminderAndAdvance(); }
+            else{ var qi = remQueue.indexOf(type); if(qi >= 0) remQueue.splice(qi, 1); }
+          });
         }
       });
     }
@@ -5950,6 +6016,15 @@
           if(el.value) S[key] = el.value;
           saveSettings();
           updateFastingRing();
+        });
+      });
+      [{key:'medMorningTime',type:'medMorning'}, {key:'medEveningTime',type:'medEvening'}].forEach(function(cfg){
+        var el = document.getElementById('lf-set-' + cfg.key);
+        if(el) el.addEventListener('change', function(){
+          if(el.value) S[cfg.key] = el.value;
+          saveSettings();
+          if(S.awake) scheduleNextMedTime(cfg.type); // re-derive today's/tomorrow's due time from the new clock time
+          updateNextReminderCard();
         });
       });
       ['waterIntervalMin','waterPortionMl','bathIntervalMin','bathFlagThreshold'].forEach(function(key){
