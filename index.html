@@ -3076,7 +3076,7 @@
               <input type="text" id="lf-set-ntfyTopic" class="lf-set-input lf-ntfy-topic" spellcheck="false" autocapitalize="off" autocomplete="off">
             </div>
             <div class="lf-ntfy-help">
-              Install the free <b>ntfy</b> app, then subscribe to the topic above (or tap Subscribe). A push is sent the moment a reminder comes due while StandBy is open — nothing is sent while the app is closed.
+              Install the free <b>ntfy</b> app, then subscribe to the topic above (or tap Subscribe). Reminders are queued for the day as soon as you tap "I'm Awake," so they still arrive even with StandBy fully closed.
             </div>
             <div class="lf-ntfy-btns">
               <div class="lf-themebtn lf-ntfy-btn" id="lf-ntfy-subscribe">Subscribe</div>
@@ -4975,7 +4975,8 @@
       nextBathDueTs: 0,
       ntfyEnabled: false,
       ntfyTopic: '',            // auto-generated on first load if empty
-      ntfyServer: 'https://ntfy.sh'
+      ntfyServer: 'https://ntfy.sh',
+      ntfyScheduledDate: ''     // guards against re-scheduling the same day
     };
     function loadSettings(){
       try{
@@ -5104,11 +5105,14 @@
       updateStatusPill();
       requestNotifyPermission();
       if(typeof startReminders === 'function') startReminders();
+      scheduleDayNtfy(); // queue today's push reminders via ntfy so they still arrive with the app closed
     }
     function goSleep(){
       if(!S.awake) return;
       S.awake = false;
       S.lastSleepTs = Date.now();
+      // Allow ntfy to re-queue a fresh day on the next wake.
+      S.ntfyScheduledDate = '';
       saveSettings();
       logEvent('sleep');
       updateStatusPill();
@@ -5214,10 +5218,14 @@
       // Alerts that pass ntfyTags also push through the ntfy app immediately.
       // This leg runs before the Notification-permission guard below on
       // purpose: on iOS the web-notification permission is rarely granted,
-      // so ntfy is the path that actually reaches the phone. Every push is
-      // published at the moment its alert fires — and alerts only fire while
-      // the app is open (checkReminders requires a visible page) — so no
-      // pushes arrive while StandBy is closed, per the owner's preference.
+      // so ntfy is the path that actually reaches the phone. This live push
+      // only fires while the app is open (checkReminders requires a visible
+      // page) — that's fine for the bathroom-frequency flag, which can only
+      // ever be event-driven, but water/bathroom due-reminders ALSO get
+      // pre-queued for the whole day by scheduleDayNtfy() below, so those
+      // keep arriving on schedule even with StandBy fully closed. A reminder
+      // that's both pre-queued and due while the app happens to be open can
+      // double-ping — an accepted trade-off for reliable background delivery.
       // ntfyPublish is a no-op unless the ntfy toggle is on and a topic is set.
       if(ntfyTags) ntfyPublish(body || title, title, 0, ntfyTags);
       if(!S.notifications || !('Notification' in window) || Notification.permission !== 'granted') return;
@@ -5263,11 +5271,34 @@
           .then(function(r){ return r.ok; }).catch(function(){ return false; });
       }catch(e){ return Promise.resolve(false); }
     }
-    // NOTE: pushes used to be pre-queued for the whole day here (delayed ntfy
-    // publishes fired even with StandBy closed, and couldn't be canceled when
-    // a glass was logged early). Removed by owner request: a push now goes
-    // out only at the moment a reminder actually comes due while the app is
-    // open — see the ntfyTags leg in notify(), fed from showReminder().
+    // Queue every remaining water/bathroom reminder for today as delayed ntfy
+    // pushes, once per day, so they still arrive even with StandBy fully
+    // closed — the live push fired from showReminder() below only fires
+    // while the app is open, which isn't enough on its own for a reminder
+    // system. Trade-off: because ntfy can't cancel or reschedule an
+    // already-queued message, an early glass or an early "I'm Sleeping"
+    // won't retract a push already queued for later — reminders sent this
+    // way are approximate on timing, not exact. Bathroom-frequency flags
+    // can't be pre-queued at all (they depend on taps that haven't happened
+    // yet), so those only ever fire live, while the app is open.
+    function scheduleDayNtfy(){
+      if(!S.ntfyEnabled || !S.ntfyTopic) return;
+      var todayKey = new Date().toDateString();
+      if(S.ntfyScheduledDate === todayKey) return;
+      var now = Date.now();
+      var sp = timeStrParts(S.sleepTime);
+      var sleepT = dateAt(new Date(), sp[0], sp[1]).getTime();
+      if(sleepT <= now) sleepT += 86400000;
+      var horizon = Math.min(sleepT, now + 3*86400000); // ntfy delay cap
+      for(var t = now + S.waterIntervalMin*60000; t < horizon; t += S.waterIntervalMin*60000){
+        ntfyPublish('Time to drink water', '💧 Water reminder', (t-now)/1000, 'droplet');
+      }
+      for(var b = now + S.bathIntervalMin*60000; b < horizon; b += S.bathIntervalMin*60000){
+        ntfyPublish('Bathroom break', '🚽 Bathroom reminder', (b-now)/1000, 'toilet');
+      }
+      S.ntfyScheduledDate = todayKey;
+      saveSettings();
+    }
     function showReminder(type){
       var meta = REM_META[type];
       remActive = type;
@@ -5978,14 +6009,16 @@
       var ntfyToggle = document.getElementById('lf-set-ntfyEnabled');
       if(ntfyToggle) ntfyToggle.addEventListener('click', function(){
         S.ntfyEnabled = !S.ntfyEnabled;
+        S.ntfyScheduledDate = ''; // let today's queue re-run under the new state
         saveSettings();
         populateSettingsUI();
+        if(S.ntfyEnabled && S.awake) scheduleDayNtfy();
         setNtfyStatus(S.ntfyEnabled ? 'Push enabled' : 'Push off', S.ntfyEnabled ? 'ok' : '');
       });
       var ntfyTopicEl = document.getElementById('lf-set-ntfyTopic');
       if(ntfyTopicEl) ntfyTopicEl.addEventListener('change', function(){
         var v = (ntfyTopicEl.value || '').trim().replace(/[^a-zA-Z0-9_\-]/g, '');
-        if(v){ S.ntfyTopic = v; saveSettings(); populateSettingsUI(); }
+        if(v){ S.ntfyTopic = v; S.ntfyScheduledDate = ''; saveSettings(); populateSettingsUI(); }
       });
       var subBtn = document.getElementById('lf-ntfy-subscribe');
       if(subBtn) subBtn.addEventListener('click', function(){
