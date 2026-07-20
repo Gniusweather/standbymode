@@ -5139,7 +5139,6 @@
       updateStatusPill();
       requestNotifyPermission();
       if(typeof startReminders === 'function') startReminders();
-      scheduleDayNtfy(); // queue today's push reminders via ntfy so they still arrive with the app closed
     }
     function goSleep(){
       if(!S.awake) return;
@@ -5467,6 +5466,16 @@
       if(!S.nextBathDueTs) scheduleNext('bath');
       if(!S.nextMedMorningDueTs) scheduleNextMedTime('medMorning');
       if(!S.nextMedEveningDueTs) scheduleNextMedTime('medEvening');
+      // Ensures today's background ntfy queue exists not just on a fresh
+      // "I'm Awake" tap but on every reload while already awake too — e.g.
+      // the auto-reload this app triggers on every new deploy (see the
+      // service-worker controllerchange handler). goAwake() alone would
+      // only fire the FIRST time you wake up; S.awake then stays true
+      // across any number of later reloads, silently skipping this queue
+      // every time since scheduleDayNtfy() lived only in goAwake(), which
+      // early-returns once already awake. Idempotent — guarded by
+      // ntfyScheduledDate, so calling it again the same day is a no-op.
+      scheduleDayNtfy();
       if(remCheckTimer) clearInterval(remCheckTimer);
       remCheckTimer = setInterval(checkReminders, 60000);
       checkReminders(); // catch anything already overdue right away
