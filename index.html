@@ -4992,7 +4992,7 @@
       waterGoalMl: 3000,
       waterPortionMl: 250,
       waterSkipSnoozeMin: 15,
-      bathIntervalMin: 60,
+      bathIntervalMin: 0,
       bathSkipSnoozeMin: 10,
       bathFlagThreshold: 8,   // visits/day above this are flagged (typical adult range is ~6-8/day)
       bathFlagNotifiedDate: '',
@@ -5349,8 +5349,10 @@
       for(var t = now + S.waterIntervalMin*60000; t < horizon; t += S.waterIntervalMin*60000){
         ntfyPublish('Time to drink water', '💧 Water reminder', (t-now)/1000, 'droplet');
       }
-      for(var b = now + S.bathIntervalMin*60000; b < horizon; b += S.bathIntervalMin*60000){
-        ntfyPublish('Bathroom break', '🚽 Bathroom reminder', (b-now)/1000, 'toilet');
+      if(S.bathIntervalMin > 0){
+        for(var b = now + S.bathIntervalMin*60000; b < horizon; b += S.bathIntervalMin*60000){
+          ntfyPublish('Bathroom break', '🚽 Bathroom reminder', (b-now)/1000, 'toilet');
+        }
       }
       Object.keys(MED_REM_META).forEach(function(type){
         var meta = MED_REM_META[type];
@@ -5433,7 +5435,9 @@
     function checkReminders(){
       if(S.awake && document.visibilityState === 'visible'){
         var now = Date.now();
-        ['water','bath'].forEach(function(type){
+        var remTypes = ['water'];
+        if(S.bathIntervalMin > 0) remTypes.push('bath');
+        remTypes.forEach(function(type){
           var meta = REM_META[type];
           if(S[meta.dueKey] && now >= S[meta.dueKey] && remActive !== type && remQueue.indexOf(type) === -1){
             // Clear immediately so this due reminder isn't re-queued every
@@ -5463,7 +5467,7 @@
       // again after a reload with reminders already scheduled just resumes
       // from the persisted due timestamps.
       if(!S.nextWaterDueTs) scheduleNext('water');
-      if(!S.nextBathDueTs) scheduleNext('bath');
+      if(!S.nextBathDueTs && S.bathIntervalMin > 0) scheduleNext('bath');
       if(!S.nextMedMorningDueTs) scheduleNextMedTime('medMorning');
       if(!S.nextMedEveningDueTs) scheduleNextMedTime('medEvening');
       // Ensures today's background ntfy queue exists not just on a fresh
@@ -5553,7 +5557,7 @@
       if(!S.awake){ nv.textContent = '—'; ns.textContent = 'Resumes when you wake'; return; }
       var candidates = [];
       if(S.nextWaterDueTs) candidates.push({ type:'Water', ts:S.nextWaterDueTs });
-      if(S.nextBathDueTs) candidates.push({ type:'Bathroom', ts:S.nextBathDueTs });
+      if(S.nextBathDueTs && S.bathIntervalMin > 0) candidates.push({ type:'Bathroom', ts:S.nextBathDueTs });
       if(S.nextMedMorningDueTs) candidates.push({ type:MED_REM_META.medMorning.label, ts:S.nextMedMorningDueTs });
       if(S.nextMedEveningDueTs) candidates.push({ type:MED_REM_META.medEvening.label, ts:S.nextMedEveningDueTs });
       if(!candidates.length){ nv.textContent = '—'; ns.textContent = 'Scheduling…'; return; }
@@ -5631,8 +5635,10 @@
       for(var t = wakeT + S.waterIntervalMin*60000; t < sleepT; t += S.waterIntervalMin*60000){
         items.push({ label: 'Drink Water', time: new Date(t), type: 'water', ico: '\u{1F4A7}' });
       }
-      for(var t2 = wakeT + S.bathIntervalMin*60000; t2 < sleepT; t2 += S.bathIntervalMin*60000){
-        items.push({ label: 'Bathroom', time: new Date(t2), type: 'bath', ico: '\u{1F6BD}' });
+      if(S.bathIntervalMin > 0){
+        for(var t2 = wakeT + S.bathIntervalMin*60000; t2 < sleepT; t2 += S.bathIntervalMin*60000){
+          items.push({ label: 'Bathroom', time: new Date(t2), type: 'bath', ico: '\u{1F6BD}' });
+        }
       }
       addOnce('Eating Window Opens', S.eatStart, 'fastEnd', '\u{1F37D}\u{FE0F}');
       addOnce('Fasting Begins', S.eatEnd, 'fastStart', '⛔');
