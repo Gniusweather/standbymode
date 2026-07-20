@@ -3474,6 +3474,11 @@
 
   let lastMinKey = '';
   function tick(){
+    // Nothing on screen is visible while hidden — skip all per-second DOM
+    // work entirely (clock hands, seconds bars, astro). The visibilitychange
+    // listener right after the interval runs one immediate tick on return,
+    // so the clock is correct the instant the display comes back.
+    if(document.hidden) return;
     const now = new Date();
     // Clock text and date only change once a minute — skip the whole block
     // (7 querySelectorAll sweeps) on the other 59 ticks.
@@ -3526,6 +3531,7 @@
     }
   }
   tick(); setInterval(tick, 1000);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) tick(); });
 
   // Analog dial tick marks
   (function(){
@@ -4122,7 +4128,16 @@
     return d < W ? (1 - d/W) : 0;
   }
 
-  function updateAstroLive(){
+  var lastAstroLiveTs = 0;
+  function updateAstroLive(force){
+    // Called from the 1s tick, but everything here moves on minute-plus
+    // timescales (sun arc ~0.002%/s, countdown shown in minutes, veil
+    // opacity steps invisibly small) — running every 30s is visually
+    // identical and drops ~29 of every 30 rounds of math + DOM writes.
+    // `force` (fresh astroData just landed) bypasses the throttle.
+    var nowMs = Date.now();
+    if(!force && nowMs - lastAstroLiveTs < 30000) return;
+    lastAstroLiveTs = nowMs;
     var now = new Date();
     applyNightVeil(now);
     // Moon: only rebuild when the day changes (phase moves slowly)
@@ -4382,7 +4397,7 @@
       if(astroData.sunsetStr)  setAll('ja-sunset',  astroData.sunsetStr.slice(11,16));
       if(astroData.sunrise && astroData.sunset) setAll('ja-daylen', fmtDayLen(astroData.sunset - astroData.sunrise));
       renderMarine();
-      updateAstroLive();
+      updateAstroLive(true); // fresh data — repaint now, don't wait out the throttle
       loadSeaTemp();
       return true;
     }catch(e){
@@ -4463,7 +4478,10 @@
     setTimeout(function(){ loaderEl.classList.remove('active'); }, 300);
   }
   refreshWeather();
-  setInterval(function(){ refreshWeather(); }, 10*60*1000);
+  // Skip the periodic fetch while hidden — no one is looking, and the
+  // visibilitychange handler below already refetches anything older than
+  // 2 minutes the moment the app returns to the foreground.
+  setInterval(function(){ if(!document.hidden) refreshWeather(); }, 10*60*1000);
   // Keep the relative "X min ago" label current between fetches
   setInterval(updateFreshness, 30*1000);
   // React immediately to connectivity changes: refetch when back online, flag
@@ -5213,7 +5231,11 @@
       if(remainEl) remainEl.textContent = fmtHM(f.remainMs) + ' remaining';
       if(iconEl) iconEl.textContent = f.eating ? '\u{1F37D}\u{FE0F}' : '⏳';
     }
-    setInterval(updateFastingRing, 1000);
+    // Ring progress spans hours and the remaining-time text is in whole
+    // minutes — a 10s cadence is indistinguishable from 1s and 10x cheaper.
+    // Skipped entirely while hidden; the visibilitychange handler below
+    // repaints immediately on return.
+    setInterval(function(){ if(!document.hidden) updateFastingRing(); }, 10000);
 
     // ---------- Water / Bathroom reminders ----------
     var REM_META = {
@@ -5459,6 +5481,8 @@
       updateNextReminderCard();
     }
     document.addEventListener('visibilitychange', function(){
+      // Repaint the (10s-throttled, hidden-skipped) fasting ring right away
+      if(document.visibilityState === 'visible') updateFastingRing();
       if(document.visibilityState === 'visible' && S.awake) checkReminders();
     });
 
@@ -5578,7 +5602,7 @@
         } else if(bestWrap){ bestWrap.style.display = 'none'; }
       } else if(bestWrap){ bestWrap.style.display = 'none'; }
     }
-    setInterval(updateConditionsCard, 30000);
+    setInterval(function(){ if(!document.hidden) updateConditionsCard(); }, 30000);
 
     // ---------- Timeline tab ----------
     // Builds today's schedule from settings alone (wake, hourly water/
