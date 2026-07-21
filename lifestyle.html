@@ -273,7 +273,7 @@ function hideRem(){$('rem').classList.remove('show');remActive=null;if(remQ.leng
 function resolve(action){if(!remActive)return;var t=remActive;log(t,{skipped:action==='skip'});schedNext(t,action==='skip'?S[META[t].sn]:null);hideRem();refreshTotals();}
 function quickLog(type){if(remActive===type){resolve('done');return;}var i=remQ.indexOf(type);if(i>=0)remQ.splice(i,1);log(type,{skipped:false});schedNext(type);refreshTotals();}
 function checkRem(){if(S.awake&&document.visibilityState==='visible'){var now=Date.now();['water','bath'].forEach(function(t){var m=META[t];if(S[m.due]&&now>=S[m.due]&&remActive!==t&&remQ.indexOf(t)<0){S[m.due]=0;save();if(remActive===null)showRem(t);else remQ.push(t);}});}}
-function startRem(){if(!S.nextWaterDueTs)schedNext('water');if(!S.nextBathDueTs)schedNext('bath');if(remTimer)clearInterval(remTimer);remTimer=setInterval(checkRem,60000);checkRem();}
+function startRem(){if(!S.nextWaterDueTs)schedNext('water');if(!S.nextBathDueTs&&S.bathIntervalMin>0)schedNext('bath');if(remTimer)clearInterval(remTimer);remTimer=setInterval(checkRem,60000);checkRem();}
 function stopRem(){if(remTimer)clearInterval(remTimer);remTimer=null;$('rem').classList.remove('show');remActive=null;remQ=[];}
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&S.awake)checkRem();});
 
@@ -287,7 +287,7 @@ function ntfy(msg,title,delaySec,tags){if(!S.ntfyEnabled||!S.ntfyTopic)return Pr
 function schedDayNtfy(){if(!S.ntfyEnabled||!S.ntfyTopic)return;var key=new Date().toDateString();if(S.ntfyScheduledDate===key)return;
   var now=Date.now(),sp=hm(S.sleepTime),sleepT=at(new Date(),sp[0],sp[1]).getTime();if(sleepT<=now)sleepT+=864e5;var horizon=Math.min(sleepT,now+3*864e5);
   for(var t=now+S.waterIntervalMin*60000;t<horizon;t+=S.waterIntervalMin*60000)ntfy('Time to drink water','💧 Water',(t-now)/1000,'droplet');
-  for(var b=now+S.bathIntervalMin*60000;b<horizon;b+=S.bathIntervalMin*60000)ntfy('Bathroom break','🚽 Bathroom',(b-now)/1000,'toilet');
+  if(S.bathIntervalMin>0)for(var b=now+S.bathIntervalMin*60000;b<horizon;b+=S.bathIntervalMin*60000)ntfy('Bathroom break','🚽 Bathroom',(b-now)/1000,'toilet');
   S.ntfyScheduledDate=key;save();}
 
 // ======================= wake / sleep =======================
@@ -333,7 +333,7 @@ function markMood(v){$('mood').querySelectorAll('span').forEach(function(el){el.
 function schedule(){var items=[],wp=hm(S.wakeTime),sp=hm(S.sleepTime),wake=at(new Date(),wp[0],wp[1]).getTime(),sl=at(new Date(),sp[0],sp[1]).getTime();if(sl<=wake)sl+=864e5;
   items.push({label:'Wake Up',time:new Date(wake),type:'wake',ico:'🌞'});
   for(var t=wake+S.waterIntervalMin*60000;t<sl;t+=S.waterIntervalMin*60000)items.push({label:'Drink Water',time:new Date(t),type:'water',ico:'💧'});
-  for(var b=wake+S.bathIntervalMin*60000;b<sl;b+=S.bathIntervalMin*60000)items.push({label:'Bathroom',time:new Date(b),type:'bath',ico:'🚽'});
+  if(S.bathIntervalMin>0)for(var b=wake+S.bathIntervalMin*60000;b<sl;b+=S.bathIntervalMin*60000)items.push({label:'Bathroom',time:new Date(b),type:'bath',ico:'🚽'});
   var es=hm(S.eatStart),ee=hm(S.eatEnd),spx=hm(S.sleepTime);
   items.push({label:'Eating Window Opens',time:at(new Date(),es[0],es[1]),type:'fastEnd',ico:'🍽️'});
   items.push({label:'Fasting Begins',time:at(new Date(),ee[0],ee[1]),type:'fastStart',ico:'⛔'});

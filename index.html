@@ -197,13 +197,13 @@
     text-overflow: ellipsis;
     line-height: 1.1;
   }
-  .f-classic .extra {
+  .f-classic .extra, .f-analog .extra {
     margin-top: clamp(10px, 3cqh, 28px);
     display: flex;
     flex-direction: column;
     gap: clamp(6px, 1.8cqh, 16px);
   }
-  .f-classic .extra-item {
+  .f-classic .extra-item, .f-analog .extra-item {
     display: flex;
     align-items: center;
     gap: 0.45em;
@@ -213,7 +213,7 @@
     white-space: nowrap;
     line-height: 1;
   }
-  .f-classic .extra-item .extra-ico {
+  .f-classic .extra-item .extra-ico, .f-analog .extra-item .extra-ico {
     font-size: 0.9em;
     filter: drop-shadow(0 0 6px rgba(109,184,255,0.35));
   }
@@ -302,6 +302,16 @@
     font-size: clamp(12px,3.4cqh,30px);
     color: rgba(255,255,255,0.62);
   }
+  .f-glass .fg-hilo {
+    font-weight: 600;
+    font-size: clamp(12px,3.4cqh,30px);
+    color: rgba(255,255,255,0.55);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  /* No high/low yet (first load, offline): hide the value and its divider */
+  .f-glass .fg-hilo:empty,
+  .f-glass .fg-wstrip-sep:has(+ .fg-hilo:empty) { display: none; }
 
   /* Big clock in the middle */
   .f-glass .fg-clock {
@@ -1109,6 +1119,14 @@
     letter-spacing: 0.02em;
     white-space: nowrap;
   }
+  .f-night .fn-hilo {
+    font-weight: 600;
+    font-size: clamp(11px, 3cqh, 28px);
+    color: rgba(200,215,245,0.6);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    margin-top: clamp(2px, 0.6cqh, 6px);
+  }
   .f-night .fn-grid {
     flex: 1 1 auto;
     display: grid;
@@ -1321,6 +1339,12 @@
     font-weight: 500;
     font-size: clamp(10px, 2.6cqh, 22px);
     color: rgba(190,200,235,0.62);
+    white-space: nowrap;
+  }
+  .f-astro .fa-moonnext {
+    font-weight: 500;
+    font-size: clamp(10px, 2.6cqh, 22px);
+    color: rgba(190,200,235,0.42);
     white-space: nowrap;
   }
   .f-astro .fa-main {
@@ -1737,6 +1761,14 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  .f-galaxy .fgx-wx {
+    font-size: clamp(11px, 3cqh, 26px);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: rgba(220,228,238,0.42);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
   .f-galaxy .fgx-clock {
     display: flex;
     align-items: baseline;
@@ -2096,6 +2128,18 @@
   html.life-portrait #face-life .lf-card-hd {
     font-size: clamp(7px, 2.4cqw, 12px);
   }
+  /* KNMI card text is cqh-sized for the rotated strip; re-base on cqw in
+     true portrait, same as the other labels above. */
+  html.life-portrait #face-life .lf-knmi-ico { font-size: clamp(18px, 9cqw, 42px); }
+  html.life-portrait #face-life .lf-knmi-temp { font-size: clamp(15px, 7cqw, 36px); }
+  html.life-portrait #face-life .lf-knmi-sval { font-size: clamp(10px, 4cqw, 20px); }
+  html.life-portrait #face-life .lf-knmi-lbl,
+  html.life-portrait #face-life .lf-knmi-slbl { font-size: clamp(6px, 2.2cqw, 11px); }
+  /* The narrow portrait box can't fit hero + three stats on one line
+     ("20.0 km" was ellipsised to "20.0…") — wrap the stats onto their own
+     full-width row instead. */
+  html.life-portrait #face-life .lf-knmi-row { flex-wrap: wrap; }
+  html.life-portrait #face-life .lf-knmi-stats { flex: 1 1 100%; }
   /* Same story for the numeric Settings inputs: taller container inflated
      the (cqh-based) font past what their (cqw-based) width fit, clipping
      the value. Widen them rather than shrink the text further. */
@@ -2269,6 +2313,63 @@
   .f-life .lf-cond-best .lf-cond-verdict-ico { font-size: 1.15em; }
   .f-life .lf-cond-best b { color: var(--lf-ink); }
   .f-life .lf-cond-best .lf-cond-sep { color: var(--lf-muted); font-weight: 600; }
+  /* KNMI weather card: icon + feels-like hero on the left, three mini
+     stats (visibility / rain / solar radiation) filling the rest. */
+  .f-life .lf-knmi-row {
+    display: flex;
+    align-items: center;
+    gap: clamp(8px, 2cqw, 22px);
+    min-width: 0;
+  }
+  .f-life .lf-knmi-ico { font-size: clamp(18px, 6.5cqh, 48px); line-height: 1; flex: 0 0 auto; }
+  .f-life .lf-knmi-hero { display: flex; flex-direction: column; gap: clamp(1px, 0.4cqh, 4px); min-width: 0; flex: 0 0 auto; }
+  .f-life .lf-knmi-temp {
+    font-size: clamp(15px, 5.5cqh, 44px);
+    font-weight: 800;
+    color: var(--lf-ink);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .f-life .lf-knmi-lbl {
+    font-size: clamp(7px, 1.7cqh, 14px);
+    font-weight: 600;
+    color: var(--lf-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .f-life .lf-knmi-stats {
+    flex: 1 1 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(4px, 1cqw, 12px);
+    min-width: 0;
+  }
+  .f-life .lf-knmi-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(1px, 0.4cqh, 4px);
+    min-width: 0;
+  }
+  .f-life .lf-knmi-sval {
+    font-size: clamp(10px, 3cqh, 24px);
+    font-weight: 700;
+    color: var(--lf-ink);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  .f-life .lf-knmi-slbl {
+    font-size: clamp(6px, 1.5cqh, 12px);
+    font-weight: 600;
+    color: var(--lf-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
 
   /* ---------- Timeline tab ---------- */
   .f-life .lf-tl-list {
@@ -2970,6 +3071,24 @@
                   <span class="lf-cond-sep" id="lf-cond-bestwrap"> &middot; best <b id="lf-cond-besttime">&mdash;</b></span>
                 </div>
               </div>
+              <!-- Live KNMI Bonaire weather. Fed entirely by the shared j-*
+                   classes that loadWeather() sweeps with setAll(), so this
+                   card needs no JS of its own and updates on every refresh. -->
+              <div class="lf-card wide" id="lf-card-knmi">
+                <div class="lf-card-hd">&#x26C5; Bonaire &middot; KNMI weather</div>
+                <div class="lf-knmi-row">
+                  <span class="lf-knmi-ico j-wico">&#x26C5;</span>
+                  <div class="lf-knmi-hero">
+                    <span class="lf-knmi-temp j-temp">--&deg;</span>
+                    <span class="lf-knmi-lbl">Feels like &middot; <span class="j-wtext">loading&hellip;</span></span>
+                  </div>
+                  <div class="lf-knmi-stats">
+                    <div class="lf-knmi-stat"><span class="lf-knmi-sval j-vis">--</span><span class="lf-knmi-slbl">&#x1F441;&#xFE0F; Visibility</span></div>
+                    <div class="lf-knmi-stat"><span class="lf-knmi-sval j-precip">--</span><span class="lf-knmi-slbl">&#x1F327;&#xFE0F; Rain</span></div>
+                    <div class="lf-knmi-stat"><span class="lf-knmi-sval j-rad">--</span><span class="lf-knmi-slbl">&#x2600;&#xFE0F; Solar</span></div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -3047,6 +3166,7 @@
             <div class="lf-set-row"><span class="lf-set-lbl">Water portion / tap</span><input type="number" min="50" max="1000" step="50" id="lf-set-waterPortionMl" class="lf-set-input lf-set-num"><span class="lf-set-unit">mL</span></div>
             <div class="lf-set-row"><span class="lf-set-lbl">Bathroom reminder every</span><input type="number" min="10" max="240" id="lf-set-bathIntervalMin" class="lf-set-input lf-set-num"><span class="lf-set-unit">min</span></div>
             <div class="lf-quickpick" id="lf-quickpick-bathIntervalMin">
+              <div class="lf-themebtn lf-qp-btn" data-min="0">Off</div>
               <div class="lf-themebtn lf-qp-btn" data-min="30">30m</div>
               <div class="lf-themebtn lf-qp-btn" data-min="45">45m</div>
               <div class="lf-themebtn lf-qp-btn" data-min="60">1h</div>
@@ -3096,6 +3216,7 @@
             <span class="j-hh">05</span><span class="fgx-colon">:</span><span class="j-mm">13</span><span class="fgx-ampm j-ampm">AM</span>
           </div>
           <div class="fgx-date"><span class="j-dow">WED</span> &middot; <span class="j-fulldate">June 20, 2026</span></div>
+          <div class="fgx-wx"><span class="j-wico">&#x26C5;</span> <span class="j-temp">--&deg;</span></div>
           <div class="fgx-secbar-wrap"><div class="fgx-secbar" id="fgx-secbar"></div></div>
         </div>
       </section>
@@ -3114,6 +3235,7 @@
           <div class="temp"><span class="ico j-wico">&#x26C5;</span><span class="j-temp">--&deg;</span></div>
           <div class="place j-place">Locating&hellip;</div>
           <div class="place" style="font-size: 0.85em; margin-top: -2px; opacity: 0.6;">Actual <span class="j-actualtemp">--&deg;</span></div>
+          <div class="place j-hilo" style="font-size: 0.85em; margin-top: -2px; opacity: 0.6;"></div>
           <div class="extra">
             <span class="extra-item"><span class="extra-ico">&#x1F4A8;</span><span class="j-wind">-- kt</span></span>
             <span class="extra-item"><span class="extra-ico">&#x2600;&#xFE0F;</span><span>UV&nbsp;<span class="j-uv">--</span></span></span>
@@ -3130,6 +3252,8 @@
           <span class="fg-wstrip-cond j-wtext">Loading&hellip;</span>
           <span class="fg-wstrip-sep"></span>
           <span class="fg-wstrip-place">&#x1F4CD; <span class="j-place">Locating&hellip;</span></span>
+          <span class="fg-wstrip-sep"></span>
+          <span class="fg-hilo j-hilo"></span>
         </div>
         <div class="fg-clock">
           <div class="fg-time"><span class="j-hh">05</span><span class="colon">:</span><span class="j-mm">13</span><span class="fg-ampm j-ampm">AM</span></div>
@@ -3174,6 +3298,11 @@
           <div class="temp"><span class="ico j-wico">&#x26C5;</span><span class="j-temp">--&deg;</span></div>
           <div class="place j-place">Locating&hellip;</div>
           <div class="place" style="font-size: 0.85em; margin-top: -2px; opacity: 0.6;">Actual <span class="j-actualtemp">--&deg;</span></div>
+          <div class="extra">
+            <span class="extra-item"><span class="extra-ico">&#x1F4A8;</span><span class="j-wind">-- kt</span></span>
+            <span class="extra-item"><span class="extra-ico">&#x2600;&#xFE0F;</span><span>UV&nbsp;<span class="j-uv">--</span></span></span>
+            <span class="extra-item"><span class="extra-ico">&#x1F32B;&#xFE0F;</span><span class="j-dust">-- &micro;g</span></span>
+          </div>
         </div>
       </section>
 
@@ -3289,6 +3418,7 @@
           <div class="fn-nearyou"><span class="fn-neardot"></span>Near you</div>
           <div class="fn-temp jn-temp">--&deg;</div>
           <div class="fn-cond jn-cond">Mostly Clear</div>
+          <div class="fn-hilo jn-hilo">&nbsp;</div>
           <div class="fn-datetime">
             <div class="fn-dt-time"><span class="j-hh">--</span><span class="fn-dt-colon">:</span><span class="j-mm">--</span><span class="fn-dt-ampm j-ampm">AM</span></div>
             <div class="fn-dt-date"><span class="j-dow">---</span> &middot; <span class="j-fulldate">---</span></div>
@@ -3352,6 +3482,7 @@
           </svg>
           <div class="fa-moonname ja-moonname">&mdash;</div>
           <div class="fa-moonpct"><span class="ja-moonpct">--</span>% illuminated</div>
+          <div class="fa-moonnext ja-moonnext">&mdash;</div>
         </div>
         <div class="fa-main">
           <div class="fa-clockrow">
@@ -3401,6 +3532,7 @@
           </div>
           <div class="fm-bft jm-uvlevel">&mdash;</div>
           <div class="fm-gust">Sea <span class="jm-watertemp">--</span>&deg; &middot; feels <span class="jm-feels">--</span>&deg;</div>
+          <div class="fm-gust">Wind <span class="jm-windnow">--</span></div>
         </div>
         <div class="fm-main">
           <div class="fm-verdict">
@@ -3472,6 +3604,27 @@
 
   let lastCalKey = '';
 
+  // iOS WebKit workaround for the "minutes disappear" bug: every big clock
+  // paints through a composited offscreen buffer (filter: drop-shadow, and
+  // most also background-clip:text gradients). When only the minute digits'
+  // text changes — with identical geometry thanks to tabular figures —
+  // WebKit sometimes fails to re-rasterize that buffer, so the freshly
+  // written digits render fully transparent (they still take up layout
+  // width) until some unrelated repaint. Dropping and restoring the
+  // filter/clip within one task forces the buffer to rebuild; no frame is
+  // presented in between, so nothing visibly flashes.
+  var CLOCK_REPAINT_SEL = '.f-classic .time, .f-glass .fg-time, .f-weather .fw-st-time, ' +
+    '.f-cal .fc-time, .f-galaxy .fgx-clock, .f-night .fn-dt-time, .f-astro .fa-time';
+  function forceClockRepaint(){
+    document.querySelectorAll(CLOCK_REPAINT_SEL).forEach(function(el){
+      el.style.filter = 'none';
+      el.style.webkitBackgroundClip = 'border-box';
+      void el.offsetWidth;                 // commit, dirtying the layer
+      el.style.filter = '';
+      el.style.webkitBackgroundClip = '';  // back to the stylesheet values
+    });
+  }
+
   let lastMinKey = '';
   function tick(){
     // Nothing on screen is visible while hidden — skip all per-second DOM
@@ -3497,6 +3650,9 @@
       // Rebuild the calendar only when the date changes
       const calKey = now.getFullYear() + '-' + now.getMonth() + '-' + now.getDate();
       if(calKey !== lastCalKey){ lastCalKey = calKey; buildCalendar(now); }
+
+      // The digits just changed — make sure they actually get painted.
+      forceClockRepaint();
     }
 
     const s = now.getSeconds();
@@ -3531,7 +3687,15 @@
     }
   }
   tick(); setInterval(tick, 1000);
-  document.addEventListener('visibilitychange', function(){ if(!document.hidden) tick(); });
+  document.addEventListener('visibilitychange', function(){
+    if(!document.hidden){
+      tick();
+      // Resuming from sleep can restore stale composited layers even when
+      // the minute (and thus tick's minute block) hasn't changed — rebuild
+      // the clock buffers unconditionally on every return to foreground.
+      forceClockRepaint();
+    }
+  });
 
   // Analog dial tick marks
   (function(){
@@ -3589,6 +3753,16 @@
     }
   })();
 
+  // ISO-8601 week number (weeks start Monday; week 1 holds the year's
+  // first Thursday) — matches the calendar grid's Monday-first layout.
+  function isoWeek(d){
+    var x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7) + 3); // this week's Thursday
+    var firstThu = new Date(Date.UTC(x.getUTCFullYear(), 0, 4));
+    firstThu.setUTCDate(firstThu.getUTCDate() - ((firstThu.getUTCDay() + 6) % 7) + 3);
+    return 1 + Math.round((x - firstThu) / (7*86400000));
+  }
+
   // Calendar face: month grid, Monday-first, today highlighted, weekends dimmed
   function buildCalendar(now){
     const grid = document.getElementById('fc-grid');
@@ -3598,7 +3772,7 @@
     if(subEl){
       var dim = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
       var left = dim - now.getDate();
-      subEl.textContent = 'Day ' + now.getDate() + ' · ' + (left === 0 ? 'last day' : left + ' left');
+      subEl.textContent = 'Wk ' + isoWeek(now) + ' · Day ' + now.getDate() + ' · ' + (left === 0 ? 'last day' : left + ' left');
     }
     grid.textContent = '';
     const wd = ['M','T','W','T','F','S','S'];
@@ -3808,6 +3982,31 @@
     if(hpa>=1000) return 'Low';
     return 'Very low';
   }
+  // Pressure tendency from a rolling localStorage history. The standard
+  // meteorological signal is the 3-hour change: ≥1 hPa either way means
+  // rising/falling weather, less is steady. Samples are tagged by source
+  // (KNMI reports sea-level pressure, Open-Meteo surface pressure) and only
+  // compared within the same source, so a fallback switch between the two
+  // can never fabricate a jump.
+  function slpTrend(slp, src){
+    if(slp==null) return '';
+    var hist = [];
+    try{ hist = JSON.parse(localStorage.getItem('slpHist') || '[]'); }catch(e){}
+    var now = Date.now();
+    hist.push({ t: now, v: slp, s: src });
+    hist = hist.filter(function(pt){ return now - pt.t < 6*3600000; });
+    try{ localStorage.setItem('slpHist', JSON.stringify(hist)); }catch(e){}
+    // Oldest same-source sample at least 2h back gives a stable baseline
+    var ref = null;
+    for(var i=0;i<hist.length;i++){
+      if(hist[i].s === src && now - hist[i].t >= 2*3600000){ ref = hist[i]; break; }
+    }
+    if(!ref) return '';
+    var per3h = (slp - ref.v) / ((now - ref.t)/3600000) * 3;
+    if(per3h >= 1)  return ' · ↑ rising';
+    if(per3h <= -1) return ' · ↓ falling';
+    return ' · steady';
+  }
   function setBarAll(cls, pct){
     document.querySelectorAll('.'+cls).forEach(function(el){
       el.style.width=Math.min(100,Math.max(0,pct))+'%';
@@ -3922,7 +4121,7 @@
         setAll('j-dew', data.dew_c!=null ? data.dew_c.toFixed(1)+'°' : '--°');
         setAll('j-feels', feels!=actualTemp ? 'Feels '+feels+'°' : '');
         setAll('j-slp', data.slp!=null ? Math.round(data.slp)+' hPa' : '--');
-        setAll('j-slpstate', slpState(data.slp));
+        setAll('j-slpstate', slpState(data.slp) + slpTrend(data.slp, 'knmi'));
         setAll('j-vis', fmtVis(data.vis_m));
         setAll('j-visqual', visQual(data.vis_m));
         setAll('j-cloud', data.cloud_octa!=null ? data.cloud_octa+'/8' : '--');
@@ -3988,7 +4187,7 @@
         setAll('j-precip', precip!=null ? precip.toFixed(1)+' mm' : '--');
         setBarAll('j-bprecip', precip!=null ? precip/5*100 : 0);
         setAll('j-slp', slp!=null ? slp+' hPa' : '--');
-        setAll('j-slpstate', slpState(slp));
+        setAll('j-slpstate', slpState(slp) + slpTrend(slp, 'om'));
         setAll('j-vis', fmtVis(vis));
         setAll('j-visqual', visQual(vis));
         setAll('j-rad', rad!=null ? rad+' W/m²' : '--');
@@ -4150,6 +4349,12 @@
       if(path) path.setAttribute('d', moonLitPath(48, f, p < 0.5));
       setAll('ja-moonname', moonName(p));
       setAll('ja-moonpct', String(Math.round(f*100)));
+      // Countdown to the next full moon (phase 0.5), in whole days
+      var toFull = ((0.5 - p + 1) % 1) * 29.530588853;
+      setAll('ja-moonnext',
+        (p >= 0.48 && p < 0.52) ? 'Full moon tonight' :
+        toFull < 1.5 ? 'Full moon tomorrow' :
+        'Full moon in ' + Math.round(toFull) + ' days');
     }
     if(!astroData || !astroData.sunrise || !astroData.sunset) return;
     var sr = astroData.sunrise, ss = astroData.sunset, srNext = astroData.sunriseNext;
@@ -4332,6 +4537,10 @@
     setAll('jm-uvlevel', lv.txt);
     setAll('jm-feels', feels != null ? String(feels) : '--');
     setAll('jm-watertemp', astroData.seaTemp != null ? String(Math.round(astroData.seaTemp)) : '--');
+    var wdir = c.wind_direction_10m != null ? c.wind_direction_10m : null;
+    setAll('jm-windnow', kt != null
+      ? kt + ' kt' + (wdir != null ? ' ' + degToCompass(wdir) : '')
+      : '--');
 
     // UV ring fill (0–12 scale)
     document.querySelectorAll('.jm-uvfill').forEach(function(el){
@@ -4374,7 +4583,7 @@
         + '&current=temperature_2m,apparent_temperature,wind_speed_10m,wind_gusts_10m,wind_direction_10m,weather_code,uv_index,precipitation_probability'
         + '&hourly=temperature_2m,apparent_temperature,wind_speed_10m,uv_index,precipitation_probability'
         + '&minutely_15=precipitation'
-        + '&daily=sunrise,sunset'
+        + '&daily=sunrise,sunset,temperature_2m_max,temperature_2m_min'
         + '&wind_speed_unit=kn&timezone=auto&forecast_days=2';
       var r = await fetch(url);
       if(!r.ok) throw new Error('http '+r.status);
@@ -4396,6 +4605,11 @@
       if(astroData.sunriseStr) setAll('ja-sunrise', astroData.sunriseStr.slice(11,16));
       if(astroData.sunsetStr)  setAll('ja-sunset',  astroData.sunsetStr.slice(11,16));
       if(astroData.sunrise && astroData.sunset) setAll('ja-daylen', fmtDayLen(astroData.sunset - astroData.sunrise));
+      // Today's forecast high/low, shown on the Classic and Glass faces
+      // (KNMI current-conditions data has no daily range of its own).
+      var hiT = (dy.temperature_2m_max && dy.temperature_2m_max[0] != null) ? Math.round(dy.temperature_2m_max[0]) : null;
+      var loT = (dy.temperature_2m_min && dy.temperature_2m_min[0] != null) ? Math.round(dy.temperature_2m_min[0]) : null;
+      if(hiT != null && loT != null) setAll('j-hilo', 'H ' + hiT + '° · L ' + loT + '°');
       renderMarine();
       updateAstroLive(true); // fresh data — repaint now, don't wait out the throttle
       loadSeaTemp();
@@ -4688,6 +4902,10 @@
       setAll('jn-city', placeLabel);
       setAll('jn-temp', feels+'°');
       setAll('jn-cond', cloudText(cloudOcta, precip));
+      var dyN = wxData.daily || {};
+      var hiN = (dyN.temperature_2m_max && dyN.temperature_2m_max[0] != null) ? Math.round(dyN.temperature_2m_max[0]) : null;
+      var loN = (dyN.temperature_2m_min && dyN.temperature_2m_min[0] != null) ? Math.round(dyN.temperature_2m_min[0]) : null;
+      setAll('jn-hilo', (hiN != null && loN != null) ? 'H ' + hiN + '° · L ' + loN + '°' : ' ');
 
       // Cards — all driven by the LOCAL location, independent of Bonaire faces
       setAll('jn-feelsbig', feels+'°');
@@ -4992,7 +5210,8 @@
       waterGoalMl: 3000,
       waterPortionMl: 250,
       waterSkipSnoozeMin: 15,
-      bathIntervalMin: 60,
+      bathIntervalMin: 0,
+      bathRemOffMigrated: 0,  // one-time: zero the interval saved by old builds
       bathSkipSnoozeMin: 10,
       bathFlagThreshold: 8,   // visits/day above this are flagged (typical adult range is ~6-8/day)
       bathFlagNotifiedDate: '',
@@ -5027,6 +5246,19 @@
     // reminders published to it aren't visible to strangers guessing topics.
     if(!S.ntfyTopic){
       S.ntfyTopic = 'standby-' + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 6);
+      saveSettings();
+    }
+    // One-time migration: bathroom reminders now default to OFF, but
+    // installs from before that change still carry the old 60-min interval
+    // in saved settings — which kept queuing hourly bathroom pushes to ntfy
+    // every day. Zero it once here; the Off/interval chips in Settings
+    // re-enable it deliberately. Note ntfy can't recall already-queued
+    // delayed messages, so pushes queued earlier today still drain before
+    // it goes fully quiet.
+    if(!S.bathRemOffMigrated){
+      S.bathRemOffMigrated = 1;
+      S.bathIntervalMin = 0;
+      S.nextBathDueTs = 0;
       saveSettings();
     }
 
@@ -5349,8 +5581,10 @@
       for(var t = now + S.waterIntervalMin*60000; t < horizon; t += S.waterIntervalMin*60000){
         ntfyPublish('Time to drink water', '💧 Water reminder', (t-now)/1000, 'droplet');
       }
-      for(var b = now + S.bathIntervalMin*60000; b < horizon; b += S.bathIntervalMin*60000){
-        ntfyPublish('Bathroom break', '🚽 Bathroom reminder', (b-now)/1000, 'toilet');
+      if(S.bathIntervalMin > 0){
+        for(var b = now + S.bathIntervalMin*60000; b < horizon; b += S.bathIntervalMin*60000){
+          ntfyPublish('Bathroom break', '🚽 Bathroom reminder', (b-now)/1000, 'toilet');
+        }
       }
       Object.keys(MED_REM_META).forEach(function(type){
         var meta = MED_REM_META[type];
@@ -5433,7 +5667,9 @@
     function checkReminders(){
       if(S.awake && document.visibilityState === 'visible'){
         var now = Date.now();
-        ['water','bath'].forEach(function(type){
+        var remTypes = ['water'];
+        if(S.bathIntervalMin > 0) remTypes.push('bath');
+        remTypes.forEach(function(type){
           var meta = REM_META[type];
           if(S[meta.dueKey] && now >= S[meta.dueKey] && remActive !== type && remQueue.indexOf(type) === -1){
             // Clear immediately so this due reminder isn't re-queued every
@@ -5463,7 +5699,7 @@
       // again after a reload with reminders already scheduled just resumes
       // from the persisted due timestamps.
       if(!S.nextWaterDueTs) scheduleNext('water');
-      if(!S.nextBathDueTs) scheduleNext('bath');
+      if(!S.nextBathDueTs && S.bathIntervalMin > 0) scheduleNext('bath');
       if(!S.nextMedMorningDueTs) scheduleNextMedTime('medMorning');
       if(!S.nextMedEveningDueTs) scheduleNextMedTime('medEvening');
       // Ensures today's background ntfy queue exists not just on a fresh
@@ -5553,7 +5789,7 @@
       if(!S.awake){ nv.textContent = '—'; ns.textContent = 'Resumes when you wake'; return; }
       var candidates = [];
       if(S.nextWaterDueTs) candidates.push({ type:'Water', ts:S.nextWaterDueTs });
-      if(S.nextBathDueTs) candidates.push({ type:'Bathroom', ts:S.nextBathDueTs });
+      if(S.nextBathDueTs && S.bathIntervalMin > 0) candidates.push({ type:'Bathroom', ts:S.nextBathDueTs });
       if(S.nextMedMorningDueTs) candidates.push({ type:MED_REM_META.medMorning.label, ts:S.nextMedMorningDueTs });
       if(S.nextMedEveningDueTs) candidates.push({ type:MED_REM_META.medEvening.label, ts:S.nextMedEveningDueTs });
       if(!candidates.length){ nv.textContent = '—'; ns.textContent = 'Scheduling…'; return; }
@@ -5631,9 +5867,16 @@
       for(var t = wakeT + S.waterIntervalMin*60000; t < sleepT; t += S.waterIntervalMin*60000){
         items.push({ label: 'Drink Water', time: new Date(t), type: 'water', ico: '\u{1F4A7}' });
       }
-      for(var t2 = wakeT + S.bathIntervalMin*60000; t2 < sleepT; t2 += S.bathIntervalMin*60000){
-        items.push({ label: 'Bathroom', time: new Date(t2), type: 'bath', ico: '\u{1F6BD}' });
+      if(S.bathIntervalMin > 0){
+        for(var t2 = wakeT + S.bathIntervalMin*60000; t2 < sleepT; t2 += S.bathIntervalMin*60000){
+          items.push({ label: 'Bathroom', time: new Date(t2), type: 'bath', ico: '\u{1F6BD}' });
+        }
       }
+      // Medicine slots pair with 'medMorning'/'medEvening' tile events the
+      // same way water slots pair with water logs, so the timeline shows
+      // each dose as done / upcoming / missed.
+      addOnce('Morning Meds', S.medMorningTime, 'medMorning', '\u{1F48A}');
+      addOnce('Evening Meds', S.medEveningTime, 'medEvening', '\u{1F48A}');
       addOnce('Eating Window Opens', S.eatStart, 'fastEnd', '\u{1F37D}\u{FE0F}');
       addOnce('Fasting Begins', S.eatEnd, 'fastStart', '⛔');
       addOnce('Sleep', S.sleepTime, 'sleep', '\u{1F319}');
