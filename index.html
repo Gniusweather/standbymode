@@ -197,13 +197,13 @@
     text-overflow: ellipsis;
     line-height: 1.1;
   }
-  .f-classic .extra {
+  .f-classic .extra, .f-analog .extra {
     margin-top: clamp(10px, 3cqh, 28px);
     display: flex;
     flex-direction: column;
     gap: clamp(6px, 1.8cqh, 16px);
   }
-  .f-classic .extra-item {
+  .f-classic .extra-item, .f-analog .extra-item {
     display: flex;
     align-items: center;
     gap: 0.45em;
@@ -213,7 +213,7 @@
     white-space: nowrap;
     line-height: 1;
   }
-  .f-classic .extra-item .extra-ico {
+  .f-classic .extra-item .extra-ico, .f-analog .extra-item .extra-ico {
     font-size: 0.9em;
     filter: drop-shadow(0 0 6px rgba(109,184,255,0.35));
   }
@@ -302,6 +302,16 @@
     font-size: clamp(12px,3.4cqh,30px);
     color: rgba(255,255,255,0.62);
   }
+  .f-glass .fg-hilo {
+    font-weight: 600;
+    font-size: clamp(12px,3.4cqh,30px);
+    color: rgba(255,255,255,0.55);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  /* No high/low yet (first load, offline): hide the value and its divider */
+  .f-glass .fg-hilo:empty,
+  .f-glass .fg-wstrip-sep:has(+ .fg-hilo:empty) { display: none; }
 
   /* Big clock in the middle */
   .f-glass .fg-clock {
@@ -1109,6 +1119,14 @@
     letter-spacing: 0.02em;
     white-space: nowrap;
   }
+  .f-night .fn-hilo {
+    font-weight: 600;
+    font-size: clamp(11px, 3cqh, 28px);
+    color: rgba(200,215,245,0.6);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    margin-top: clamp(2px, 0.6cqh, 6px);
+  }
   .f-night .fn-grid {
     flex: 1 1 auto;
     display: grid;
@@ -1321,6 +1339,12 @@
     font-weight: 500;
     font-size: clamp(10px, 2.6cqh, 22px);
     color: rgba(190,200,235,0.62);
+    white-space: nowrap;
+  }
+  .f-astro .fa-moonnext {
+    font-weight: 500;
+    font-size: clamp(10px, 2.6cqh, 22px);
+    color: rgba(190,200,235,0.42);
     white-space: nowrap;
   }
   .f-astro .fa-main {
@@ -1736,6 +1760,14 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  .f-galaxy .fgx-wx {
+    font-size: clamp(11px, 3cqh, 26px);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: rgba(220,228,238,0.42);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
   .f-galaxy .fgx-clock {
     display: flex;
@@ -3096,6 +3128,7 @@
             <span class="j-hh">05</span><span class="fgx-colon">:</span><span class="j-mm">13</span><span class="fgx-ampm j-ampm">AM</span>
           </div>
           <div class="fgx-date"><span class="j-dow">WED</span> &middot; <span class="j-fulldate">June 20, 2026</span></div>
+          <div class="fgx-wx"><span class="j-wico">&#x26C5;</span> <span class="j-temp">--&deg;</span></div>
           <div class="fgx-secbar-wrap"><div class="fgx-secbar" id="fgx-secbar"></div></div>
         </div>
       </section>
@@ -3114,6 +3147,7 @@
           <div class="temp"><span class="ico j-wico">&#x26C5;</span><span class="j-temp">--&deg;</span></div>
           <div class="place j-place">Locating&hellip;</div>
           <div class="place" style="font-size: 0.85em; margin-top: -2px; opacity: 0.6;">Actual <span class="j-actualtemp">--&deg;</span></div>
+          <div class="place j-hilo" style="font-size: 0.85em; margin-top: -2px; opacity: 0.6;"></div>
           <div class="extra">
             <span class="extra-item"><span class="extra-ico">&#x1F4A8;</span><span class="j-wind">-- kt</span></span>
             <span class="extra-item"><span class="extra-ico">&#x2600;&#xFE0F;</span><span>UV&nbsp;<span class="j-uv">--</span></span></span>
@@ -3130,6 +3164,8 @@
           <span class="fg-wstrip-cond j-wtext">Loading&hellip;</span>
           <span class="fg-wstrip-sep"></span>
           <span class="fg-wstrip-place">&#x1F4CD; <span class="j-place">Locating&hellip;</span></span>
+          <span class="fg-wstrip-sep"></span>
+          <span class="fg-hilo j-hilo"></span>
         </div>
         <div class="fg-clock">
           <div class="fg-time"><span class="j-hh">05</span><span class="colon">:</span><span class="j-mm">13</span><span class="fg-ampm j-ampm">AM</span></div>
@@ -3174,6 +3210,11 @@
           <div class="temp"><span class="ico j-wico">&#x26C5;</span><span class="j-temp">--&deg;</span></div>
           <div class="place j-place">Locating&hellip;</div>
           <div class="place" style="font-size: 0.85em; margin-top: -2px; opacity: 0.6;">Actual <span class="j-actualtemp">--&deg;</span></div>
+          <div class="extra">
+            <span class="extra-item"><span class="extra-ico">&#x1F4A8;</span><span class="j-wind">-- kt</span></span>
+            <span class="extra-item"><span class="extra-ico">&#x2600;&#xFE0F;</span><span>UV&nbsp;<span class="j-uv">--</span></span></span>
+            <span class="extra-item"><span class="extra-ico">&#x1F32B;&#xFE0F;</span><span class="j-dust">-- &micro;g</span></span>
+          </div>
         </div>
       </section>
 
@@ -3289,6 +3330,7 @@
           <div class="fn-nearyou"><span class="fn-neardot"></span>Near you</div>
           <div class="fn-temp jn-temp">--&deg;</div>
           <div class="fn-cond jn-cond">Mostly Clear</div>
+          <div class="fn-hilo jn-hilo">&nbsp;</div>
           <div class="fn-datetime">
             <div class="fn-dt-time"><span class="j-hh">--</span><span class="fn-dt-colon">:</span><span class="j-mm">--</span><span class="fn-dt-ampm j-ampm">AM</span></div>
             <div class="fn-dt-date"><span class="j-dow">---</span> &middot; <span class="j-fulldate">---</span></div>
@@ -3352,6 +3394,7 @@
           </svg>
           <div class="fa-moonname ja-moonname">&mdash;</div>
           <div class="fa-moonpct"><span class="ja-moonpct">--</span>% illuminated</div>
+          <div class="fa-moonnext ja-moonnext">&mdash;</div>
         </div>
         <div class="fa-main">
           <div class="fa-clockrow">
@@ -3401,6 +3444,7 @@
           </div>
           <div class="fm-bft jm-uvlevel">&mdash;</div>
           <div class="fm-gust">Sea <span class="jm-watertemp">--</span>&deg; &middot; feels <span class="jm-feels">--</span>&deg;</div>
+          <div class="fm-gust">Wind <span class="jm-windnow">--</span></div>
         </div>
         <div class="fm-main">
           <div class="fm-verdict">
@@ -3589,6 +3633,16 @@
     }
   })();
 
+  // ISO-8601 week number (weeks start Monday; week 1 holds the year's
+  // first Thursday) — matches the calendar grid's Monday-first layout.
+  function isoWeek(d){
+    var x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7) + 3); // this week's Thursday
+    var firstThu = new Date(Date.UTC(x.getUTCFullYear(), 0, 4));
+    firstThu.setUTCDate(firstThu.getUTCDate() - ((firstThu.getUTCDay() + 6) % 7) + 3);
+    return 1 + Math.round((x - firstThu) / (7*86400000));
+  }
+
   // Calendar face: month grid, Monday-first, today highlighted, weekends dimmed
   function buildCalendar(now){
     const grid = document.getElementById('fc-grid');
@@ -3598,7 +3652,7 @@
     if(subEl){
       var dim = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
       var left = dim - now.getDate();
-      subEl.textContent = 'Day ' + now.getDate() + ' · ' + (left === 0 ? 'last day' : left + ' left');
+      subEl.textContent = 'Wk ' + isoWeek(now) + ' · Day ' + now.getDate() + ' · ' + (left === 0 ? 'last day' : left + ' left');
     }
     grid.textContent = '';
     const wd = ['M','T','W','T','F','S','S'];
@@ -3808,6 +3862,31 @@
     if(hpa>=1000) return 'Low';
     return 'Very low';
   }
+  // Pressure tendency from a rolling localStorage history. The standard
+  // meteorological signal is the 3-hour change: ≥1 hPa either way means
+  // rising/falling weather, less is steady. Samples are tagged by source
+  // (KNMI reports sea-level pressure, Open-Meteo surface pressure) and only
+  // compared within the same source, so a fallback switch between the two
+  // can never fabricate a jump.
+  function slpTrend(slp, src){
+    if(slp==null) return '';
+    var hist = [];
+    try{ hist = JSON.parse(localStorage.getItem('slpHist') || '[]'); }catch(e){}
+    var now = Date.now();
+    hist.push({ t: now, v: slp, s: src });
+    hist = hist.filter(function(pt){ return now - pt.t < 6*3600000; });
+    try{ localStorage.setItem('slpHist', JSON.stringify(hist)); }catch(e){}
+    // Oldest same-source sample at least 2h back gives a stable baseline
+    var ref = null;
+    for(var i=0;i<hist.length;i++){
+      if(hist[i].s === src && now - hist[i].t >= 2*3600000){ ref = hist[i]; break; }
+    }
+    if(!ref) return '';
+    var per3h = (slp - ref.v) / ((now - ref.t)/3600000) * 3;
+    if(per3h >= 1)  return ' · ↑ rising';
+    if(per3h <= -1) return ' · ↓ falling';
+    return ' · steady';
+  }
   function setBarAll(cls, pct){
     document.querySelectorAll('.'+cls).forEach(function(el){
       el.style.width=Math.min(100,Math.max(0,pct))+'%';
@@ -3922,7 +4001,7 @@
         setAll('j-dew', data.dew_c!=null ? data.dew_c.toFixed(1)+'°' : '--°');
         setAll('j-feels', feels!=actualTemp ? 'Feels '+feels+'°' : '');
         setAll('j-slp', data.slp!=null ? Math.round(data.slp)+' hPa' : '--');
-        setAll('j-slpstate', slpState(data.slp));
+        setAll('j-slpstate', slpState(data.slp) + slpTrend(data.slp, 'knmi'));
         setAll('j-vis', fmtVis(data.vis_m));
         setAll('j-visqual', visQual(data.vis_m));
         setAll('j-cloud', data.cloud_octa!=null ? data.cloud_octa+'/8' : '--');
@@ -3988,7 +4067,7 @@
         setAll('j-precip', precip!=null ? precip.toFixed(1)+' mm' : '--');
         setBarAll('j-bprecip', precip!=null ? precip/5*100 : 0);
         setAll('j-slp', slp!=null ? slp+' hPa' : '--');
-        setAll('j-slpstate', slpState(slp));
+        setAll('j-slpstate', slpState(slp) + slpTrend(slp, 'om'));
         setAll('j-vis', fmtVis(vis));
         setAll('j-visqual', visQual(vis));
         setAll('j-rad', rad!=null ? rad+' W/m²' : '--');
@@ -4150,6 +4229,12 @@
       if(path) path.setAttribute('d', moonLitPath(48, f, p < 0.5));
       setAll('ja-moonname', moonName(p));
       setAll('ja-moonpct', String(Math.round(f*100)));
+      // Countdown to the next full moon (phase 0.5), in whole days
+      var toFull = ((0.5 - p + 1) % 1) * 29.530588853;
+      setAll('ja-moonnext',
+        (p >= 0.48 && p < 0.52) ? 'Full moon tonight' :
+        toFull < 1.5 ? 'Full moon tomorrow' :
+        'Full moon in ' + Math.round(toFull) + ' days');
     }
     if(!astroData || !astroData.sunrise || !astroData.sunset) return;
     var sr = astroData.sunrise, ss = astroData.sunset, srNext = astroData.sunriseNext;
@@ -4332,6 +4417,10 @@
     setAll('jm-uvlevel', lv.txt);
     setAll('jm-feels', feels != null ? String(feels) : '--');
     setAll('jm-watertemp', astroData.seaTemp != null ? String(Math.round(astroData.seaTemp)) : '--');
+    var wdir = c.wind_direction_10m != null ? c.wind_direction_10m : null;
+    setAll('jm-windnow', kt != null
+      ? kt + ' kt' + (wdir != null ? ' ' + degToCompass(wdir) : '')
+      : '--');
 
     // UV ring fill (0–12 scale)
     document.querySelectorAll('.jm-uvfill').forEach(function(el){
@@ -4374,7 +4463,7 @@
         + '&current=temperature_2m,apparent_temperature,wind_speed_10m,wind_gusts_10m,wind_direction_10m,weather_code,uv_index,precipitation_probability'
         + '&hourly=temperature_2m,apparent_temperature,wind_speed_10m,uv_index,precipitation_probability'
         + '&minutely_15=precipitation'
-        + '&daily=sunrise,sunset'
+        + '&daily=sunrise,sunset,temperature_2m_max,temperature_2m_min'
         + '&wind_speed_unit=kn&timezone=auto&forecast_days=2';
       var r = await fetch(url);
       if(!r.ok) throw new Error('http '+r.status);
@@ -4396,6 +4485,11 @@
       if(astroData.sunriseStr) setAll('ja-sunrise', astroData.sunriseStr.slice(11,16));
       if(astroData.sunsetStr)  setAll('ja-sunset',  astroData.sunsetStr.slice(11,16));
       if(astroData.sunrise && astroData.sunset) setAll('ja-daylen', fmtDayLen(astroData.sunset - astroData.sunrise));
+      // Today's forecast high/low, shown on the Classic and Glass faces
+      // (KNMI current-conditions data has no daily range of its own).
+      var hiT = (dy.temperature_2m_max && dy.temperature_2m_max[0] != null) ? Math.round(dy.temperature_2m_max[0]) : null;
+      var loT = (dy.temperature_2m_min && dy.temperature_2m_min[0] != null) ? Math.round(dy.temperature_2m_min[0]) : null;
+      if(hiT != null && loT != null) setAll('j-hilo', 'H ' + hiT + '° · L ' + loT + '°');
       renderMarine();
       updateAstroLive(true); // fresh data — repaint now, don't wait out the throttle
       loadSeaTemp();
@@ -4688,6 +4782,10 @@
       setAll('jn-city', placeLabel);
       setAll('jn-temp', feels+'°');
       setAll('jn-cond', cloudText(cloudOcta, precip));
+      var dyN = wxData.daily || {};
+      var hiN = (dyN.temperature_2m_max && dyN.temperature_2m_max[0] != null) ? Math.round(dyN.temperature_2m_max[0]) : null;
+      var loN = (dyN.temperature_2m_min && dyN.temperature_2m_min[0] != null) ? Math.round(dyN.temperature_2m_min[0]) : null;
+      setAll('jn-hilo', (hiN != null && loN != null) ? 'H ' + hiN + '° · L ' + loN + '°' : ' ');
 
       // Cards — all driven by the LOCAL location, independent of Bonaire faces
       setAll('jn-feelsbig', feels+'°');
@@ -5640,6 +5738,11 @@
           items.push({ label: 'Bathroom', time: new Date(t2), type: 'bath', ico: '\u{1F6BD}' });
         }
       }
+      // Medicine slots pair with 'medMorning'/'medEvening' tile events the
+      // same way water slots pair with water logs, so the timeline shows
+      // each dose as done / upcoming / missed.
+      addOnce('Morning Meds', S.medMorningTime, 'medMorning', '\u{1F48A}');
+      addOnce('Evening Meds', S.medEveningTime, 'medEvening', '\u{1F48A}');
       addOnce('Eating Window Opens', S.eatStart, 'fastEnd', '\u{1F37D}\u{FE0F}');
       addOnce('Fasting Begins', S.eatEnd, 'fastStart', '⛔');
       addOnce('Sleep', S.sleepTime, 'sleep', '\u{1F319}');
