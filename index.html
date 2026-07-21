@@ -2128,6 +2128,18 @@
   html.life-portrait #face-life .lf-card-hd {
     font-size: clamp(7px, 2.4cqw, 12px);
   }
+  /* KNMI card text is cqh-sized for the rotated strip; re-base on cqw in
+     true portrait, same as the other labels above. */
+  html.life-portrait #face-life .lf-knmi-ico { font-size: clamp(18px, 9cqw, 42px); }
+  html.life-portrait #face-life .lf-knmi-temp { font-size: clamp(15px, 7cqw, 36px); }
+  html.life-portrait #face-life .lf-knmi-sval { font-size: clamp(10px, 4cqw, 20px); }
+  html.life-portrait #face-life .lf-knmi-lbl,
+  html.life-portrait #face-life .lf-knmi-slbl { font-size: clamp(6px, 2.2cqw, 11px); }
+  /* The narrow portrait box can't fit hero + three stats on one line
+     ("20.0 km" was ellipsised to "20.0…") — wrap the stats onto their own
+     full-width row instead. */
+  html.life-portrait #face-life .lf-knmi-row { flex-wrap: wrap; }
+  html.life-portrait #face-life .lf-knmi-stats { flex: 1 1 100%; }
   /* Same story for the numeric Settings inputs: taller container inflated
      the (cqh-based) font past what their (cqw-based) width fit, clipping
      the value. Widen them rather than shrink the text further. */
@@ -2301,6 +2313,63 @@
   .f-life .lf-cond-best .lf-cond-verdict-ico { font-size: 1.15em; }
   .f-life .lf-cond-best b { color: var(--lf-ink); }
   .f-life .lf-cond-best .lf-cond-sep { color: var(--lf-muted); font-weight: 600; }
+  /* KNMI weather card: icon + feels-like hero on the left, three mini
+     stats (visibility / rain / solar radiation) filling the rest. */
+  .f-life .lf-knmi-row {
+    display: flex;
+    align-items: center;
+    gap: clamp(8px, 2cqw, 22px);
+    min-width: 0;
+  }
+  .f-life .lf-knmi-ico { font-size: clamp(18px, 6.5cqh, 48px); line-height: 1; flex: 0 0 auto; }
+  .f-life .lf-knmi-hero { display: flex; flex-direction: column; gap: clamp(1px, 0.4cqh, 4px); min-width: 0; flex: 0 0 auto; }
+  .f-life .lf-knmi-temp {
+    font-size: clamp(15px, 5.5cqh, 44px);
+    font-weight: 800;
+    color: var(--lf-ink);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .f-life .lf-knmi-lbl {
+    font-size: clamp(7px, 1.7cqh, 14px);
+    font-weight: 600;
+    color: var(--lf-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .f-life .lf-knmi-stats {
+    flex: 1 1 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(4px, 1cqw, 12px);
+    min-width: 0;
+  }
+  .f-life .lf-knmi-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(1px, 0.4cqh, 4px);
+    min-width: 0;
+  }
+  .f-life .lf-knmi-sval {
+    font-size: clamp(10px, 3cqh, 24px);
+    font-weight: 700;
+    color: var(--lf-ink);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  .f-life .lf-knmi-slbl {
+    font-size: clamp(6px, 1.5cqh, 12px);
+    font-weight: 600;
+    color: var(--lf-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
 
   /* ---------- Timeline tab ---------- */
   .f-life .lf-tl-list {
@@ -3002,6 +3071,24 @@
                   <span class="lf-cond-sep" id="lf-cond-bestwrap"> &middot; best <b id="lf-cond-besttime">&mdash;</b></span>
                 </div>
               </div>
+              <!-- Live KNMI Bonaire weather. Fed entirely by the shared j-*
+                   classes that loadWeather() sweeps with setAll(), so this
+                   card needs no JS of its own and updates on every refresh. -->
+              <div class="lf-card wide" id="lf-card-knmi">
+                <div class="lf-card-hd">&#x26C5; Bonaire &middot; KNMI weather</div>
+                <div class="lf-knmi-row">
+                  <span class="lf-knmi-ico j-wico">&#x26C5;</span>
+                  <div class="lf-knmi-hero">
+                    <span class="lf-knmi-temp j-temp">--&deg;</span>
+                    <span class="lf-knmi-lbl">Feels like &middot; <span class="j-wtext">loading&hellip;</span></span>
+                  </div>
+                  <div class="lf-knmi-stats">
+                    <div class="lf-knmi-stat"><span class="lf-knmi-sval j-vis">--</span><span class="lf-knmi-slbl">&#x1F441;&#xFE0F; Visibility</span></div>
+                    <div class="lf-knmi-stat"><span class="lf-knmi-sval j-precip">--</span><span class="lf-knmi-slbl">&#x1F327;&#xFE0F; Rain</span></div>
+                    <div class="lf-knmi-stat"><span class="lf-knmi-sval j-rad">--</span><span class="lf-knmi-slbl">&#x2600;&#xFE0F; Solar</span></div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -3079,6 +3166,7 @@
             <div class="lf-set-row"><span class="lf-set-lbl">Water portion / tap</span><input type="number" min="50" max="1000" step="50" id="lf-set-waterPortionMl" class="lf-set-input lf-set-num"><span class="lf-set-unit">mL</span></div>
             <div class="lf-set-row"><span class="lf-set-lbl">Bathroom reminder every</span><input type="number" min="10" max="240" id="lf-set-bathIntervalMin" class="lf-set-input lf-set-num"><span class="lf-set-unit">min</span></div>
             <div class="lf-quickpick" id="lf-quickpick-bathIntervalMin">
+              <div class="lf-themebtn lf-qp-btn" data-min="0">Off</div>
               <div class="lf-themebtn lf-qp-btn" data-min="30">30m</div>
               <div class="lf-themebtn lf-qp-btn" data-min="45">45m</div>
               <div class="lf-themebtn lf-qp-btn" data-min="60">1h</div>
@@ -5123,6 +5211,7 @@
       waterPortionMl: 250,
       waterSkipSnoozeMin: 15,
       bathIntervalMin: 0,
+      bathRemOffMigrated: 0,  // one-time: zero the interval saved by old builds
       bathSkipSnoozeMin: 10,
       bathFlagThreshold: 8,   // visits/day above this are flagged (typical adult range is ~6-8/day)
       bathFlagNotifiedDate: '',
@@ -5157,6 +5246,19 @@
     // reminders published to it aren't visible to strangers guessing topics.
     if(!S.ntfyTopic){
       S.ntfyTopic = 'standby-' + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 6);
+      saveSettings();
+    }
+    // One-time migration: bathroom reminders now default to OFF, but
+    // installs from before that change still carry the old 60-min interval
+    // in saved settings — which kept queuing hourly bathroom pushes to ntfy
+    // every day. Zero it once here; the Off/interval chips in Settings
+    // re-enable it deliberately. Note ntfy can't recall already-queued
+    // delayed messages, so pushes queued earlier today still drain before
+    // it goes fully quiet.
+    if(!S.bathRemOffMigrated){
+      S.bathRemOffMigrated = 1;
+      S.bathIntervalMin = 0;
+      S.nextBathDueTs = 0;
       saveSettings();
     }
 
