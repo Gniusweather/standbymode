@@ -3516,6 +3516,27 @@
 
   let lastCalKey = '';
 
+  // iOS WebKit workaround for the "minutes disappear" bug: every big clock
+  // paints through a composited offscreen buffer (filter: drop-shadow, and
+  // most also background-clip:text gradients). When only the minute digits'
+  // text changes — with identical geometry thanks to tabular figures —
+  // WebKit sometimes fails to re-rasterize that buffer, so the freshly
+  // written digits render fully transparent (they still take up layout
+  // width) until some unrelated repaint. Dropping and restoring the
+  // filter/clip within one task forces the buffer to rebuild; no frame is
+  // presented in between, so nothing visibly flashes.
+  var CLOCK_REPAINT_SEL = '.f-classic .time, .f-glass .fg-time, .f-weather .fw-st-time, ' +
+    '.f-cal .fc-time, .f-galaxy .fgx-clock, .f-night .fn-dt-time, .f-astro .fa-time';
+  function forceClockRepaint(){
+    document.querySelectorAll(CLOCK_REPAINT_SEL).forEach(function(el){
+      el.style.filter = 'none';
+      el.style.webkitBackgroundClip = 'border-box';
+      void el.offsetWidth;                 // commit, dirtying the layer
+      el.style.filter = '';
+      el.style.webkitBackgroundClip = '';  // back to the stylesheet values
+    });
+  }
+
   let lastMinKey = '';
   function tick(){
     // Nothing on screen is visible while hidden — skip all per-second DOM
@@ -3541,6 +3562,9 @@
       // Rebuild the calendar only when the date changes
       const calKey = now.getFullYear() + '-' + now.getMonth() + '-' + now.getDate();
       if(calKey !== lastCalKey){ lastCalKey = calKey; buildCalendar(now); }
+
+      // The digits just changed — make sure they actually get painted.
+      forceClockRepaint();
     }
 
     const s = now.getSeconds();
@@ -3575,7 +3599,15 @@
     }
   }
   tick(); setInterval(tick, 1000);
-  document.addEventListener('visibilitychange', function(){ if(!document.hidden) tick(); });
+  document.addEventListener('visibilitychange', function(){
+    if(!document.hidden){
+      tick();
+      // Resuming from sleep can restore stale composited layers even when
+      // the minute (and thus tick's minute block) hasn't changed — rebuild
+      // the clock buffers unconditionally on every return to foreground.
+      forceClockRepaint();
+    }
+  });
 
   // Analog dial tick marks
   (function(){
