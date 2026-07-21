@@ -2140,6 +2140,11 @@
      full-width row instead. */
   html.life-portrait #face-life .lf-knmi-row { flex-wrap: wrap; }
   html.life-portrait #face-life .lf-knmi-stats { flex: 1 1 100%; }
+  /* In portrait the Home column scrolls and the weather card would sit
+     below the fold at the bottom — hoist it to the top of the card grid
+     so it's visible without scrolling. (Landscape shows every card at
+     once, so source order stands there.) */
+  html.life-portrait #face-life #lf-card-knmi { order: -1; }
   /* Same story for the numeric Settings inputs: taller container inflated
      the (cqh-based) font past what their (cqw-based) width fit, clipping
      the value. Widen them rather than shrink the text further. */
