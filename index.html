@@ -1933,6 +1933,12 @@
     overflow: hidden;
   }
   .f-life .lf-view.active { display: flex; flex-direction: column; min-height: 0; }
+  /* Unlike Settings (which wraps its rows in their own scrollable
+     .lf-settings-list) Stats has no such wrapper, so it normally relies on
+     everything fitting the fixed landscape height exactly. The CSV
+     import/export row group pushed that past what fits — scroll rather
+     than let the calendar grid get silently squeezed/clipped. */
+  .f-life #lf-view-stats.active { overflow-y: auto; overflow-x: hidden; }
 
   /* ---- Home sub-view ---- */
   .f-life .lf-home {
@@ -2189,6 +2195,14 @@
     overflow: hidden;
     text-overflow: ellipsis;
     min-height: 1em;
+  }
+  /* Briefly (within the undo window) the timestamp itself doubles as an
+     undo button for that log — distinct color + underline signal it's now
+     tappable, reverting to the plain muted stamp once the window closes. */
+  .f-life .lf-card-last.undoable {
+    color: var(--lf-red);
+    text-decoration: underline;
+    cursor: pointer;
   }
   .f-life .lf-notice {
     font-size: clamp(7px, 1.6cqh, 13px);
@@ -3179,6 +3193,14 @@
             <div class="lf-themebtn lf-export-btn" id="lf-export-summary" role="button" tabindex="0">&#x2B07;&#xFE0F; Summary CSV</div>
             <div class="lf-themebtn lf-export-btn" id="lf-export-log" role="button" tabindex="0">&#x2B07;&#xFE0F; Full log CSV</div>
           </div>
+          <!-- Restores a "Full log CSV" export back into IndexedDB — the
+               only way today's data survives a device switch, since
+               everything otherwise lives purely on-device. -->
+          <div class="lf-export-btns">
+            <div class="lf-themebtn lf-export-btn" id="lf-import-log" role="button" tabindex="0">&#x2B06;&#xFE0F; Import log CSV</div>
+          </div>
+          <input type="file" id="lf-import-file" accept=".csv,text/csv" style="display:none">
+          <div class="lf-ntfy-status" id="lf-import-status"></div>
         </div>
 
         <!-- Settings (populated in a later stage) -->
@@ -3217,6 +3239,10 @@
             <div class="lf-set-row">
               <span class="lf-set-lbl" id="lf-set-rainAlerts-lbl">Rain alerts</span>
               <div class="lf-notif-toggle" id="lf-set-rainAlerts" role="switch" aria-checked="true" aria-labelledby="lf-set-rainAlerts-lbl" tabindex="0"><span class="lf-notif-knob"></span></div>
+            </div>
+            <div class="lf-set-row">
+              <span class="lf-set-lbl" id="lf-set-fastAlerts-lbl">Fasting milestones</span>
+              <div class="lf-notif-toggle" id="lf-set-fastAlerts" role="switch" aria-checked="true" aria-labelledby="lf-set-fastAlerts-lbl" tabindex="0"><span class="lf-notif-knob"></span></div>
             </div>
             <div class="lf-set-row">
               <span class="lf-set-lbl" id="lf-set-theme-lbl">Theme</span>
@@ -5274,6 +5300,7 @@
       nextMedEveningDueTs: 0,
       notifications: true,
       rainAlerts: true,    // push once when the KNMI/Open-Meteo nowcast turns imminent
+      fastAlerts: true,    // push once per fast when 12h/16h elapsed
       theme: 'dark',       // 'dark' | 'light' | 'auto'
       awake: false,
       lastWakeTs: 0,
@@ -5509,6 +5536,32 @@
       return h > 0 ? h+'h '+(m%60)+'m' : m+'m';
     }
     var lastFastingEating = null; // null until first computed, so the very first tick never logs a false transition
+    // Pushes one alert per fast when elapsed fasting time crosses each
+    // configured milestone, so the ring doesn't have to be watched for
+    // 12h/16h to be noticed. Keyed by the current fast's winStart timestamp
+    // (stable for the whole fast, changes the moment eating resumes), so
+    // switching eating<->fasting naturally resets which milestones are
+    // still owed without any separate day-boundary bookkeeping.
+    var FAST_MILESTONE_HOURS = [12, 16];
+    var fastMilestoneKey = null;
+    var fastMilestonesFired = {};
+    function checkFastMilestones(f){
+      if(f.eating){ fastMilestoneKey = null; fastMilestonesFired = {}; return; }
+      var key = f.winStart.getTime();
+      if(fastMilestoneKey !== key){ fastMilestoneKey = key; fastMilestonesFired = {}; }
+      // Milestones keep being TRACKED above regardless of awake/settings
+      // state; only the push itself is gated, so re-waking (or turning the
+      // toggle back on) mid-fast still catches up on anything already owed
+      // rather than needing a fresh fast to notice again.
+      if(!S.fastAlerts || !S.awake) return;
+      var elapsedH = (Date.now() - f.winStart) / 3600000;
+      FAST_MILESTONE_HOURS.forEach(function(h){
+        if(elapsedH >= h && !fastMilestonesFired[h]){
+          fastMilestonesFired[h] = true;
+          notify('⏱️ ' + h + 'h fasting', 'You’ve been fasting for ' + h + ' hours.', 'stopwatch');
+        }
+      });
+    }
     function updateFastingRing(){
       if(!faceEl) return;
       var now = new Date();
@@ -5518,6 +5571,7 @@
         logEvent(f.eating ? 'fastEnd' : 'fastStart');
       }
       lastFastingEating = f.eating;
+      checkFastMilestones(f);
 
       var fill = document.getElementById('lf-fastfill');
       var stateEl = document.getElementById('lf-fast-state');
@@ -5775,7 +5829,7 @@
             saveSettings();
             // Only alert if today's dose isn't already logged — e.g. taken
             // early straight from the tile, well before the reminder time.
-            getEventsInRange(startOfToday(), Date.now() + 1, type).then(function(evs){
+            getEventsInRange(startOfToday(), endOfToday(), type).then(function(evs){
               if(evs.length){ scheduleNextMedTime(type); return; }
               if(remActive === null) showReminder(type); else remQueue.push(type);
             });
@@ -5840,6 +5894,19 @@
 
     // ---------- Today's totals (water / bathroom dashboard cards) ----------
     function startOfToday(){ var d = new Date(); d.setHours(0,0,0,0); return d.getTime(); }
+    // A fixed end-of-day bound, NOT `Date.now()`: logEvent() stamps its
+    // record's `ts` inside an openDb().then() callback — one microtask
+    // after it's called — while quickLog()/toggleMed() immediately chain a
+    // "get today's events up to now" query right after. If that query's
+    // upper bound is `Date.now()` captured at call time, it can predate the
+    // write's own later `Date.now()` by the width of that microtask gap,
+    // silently excluding the event just logged from its own refresh (the
+    // record is still in IndexedDB — dbCount is correct — only the read
+    // right after it misses it, until some later, unrelated refresh
+    // happens to query wide enough to pick it up). A same-day bound that
+    // doesn't depend on a racy second `Date.now()` snapshot removes the
+    // race outright, since "today" doesn't change mid-query either way.
+    function endOfToday(){ var d = new Date(); d.setHours(23,59,59,999); return d.getTime(); }
     // Flags the Bathroom tile (and sends one push, once per day) once today's
     // visit count crosses the configured threshold. Default of 8/day sits at
     // the upper edge of typical adult urinary frequency — a gentle heads-up
@@ -5867,7 +5934,7 @@
     function fmtClock(ts){ return new Date(ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }
     function refreshTodayTotals(){
       var seq = ++totalsReqSeq;
-      getEventsInRange(startOfToday(), Date.now()).then(function(events){
+      getEventsInRange(startOfToday(), endOfToday()).then(function(events){
         if(seq !== totalsReqSeq) return; // superseded by a newer call — discard
         var waters = events.filter(function(e){ return e.type === 'water' && !e.skipped; });
         var baths = events.filter(function(e){ return e.type === 'bath' && !e.skipped; });
@@ -5880,11 +5947,11 @@
         if(ws) ws.textContent = (mlDrunk/1000).toFixed(1) + ' / ' + (S.waterGoalMl/1000).toFixed(1) + ' L';
         var bv = document.getElementById('lf-bath-val'); if(bv) bv.textContent = String(bathVisits);
         // Small stamp of the most recent log on each tile (blank until the
-        // first tap of the day)
-        var wl = document.getElementById('lf-water-last');
-        if(wl) wl.textContent = waters.length ? ('Last ' + fmtClock(waters[waters.length-1].ts)) : '';
-        var bl = document.getElementById('lf-bath-last');
-        if(bl) bl.textContent = baths.length ? ('Last ' + fmtClock(baths[baths.length-1].ts)) : '';
+        // first tap of the day). Within a short window of a fresh tap, the
+        // stamp itself doubles as an undo button for a mis-tap — see
+        // renderLastStamp()/undoLastEvent() below.
+        renderLastStamp('lf-water-last', waters, 'water');
+        renderLastStamp('lf-bath-last', baths, 'bath');
         checkBathFlag(bathVisits);
       });
       updateNextReminderCard();
@@ -5904,6 +5971,56 @@
       var mins = Math.max(0, Math.round((candidates[0].ts - Date.now())/60000));
       nv.textContent = candidates[0].type;
       ns.textContent = mins <= 0 ? 'Due now' : ('in ' + mins + ' min');
+    }
+
+    // Water/bathroom are counters, not a daily checkbox like meds, so a
+    // mis-tap can't be undone by tapping the same tile again (that just
+    // logs another one). Instead, for a short window after the most recent
+    // log, its timestamp stamp becomes a tappable "undo" for that one entry
+    // — long enough to catch a slip of the thumb, short enough that an old
+    // stamp glanced at minutes later never looks like a live control.
+    var UNDO_WINDOW_MS = 120000;
+    function renderLastStamp(elId, sameTypeEvents, type){
+      var el = document.getElementById(elId);
+      if(!el || !sameTypeEvents.length) { if(el){ el.textContent=''; setUndoable(el,false); } return; }
+      var last = sameTypeEvents[sameTypeEvents.length - 1];
+      var fresh = Date.now() - last.ts < UNDO_WINDOW_MS;
+      el.textContent = 'Last ' + fmtClock(last.ts) + (fresh ? ' · Undo' : '');
+      el.dataset.undoType = fresh ? type : '';
+      setUndoable(el, fresh);
+    }
+    function setUndoable(el, on){
+      el.classList.toggle('undoable', on);
+      if(on){ el.setAttribute('role','button'); el.tabIndex = 0; el.setAttribute('aria-label','Undo last log'); }
+      else{ el.removeAttribute('role'); el.removeAttribute('tabindex'); el.removeAttribute('aria-label'); }
+    }
+    // Deletes only the single most recent event of `type` — re-checks the
+    // window server-side-of-sorts (against the DB, not just the possibly
+    // stale DOM) so a tap that lands right as the window closes can't
+    // delete an entry the user no longer intends to touch.
+    function undoLastEvent(type){
+      getEventsInRange(startOfToday(), endOfToday(), type).then(function(evs){
+        if(!evs.length) return;
+        var last = evs[evs.length - 1];
+        if(Date.now() - last.ts > UNDO_WINDOW_MS) { refreshTodayTotals(); return; }
+        openDb().then(function(db){
+          var tx = db.transaction('events', 'readwrite');
+          tx.objectStore('events').delete(last.id);
+          tx.oncomplete = function(){ refreshTodayTotals(); };
+        });
+      });
+    }
+    function initUndoStamps(){
+      ['lf-water-last', 'lf-bath-last'].forEach(function(id){
+        var el = document.getElementById(id);
+        if(!el) return;
+        el.addEventListener('click', function(ev){
+          // Stop the tap from also bubbling to the parent card's own click
+          // handler, which would log a brand-new entry in the same gesture.
+          ev.stopPropagation();
+          if(el.dataset.undoType) undoLastEvent(el.dataset.undoType);
+        });
+      });
     }
 
     // ---------- Live KNMI conditions card ----------
@@ -6204,6 +6321,8 @@
       if(notifEl){ notifEl.classList.toggle('on', !!S.notifications); notifEl.setAttribute('aria-checked', S.notifications ? 'true' : 'false'); }
       var rainEl = document.getElementById('lf-set-rainAlerts');
       if(rainEl){ rainEl.classList.toggle('on', !!S.rainAlerts); rainEl.setAttribute('aria-checked', S.rainAlerts ? 'true' : 'false'); }
+      var fastEl = document.getElementById('lf-set-fastAlerts');
+      if(fastEl){ fastEl.classList.toggle('on', !!S.fastAlerts); fastEl.setAttribute('aria-checked', S.fastAlerts ? 'true' : 'false'); }
       var themeRow = document.getElementById('lf-set-theme');
       if(themeRow) themeRow.querySelectorAll('.lf-themebtn').forEach(function(b){
         var on = b.dataset.theme === S.theme;
@@ -6222,7 +6341,7 @@
     // IndexedDB record instead of inserting a duplicate, found by scanning
     // today's already-fetched mood events for an existing row.
     function logMood(value){
-      return getEventsInRange(startOfToday(), Date.now() + 1).then(function(events){
+      return getEventsInRange(startOfToday(), endOfToday()).then(function(events){
         var existing = events.filter(function(e){ return e.type === 'mood'; })[0];
         return openDb().then(function(db){
           return new Promise(function(resolve, reject){
@@ -6258,7 +6377,7 @@
     // load and the day-rollover check below, so a fresh day always clears
     // yesterday's selection rather than leaving it visually stuck.
     function refreshMoodDisplay(){
-      getEventsInRange(startOfToday(), Date.now() + 1).then(function(events){
+      getEventsInRange(startOfToday(), endOfToday()).then(function(events){
         var existing = events.filter(function(e){ return e.type === 'mood'; })[0];
         updateMoodRowDisplay(existing ? existing.value : null);
       });
@@ -6379,6 +6498,128 @@
       if(logBtn) logBtn.addEventListener('click', exportLogCsv);
     }
 
+    // ---------- Log CSV import ----------
+    // A minimal RFC4180-style reader matching csvEscape()'s writer: quotes
+    // a field only when it contains a comma/quote/newline, doubles internal
+    // quotes. None of our own exported fields need it (dates/times/labels
+    // are all comma-free), but a hand-edited file might.
+    function csvParse(text){
+      var rows = [], row = [], field = '', inQuotes = false;
+      for(var i=0;i<text.length;i++){
+        var c = text[i];
+        if(inQuotes){
+          if(c === '"'){ if(text[i+1] === '"'){ field += '"'; i++; } else inQuotes = false; }
+          else field += c;
+        } else if(c === '"'){ inQuotes = true; }
+        else if(c === ','){ row.push(field); field = ''; }
+        else if(c === '\r'){ /* ignore — \n (or EOF) ends the row */ }
+        else if(c === '\n'){ row.push(field); rows.push(row); row = []; field = ''; }
+        else field += c;
+      }
+      if(field.length || row.length){ row.push(field); rows.push(row); }
+      return rows;
+    }
+    // exportLogCsv()'s Time column comes from fmtClock(), which formats via
+    // toLocaleTimeString() — 12-hour "02:30 PM" or 24-hour "14:30" depending
+    // on the browser's locale at export time, not a fixed format. Handle
+    // both so a file exported on one device/locale still imports on another.
+    function parseCsvTime(s){
+      var m = /^(\d{1,2}):(\d{2})\s*([AaPp][Mm])?$/.exec(String(s || '').trim());
+      if(!m) return null;
+      var h = parseInt(m[1], 10), mi = parseInt(m[2], 10);
+      var ap = m[3] ? m[3].toUpperCase() : null;
+      if(ap === 'PM' && h < 12) h += 12;
+      if(ap === 'AM' && h === 12) h = 0;
+      if(h > 23 || h < 0 || mi > 59 || mi < 0) return null;
+      return { h: h, m: mi };
+    }
+    var LOG_LABELS_REV = {};
+    Object.keys(LOG_LABELS).forEach(function(k){ LOG_LABELS_REV[LOG_LABELS[k]] = k; });
+    function setImportStatus(msg, cls){
+      var el = document.getElementById('lf-import-status');
+      if(el){ el.textContent = msg; el.className = 'lf-ntfy-status' + (cls ? ' ' + cls : ''); }
+    }
+    // Re-derives events from exactly the columns exportLogCsv() writes
+    // (Date, Time, Event, Value, Skipped). Time only carries hour:minute —
+    // seconds are lost on the round trip, which every consumer of this data
+    // (day buckets, streaks, "logged today" checks, the timeline) is
+    // already indifferent to. Existing events in the imported span are
+    // fetched once up front so re-importing the same file (or importing
+    // over live data that already has some of those entries) skips exact
+    // type+minute duplicates instead of doubling every count.
+    function importLogCsv(file){
+      setImportStatus('Reading…');
+      var reader = new FileReader();
+      reader.onerror = function(){ setImportStatus('Could not read that file', 'err'); };
+      reader.onload = function(){
+        var text = String(reader.result).replace(/^﻿/, '');
+        var rows = csvParse(text).filter(function(r){ return r.length > 1 || (r.length === 1 && r[0] !== ''); });
+        if(!rows.length || rows[0][0] !== 'Date' || rows[0][2] !== 'Event'){
+          setImportStatus('Not a StandBy log CSV', 'err');
+          return;
+        }
+        var recs = [], unrecognized = 0;
+        for(var i = 1; i < rows.length; i++){
+          var r = rows[i];
+          if(r.length < 3){ unrecognized++; continue; }
+          var type = LOG_LABELS_REV[r[2]];
+          var tm = parseCsvTime(r[1]);
+          var d = /^(\d{4})-(\d{2})-(\d{2})$/.exec(r[0]);
+          if(!type || !tm || !d){ unrecognized++; continue; }
+          var ts = new Date(parseInt(d[1],10), parseInt(d[2],10)-1, parseInt(d[3],10), tm.h, tm.m, 0, 0).getTime();
+          var rec = { type: type, ts: ts };
+          if(r[3]){ var v = parseFloat(r[3]); rec.value = isNaN(v) ? r[3] : v; }
+          if(r[4] === 'yes') rec.skipped = true;
+          recs.push(rec);
+        }
+        if(!recs.length){ setImportStatus('No recognizable rows in that file', 'err'); return; }
+        var minTs = Math.min.apply(null, recs.map(function(r){ return r.ts; }));
+        var maxTs = Math.max.apply(null, recs.map(function(r){ return r.ts; }));
+        getEventsInRange(minTs - 60000, maxTs + 60000).then(function(existing){
+          var seen = {};
+          existing.forEach(function(e){ seen[e.type + '|' + Math.floor(e.ts/60000)] = true; });
+          var toInsert = recs.filter(function(r){ return !seen[r.type + '|' + Math.floor(r.ts/60000)]; });
+          var dupes = recs.length - toInsert.length;
+          if(!toInsert.length){
+            setImportStatus('All ' + recs.length + ' entries already present', 'ok');
+            return;
+          }
+          openDb().then(function(db){
+            return new Promise(function(resolve, reject){
+              var tx = db.transaction('events', 'readwrite');
+              var store = tx.objectStore('events');
+              toInsert.forEach(function(rec){ store.add(rec); });
+              tx.oncomplete = resolve;
+              tx.onerror = function(){ reject(tx.error); };
+            });
+          }).then(function(){
+            var msg = 'Imported ' + toInsert.length + ' entries';
+            if(dupes) msg += ' · ' + dupes + ' already present';
+            if(unrecognized) msg += ' · skipped ' + unrecognized + ' unrecognized';
+            setImportStatus(msg, 'ok');
+            // Refresh every view that could show imported data immediately.
+            refreshTodayTotals();
+            refreshMedCards();
+            refreshMoodDisplay();
+            renderStats();
+            var timelineView = document.getElementById('lf-view-timeline');
+            if(timelineView && timelineView.classList.contains('active')) renderTimeline();
+          }).catch(function(){ setImportStatus('Import failed writing to the local database', 'err'); });
+        });
+      };
+      reader.readAsText(file);
+    }
+    function initImportButton(){
+      var btn = document.getElementById('lf-import-log');
+      var fileInput = document.getElementById('lf-import-file');
+      if(!btn || !fileInput) return;
+      btn.addEventListener('click', function(){ fileInput.click(); });
+      fileInput.addEventListener('change', function(){
+        if(fileInput.files && fileInput.files[0]) importLogCsv(fileInput.files[0]);
+        fileInput.value = ''; // allow re-selecting the same file next time
+      });
+    }
+
     // ---------- Medicine tracker (Morning / Evening) ----------
     // A tile is a simple daily checkbox, not a counter: tapping logs one
     // 'medMorning'/'medEvening' event for today, tapping again removes it
@@ -6387,7 +6628,7 @@
     var MED_TYPES = { morning: 'medMorning', evening: 'medEvening' };
     function toggleMed(slot){
       var type = MED_TYPES[slot];
-      getEventsInRange(startOfToday(), Date.now() + 1, type).then(function(evs){
+      getEventsInRange(startOfToday(), endOfToday(), type).then(function(evs){
         if(evs.length){
           openDb().then(function(db){
             var tx = db.transaction('events', 'readwrite');
@@ -6410,7 +6651,7 @@
       });
     }
     function refreshMedCards(){
-      getEventsInRange(startOfToday(), Date.now() + 1).then(function(events){
+      getEventsInRange(startOfToday(), endOfToday()).then(function(events){
         Object.keys(MED_TYPES).forEach(function(slot){
           var ev = events.filter(function(e){ return e.type === MED_TYPES[slot]; })[0];
           var card = document.getElementById('lf-card-med-' + slot);
@@ -6521,6 +6762,12 @@
       var rainEl = document.getElementById('lf-set-rainAlerts');
       if(rainEl) rainEl.addEventListener('click', function(){
         S.rainAlerts = !S.rainAlerts;
+        saveSettings();
+        populateSettingsUI();
+      });
+      var fastEl = document.getElementById('lf-set-fastAlerts');
+      if(fastEl) fastEl.addEventListener('click', function(){
+        S.fastAlerts = !S.fastAlerts;
         saveSettings();
         populateSettingsUI();
       });
@@ -6636,9 +6883,11 @@
       initReminderButtons();
       initStatsToggle();
       initExportButtons();
+      initImportButton();
       initSettingsUI();
       initMoodButtons();
       initMedButtons();
+      initUndoStamps();
       initKeyboardActivation();
       updateGreeting();
       updateStatusPill();
