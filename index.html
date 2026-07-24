@@ -16,6 +16,18 @@
     --muted: #8a8a8e;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  /* Screen-reader-only: present in the accessibility tree, invisible on
+     screen — used for the carousel's live face announcer and any label
+     text that would be redundant/cluttering if shown visually. */
+  .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+  }
   html, body {
     height: 100%;
     background: #000;
@@ -2088,6 +2100,15 @@
     text-overflow: ellipsis;
   }
   .f-life .lf-card.wide { grid-column: span 3; }
+  /* The merged weather+outdoors card carries roughly the combined content
+     of the two cards it replaced (header, hero row, 6 mini-stats, verdict
+     line) — noticeably more than the single line most cards fit into
+     "1fr" of this equal-height grid. Span 2 row-slots so it gets close to
+     the same total space the original two full-height wide cards had
+     together, instead of clipping under .lf-cards' overflow:hidden.
+     grid-auto-rows switches to `auto` in life-portrait mode (see below),
+     where every row is already content-sized and a row-span is harmless. */
+  .f-life .lf-card#lf-card-weather { grid-row: span 2; }
 
   /* ---------- Life face: true-portrait layout ----------
      The rules above assume the wide landscape box the rotation hack
@@ -2144,7 +2165,7 @@
      below the fold at the bottom — hoist it to the top of the card grid
      so it's visible without scrolling. (Landscape shows every card at
      once, so source order stands there.) */
-  html.life-portrait #face-life #lf-card-knmi { order: -1; }
+  html.life-portrait #face-life #lf-card-weather { order: -1; }
   /* Same story for the numeric Settings inputs: taller container inflated
      the (cqh-based) font past what their (cqw-based) width fit, clipping
      the value. Widen them rather than shrink the text further. */
@@ -2953,29 +2974,33 @@
 <body class="data-loading">
   <div class="data-loader" id="data-loader"></div>
   <div class="data-fresh" id="data-fresh" style="opacity:0"><span class="df-dot"></span><span class="df-text"></span></div>
+  <!-- Announces which face is showing whenever the carousel settles on a
+       new one, since the swipe gesture itself has no accessible semantics
+       and the position dots below are purely decorative (aria-hidden). -->
+  <div class="sr-only" id="face-announcer" aria-live="polite" aria-atomic="true"></div>
   <!-- Night mode: warm (multiply) + dark veils that strengthen after sunset -->
   <div class="nv-gold" id="nv-gold" aria-hidden="true"></div>
   <div class="nv-warm" id="nv-warm" aria-hidden="true"></div>
   <div class="nv-dark" id="nv-dark" aria-hidden="true"></div>
   <div class="install-nudge" id="install-nudge">
-    <span class="in-ico">&#x1F4F2;</span>
+    <span class="in-ico" aria-hidden="true">&#x1F4F2;</span>
     <span class="in-txt">Tap <b>Share</b> &rarr; <b>Add to Home Screen</b> for full-screen StandBy mode</span>
-    <span class="in-close" id="install-nudge-close">&#x2715;</span>
+    <span class="in-close" id="install-nudge-close" role="button" tabindex="0" aria-label="Dismiss">&#x2715;</span>
   </div>
   <div class="stage" id="stage">
     <div class="carousel" id="carousel">
 
       <!-- Face 1: Life (Smart Daily Dashboard & Health Assistant) -->
-      <section class="face f-life" id="face-life" data-theme="dark">
-        <div class="lf-tabs">
-          <div class="lf-tab active" data-lftab="home">Home</div>
-          <div class="lf-tab" data-lftab="timeline">Timeline</div>
-          <div class="lf-tab" data-lftab="stats">Stats</div>
-          <div class="lf-tab" data-lftab="settings">Settings</div>
+      <section class="face f-life" id="face-life" data-theme="dark" role="group" aria-roledescription="slide" aria-label="Life dashboard">
+        <div class="lf-tabs" role="tablist" aria-label="Life dashboard sections">
+          <div class="lf-tab active" data-lftab="home" role="tab" aria-selected="true" aria-controls="lf-view-home" id="lf-tab-home" tabindex="0">Home</div>
+          <div class="lf-tab" data-lftab="timeline" role="tab" aria-selected="false" aria-controls="lf-view-timeline" id="lf-tab-timeline" tabindex="-1">Timeline</div>
+          <div class="lf-tab" data-lftab="stats" role="tab" aria-selected="false" aria-controls="lf-view-stats" id="lf-tab-stats" tabindex="-1">Stats</div>
+          <div class="lf-tab" data-lftab="settings" role="tab" aria-selected="false" aria-controls="lf-view-settings" id="lf-tab-settings" tabindex="-1">Settings</div>
         </div>
 
         <!-- Home -->
-        <div class="lf-view active" id="lf-view-home">
+        <div class="lf-view active" id="lf-view-home" role="tabpanel" aria-labelledby="lf-tab-home">
           <div class="lf-home">
             <div class="lf-homeleft">
               <div class="lf-greeting" id="lf-greeting">Good Morning</div>
@@ -2987,23 +3012,23 @@
                    from the Home tab (where the clock lives) — a reminder
                    that becomes due while on Timeline/Stats/Settings simply
                    waits here until the user returns to Home. -->
-              <div class="lf-reminder" id="lf-reminder">
+              <div class="lf-reminder" id="lf-reminder" role="alert" aria-hidden="true">
                 <div class="lf-rem-row">
-                  <span class="lf-rem-ico" id="lf-rem-ico">&#x1F4A7;</span>
+                  <span class="lf-rem-ico" id="lf-rem-ico" aria-hidden="true">&#x1F4A7;</span>
                   <span class="lf-rem-txt" id="lf-rem-txt">Time to drink water</span>
                 </div>
                 <div class="lf-rem-btns">
-                  <span class="lf-rem-btn primary" id="lf-rem-done">&#x2713; Done</span>
-                  <span class="lf-rem-btn" id="lf-rem-skip">Skip</span>
+                  <span class="lf-rem-btn primary" id="lf-rem-done" role="button" tabindex="-1">&#x2713; Done</span>
+                  <span class="lf-rem-btn" id="lf-rem-skip" role="button" tabindex="-1">Skip</span>
                 </div>
               </div>
 
               <div class="lf-statuspill sleep" id="lf-statuspill">
-                <span class="lf-statusdot"></span><span id="lf-statustxt">Sleeping</span>
+                <span class="lf-statusdot" aria-hidden="true"></span><span id="lf-statustxt">Sleeping</span>
               </div>
-              <div class="lf-wsrow">
-                <div class="lf-wsbtn on awake" id="lf-btn-awake"><span class="lf-wsico">&#x1F31E;</span>I'm Awake</div>
-                <div class="lf-wsbtn" id="lf-btn-sleep"><span class="lf-wsico">&#x1F319;</span>I'm Sleeping</div>
+              <div class="lf-wsrow" role="group" aria-label="Awake/asleep status">
+                <div class="lf-wsbtn on awake" id="lf-btn-awake" role="button" tabindex="0" aria-pressed="true"><span class="lf-wsico" aria-hidden="true">&#x1F31E;</span>I'm Awake</div>
+                <div class="lf-wsbtn" id="lf-btn-sleep" role="button" tabindex="0" aria-pressed="false"><span class="lf-wsico" aria-hidden="true">&#x1F319;</span>I'm Sleeping</div>
               </div>
               <div class="lf-notice">Reminders work best while StandBy stays open</div>
             </div>
@@ -3047,42 +3072,38 @@
               </div>
               <div class="lf-card" id="lf-card-mood">
                 <div class="lf-card-hd">&#x1F642; Mood</div>
-                <div class="lf-mood-row" id="lf-mood-row">
-                  <span class="lf-mood-emoji" data-mood="1">&#x1F61E;</span>
-                  <span class="lf-mood-emoji" data-mood="2">&#x1F641;</span>
-                  <span class="lf-mood-emoji" data-mood="3">&#x1F610;</span>
-                  <span class="lf-mood-emoji" data-mood="4">&#x1F642;</span>
-                  <span class="lf-mood-emoji" data-mood="5">&#x1F604;</span>
+                <div class="lf-mood-row" id="lf-mood-row" role="radiogroup" aria-label="Today's mood">
+                  <span class="lf-mood-emoji" data-mood="1" role="radio" aria-checked="false" aria-label="Terrible" tabindex="0">&#x1F61E;</span>
+                  <span class="lf-mood-emoji" data-mood="2" role="radio" aria-checked="false" aria-label="Bad" tabindex="-1">&#x1F641;</span>
+                  <span class="lf-mood-emoji" data-mood="3" role="radio" aria-checked="false" aria-label="Okay" tabindex="-1">&#x1F610;</span>
+                  <span class="lf-mood-emoji" data-mood="4" role="radio" aria-checked="false" aria-label="Good" tabindex="-1">&#x1F642;</span>
+                  <span class="lf-mood-emoji" data-mood="5" role="radio" aria-checked="false" aria-label="Great" tabindex="-1">&#x1F604;</span>
                 </div>
               </div>
-              <div class="lf-card lf-tappable" id="lf-card-med-morning" role="button" tabindex="0">
+              <div class="lf-card lf-tappable" id="lf-card-med-morning" role="button" aria-pressed="false" tabindex="0">
                 <div class="lf-card-hd">&#x1F305; Morning meds</div>
                 <div class="lf-card-val" id="lf-med-morning-val">&mdash;</div>
                 <div class="lf-card-sub" id="lf-med-morning-sub">Not yet</div>
                 <div class="lf-tap-hint" id="lf-med-morning-hint">+ Tap when taken</div>
               </div>
-              <div class="lf-card lf-tappable" id="lf-card-med-evening" role="button" tabindex="0">
+              <div class="lf-card lf-tappable" id="lf-card-med-evening" role="button" aria-pressed="false" tabindex="0">
                 <div class="lf-card-hd">&#x1F319; Evening meds</div>
                 <div class="lf-card-val" id="lf-med-evening-val">&mdash;</div>
                 <div class="lf-card-sub" id="lf-med-evening-sub">Not yet</div>
                 <div class="lf-tap-hint" id="lf-med-evening-hint">+ Tap when taken</div>
               </div>
-              <div class="lf-card wide" id="lf-card-conditions">
-                <div class="lf-card-hd">&#x1F30A; Bonaire &middot; outdoors &amp; swim</div>
-                <div class="lf-card-val" id="lf-cond-val" style="font-size:clamp(11px,3cqh,22px)">&mdash;</div>
-                <div class="lf-cond-best">
-                  <span class="lf-cond-verdict-ico" id="lf-cond-verdict-ico">&#x1F3D6;&#xFE0F;</span>
-                  <span id="lf-cond-verdict">&mdash;</span>
-                  <span class="lf-cond-sep" id="lf-cond-bestwrap"> &middot; best <b id="lf-cond-besttime">&mdash;</b></span>
-                </div>
-              </div>
-              <!-- Live KNMI Bonaire weather. Fed entirely by the shared j-*
-                   classes that loadWeather() sweeps with setAll(), so this
-                   card needs no JS of its own and updates on every refresh. -->
-              <div class="lf-card wide" id="lf-card-knmi">
-                <div class="lf-card-hd">&#x26C5; Bonaire &middot; KNMI weather</div>
+              <!-- Merged weather + outdoor-conditions card. The hero (icon,
+                   feels-like temp, condition text) and three of the six mini
+                   stats (visibility/rain/solar) are fed entirely by the
+                   shared j-* classes that loadWeather() sweeps with
+                   setAll(), so that half needs no JS of its own. UV/wind/sea
+                   plus the swim verdict and best-outdoor-window line come
+                   from updateConditionsCard() below, which reuses the
+                   Marine face's own scoring logic rather than re-deriving it. -->
+              <div class="lf-card wide" id="lf-card-weather">
+                <div class="lf-card-hd">&#x1F30A; Bonaire &middot; weather &amp; outdoors</div>
                 <div class="lf-knmi-row">
-                  <span class="lf-knmi-ico j-wico">&#x26C5;</span>
+                  <span class="lf-knmi-ico j-wico" aria-hidden="true">&#x26C5;</span>
                   <div class="lf-knmi-hero">
                     <span class="lf-knmi-temp j-temp">--&deg;</span>
                     <span class="lf-knmi-lbl">Feels like &middot; <span class="j-wtext">loading&hellip;</span></span>
@@ -3091,7 +3112,15 @@
                     <div class="lf-knmi-stat"><span class="lf-knmi-sval j-vis">--</span><span class="lf-knmi-slbl">&#x1F441;&#xFE0F; Visibility</span></div>
                     <div class="lf-knmi-stat"><span class="lf-knmi-sval j-precip">--</span><span class="lf-knmi-slbl">&#x1F327;&#xFE0F; Rain</span></div>
                     <div class="lf-knmi-stat"><span class="lf-knmi-sval j-rad">--</span><span class="lf-knmi-slbl">&#x2600;&#xFE0F; Solar</span></div>
+                    <div class="lf-knmi-stat"><span class="lf-knmi-sval" id="lf-cond-uv">--</span><span class="lf-knmi-slbl">&#x2600;&#xFE0F; UV</span></div>
+                    <div class="lf-knmi-stat"><span class="lf-knmi-sval" id="lf-cond-wind">--</span><span class="lf-knmi-slbl">&#x1F4A8; Wind</span></div>
+                    <div class="lf-knmi-stat"><span class="lf-knmi-sval" id="lf-cond-sea">--</span><span class="lf-knmi-slbl">&#x1F30A; Sea</span></div>
                   </div>
+                </div>
+                <div class="lf-cond-best">
+                  <span class="lf-cond-verdict-ico" id="lf-cond-verdict-ico" aria-hidden="true">&#x1F3D6;&#xFE0F;</span>
+                  <span id="lf-cond-verdict">&mdash;</span>
+                  <span class="lf-cond-sep" id="lf-cond-bestwrap"> &middot; best <b id="lf-cond-besttime">&mdash;</b></span>
                 </div>
               </div>
             </div>
@@ -3099,10 +3128,10 @@
         </div>
 
         <!-- Timeline (populated in a later stage) -->
-        <div class="lf-view" id="lf-view-timeline"></div>
+        <div class="lf-view" id="lf-view-timeline" role="tabpanel" aria-labelledby="lf-tab-timeline"></div>
 
         <!-- Stats (populated in a later stage) -->
-        <div class="lf-view" id="lf-view-stats">
+        <div class="lf-view" id="lf-view-stats" role="tabpanel" aria-labelledby="lf-tab-stats">
           <div class="lf-stats-daily" id="lf-stats-daily">
             <div class="lf-stat-chip"><div class="lf-card-hd">Water today</div><div class="lf-card-val blue" id="lf-st-water">0%</div></div>
             <div class="lf-stat-chip"><div class="lf-card-hd">Bathroom</div><div class="lf-card-val" id="lf-st-bath">0</div></div>
@@ -3111,10 +3140,10 @@
           </div>
           <div class="lf-today-log" id="lf-today-log"></div>
           <div class="lf-mood-strip" id="lf-mood-strip"></div>
-          <div class="lf-stats-toggle">
-            <div class="lf-rangetab active" data-lfrange="7">Week</div>
-            <div class="lf-rangetab" data-lfrange="30">Month</div>
-            <div class="lf-rangetab" data-lfrange="365">Year</div>
+          <div class="lf-stats-toggle" role="radiogroup" aria-label="Stats time range">
+            <div class="lf-rangetab active" data-lfrange="7" role="radio" aria-checked="true" tabindex="0">Week</div>
+            <div class="lf-rangetab" data-lfrange="30" role="radio" aria-checked="false" tabindex="-1">Month</div>
+            <div class="lf-rangetab" data-lfrange="365" role="radio" aria-checked="false" tabindex="-1">Year</div>
           </div>
           <div class="lf-stats-charts" id="lf-stats-charts">
             <div class="lf-chart-card">
@@ -3147,56 +3176,60 @@
             <div class="lf-cal-grid" id="lf-cal-grid"></div>
           </div>
           <div class="lf-export-btns">
-            <div class="lf-themebtn lf-export-btn" id="lf-export-summary">&#x2B07;&#xFE0F; Summary CSV</div>
-            <div class="lf-themebtn lf-export-btn" id="lf-export-log">&#x2B07;&#xFE0F; Full log CSV</div>
+            <div class="lf-themebtn lf-export-btn" id="lf-export-summary" role="button" tabindex="0">&#x2B07;&#xFE0F; Summary CSV</div>
+            <div class="lf-themebtn lf-export-btn" id="lf-export-log" role="button" tabindex="0">&#x2B07;&#xFE0F; Full log CSV</div>
           </div>
         </div>
 
         <!-- Settings (populated in a later stage) -->
-        <div class="lf-view" id="lf-view-settings">
+        <div class="lf-view" id="lf-view-settings" role="tabpanel" aria-labelledby="lf-tab-settings">
           <div class="lf-settings-list">
             <div class="lf-set-row"><span class="lf-set-lbl">Wake time</span><input type="time" id="lf-set-wakeTime" class="lf-set-input"></div>
             <div class="lf-set-row"><span class="lf-set-lbl">Sleep time</span><input type="time" id="lf-set-sleepTime" class="lf-set-input"></div>
             <div class="lf-set-row"><span class="lf-set-lbl">Eating window opens</span><input type="time" id="lf-set-eatStart" class="lf-set-input"></div>
             <div class="lf-set-row"><span class="lf-set-lbl">Eating window closes</span><input type="time" id="lf-set-eatEnd" class="lf-set-input"></div>
             <div class="lf-set-row"><span class="lf-set-lbl">Water reminder every</span><input type="number" min="10" max="240" id="lf-set-waterIntervalMin" class="lf-set-input lf-set-num"><span class="lf-set-unit">min</span></div>
-            <div class="lf-quickpick" id="lf-quickpick-waterIntervalMin">
-              <div class="lf-themebtn lf-qp-btn" data-min="30">30m</div>
-              <div class="lf-themebtn lf-qp-btn" data-min="45">45m</div>
-              <div class="lf-themebtn lf-qp-btn" data-min="60">1h</div>
-              <div class="lf-themebtn lf-qp-btn" data-min="90">1h30</div>
-              <div class="lf-themebtn lf-qp-btn" data-min="120">2h</div>
+            <div class="lf-quickpick" id="lf-quickpick-waterIntervalMin" role="group" aria-label="Water reminder quick picks">
+              <div class="lf-themebtn lf-qp-btn" data-min="30" role="button" aria-pressed="false" tabindex="0">30m</div>
+              <div class="lf-themebtn lf-qp-btn" data-min="45" role="button" aria-pressed="false" tabindex="0">45m</div>
+              <div class="lf-themebtn lf-qp-btn" data-min="60" role="button" aria-pressed="false" tabindex="0">1h</div>
+              <div class="lf-themebtn lf-qp-btn" data-min="90" role="button" aria-pressed="false" tabindex="0">1h30</div>
+              <div class="lf-themebtn lf-qp-btn" data-min="120" role="button" aria-pressed="false" tabindex="0">2h</div>
             </div>
             <div class="lf-set-row"><span class="lf-set-lbl">Water goal</span><input type="number" min="0.5" max="10" step="0.1" id="lf-set-waterGoalL" class="lf-set-input lf-set-num"><span class="lf-set-unit">L</span></div>
             <div class="lf-set-row"><span class="lf-set-lbl">Water portion / tap</span><input type="number" min="50" max="1000" step="50" id="lf-set-waterPortionMl" class="lf-set-input lf-set-num"><span class="lf-set-unit">mL</span></div>
             <div class="lf-set-row"><span class="lf-set-lbl">Bathroom reminder every</span><input type="number" min="10" max="240" id="lf-set-bathIntervalMin" class="lf-set-input lf-set-num"><span class="lf-set-unit">min</span></div>
-            <div class="lf-quickpick" id="lf-quickpick-bathIntervalMin">
-              <div class="lf-themebtn lf-qp-btn" data-min="0">Off</div>
-              <div class="lf-themebtn lf-qp-btn" data-min="30">30m</div>
-              <div class="lf-themebtn lf-qp-btn" data-min="45">45m</div>
-              <div class="lf-themebtn lf-qp-btn" data-min="60">1h</div>
-              <div class="lf-themebtn lf-qp-btn" data-min="90">1h30</div>
-              <div class="lf-themebtn lf-qp-btn" data-min="120">2h</div>
+            <div class="lf-quickpick" id="lf-quickpick-bathIntervalMin" role="group" aria-label="Bathroom reminder quick picks">
+              <div class="lf-themebtn lf-qp-btn" data-min="0" role="button" aria-pressed="false" tabindex="0">Off</div>
+              <div class="lf-themebtn lf-qp-btn" data-min="30" role="button" aria-pressed="false" tabindex="0">30m</div>
+              <div class="lf-themebtn lf-qp-btn" data-min="45" role="button" aria-pressed="false" tabindex="0">45m</div>
+              <div class="lf-themebtn lf-qp-btn" data-min="60" role="button" aria-pressed="false" tabindex="0">1h</div>
+              <div class="lf-themebtn lf-qp-btn" data-min="90" role="button" aria-pressed="false" tabindex="0">1h30</div>
+              <div class="lf-themebtn lf-qp-btn" data-min="120" role="button" aria-pressed="false" tabindex="0">2h</div>
             </div>
             <div class="lf-set-row"><span class="lf-set-lbl">Flag bathroom if over</span><input type="number" min="3" max="30" id="lf-set-bathFlagThreshold" class="lf-set-input lf-set-num"><span class="lf-set-unit">/day</span></div>
             <div class="lf-set-row"><span class="lf-set-lbl">Morning meds at</span><input type="time" id="lf-set-medMorningTime" class="lf-set-input"></div>
             <div class="lf-set-row"><span class="lf-set-lbl">Evening meds at</span><input type="time" id="lf-set-medEveningTime" class="lf-set-input"></div>
             <div class="lf-set-row">
-              <span class="lf-set-lbl">Notifications</span>
-              <div class="lf-notif-toggle" id="lf-set-notifications"><span class="lf-notif-knob"></span></div>
+              <span class="lf-set-lbl" id="lf-set-notifications-lbl">Notifications</span>
+              <div class="lf-notif-toggle" id="lf-set-notifications" role="switch" aria-checked="true" aria-labelledby="lf-set-notifications-lbl" tabindex="0"><span class="lf-notif-knob"></span></div>
             </div>
             <div class="lf-set-row">
-              <span class="lf-set-lbl">Theme</span>
-              <div class="lf-themerow" id="lf-set-theme">
-                <div class="lf-themebtn" data-theme="dark">Dark</div>
-                <div class="lf-themebtn" data-theme="light">Light</div>
-                <div class="lf-themebtn" data-theme="auto">Auto</div>
+              <span class="lf-set-lbl" id="lf-set-rainAlerts-lbl">Rain alerts</span>
+              <div class="lf-notif-toggle" id="lf-set-rainAlerts" role="switch" aria-checked="true" aria-labelledby="lf-set-rainAlerts-lbl" tabindex="0"><span class="lf-notif-knob"></span></div>
+            </div>
+            <div class="lf-set-row">
+              <span class="lf-set-lbl" id="lf-set-theme-lbl">Theme</span>
+              <div class="lf-themerow" id="lf-set-theme" role="radiogroup" aria-labelledby="lf-set-theme-lbl">
+                <div class="lf-themebtn" data-theme="dark" role="radio" aria-checked="false" tabindex="-1">Dark</div>
+                <div class="lf-themebtn" data-theme="light" role="radio" aria-checked="false" tabindex="-1">Light</div>
+                <div class="lf-themebtn" data-theme="auto" role="radio" aria-checked="false" tabindex="-1">Auto</div>
               </div>
             </div>
             <div class="lf-set-section">Push reminders (ntfy.sh)</div>
             <div class="lf-set-row">
-              <span class="lf-set-lbl">Push via ntfy</span>
-              <div class="lf-notif-toggle" id="lf-set-ntfyEnabled"><span class="lf-notif-knob"></span></div>
+              <span class="lf-set-lbl" id="lf-set-ntfyEnabled-lbl">Push via ntfy</span>
+              <div class="lf-notif-toggle" id="lf-set-ntfyEnabled" role="switch" aria-checked="false" aria-labelledby="lf-set-ntfyEnabled-lbl" tabindex="0"><span class="lf-notif-knob"></span></div>
             </div>
             <div class="lf-set-row lf-ntfy-topicrow">
               <span class="lf-set-lbl">Your topic</span>
@@ -3206,8 +3239,8 @@
               Install the free <b>ntfy</b> app, then subscribe to the topic above (or tap Subscribe). Reminders are queued for the day as soon as you tap "I'm Awake," so they still arrive even with StandBy fully closed.
             </div>
             <div class="lf-ntfy-btns">
-              <div class="lf-themebtn lf-ntfy-btn" id="lf-ntfy-subscribe">Subscribe</div>
-              <div class="lf-themebtn lf-ntfy-btn" id="lf-ntfy-test">Send test</div>
+              <div class="lf-themebtn lf-ntfy-btn" id="lf-ntfy-subscribe" role="button" tabindex="0">Subscribe</div>
+              <div class="lf-themebtn lf-ntfy-btn" id="lf-ntfy-test" role="button" tabindex="0">Send test</div>
             </div>
             <div class="lf-ntfy-status" id="lf-ntfy-status"></div>
           </div>
@@ -3215,7 +3248,7 @@
       </section>
 
       <!-- Face 2: Galaxy AOD (Samsung-style Always-On Display) -->
-      <section class="face f-galaxy" id="face-galaxy">
+      <section class="face f-galaxy" id="face-galaxy" role="group" aria-roledescription="slide" aria-label="Galaxy always-on clock">
         <div class="fgx-drift">
           <div class="fgx-clock">
             <span class="j-hh">05</span><span class="fgx-colon">:</span><span class="j-mm">13</span><span class="fgx-ampm j-ampm">AM</span>
@@ -3227,7 +3260,7 @@
       </section>
 
       <!-- Face 3: Classic -->
-      <section class="face f-classic">
+      <section class="face f-classic" role="group" aria-roledescription="slide" aria-label="Classic clock and weather">
         <div class="clock">
           <div class="time">
             <span class="j-hh">5</span><span class="colon">:</span><span class="j-mm">13</span><span class="ampm j-ampm">AM</span>
@@ -3250,7 +3283,7 @@
       </section>
 
       <!-- Face 4: Glass Weather -->
-      <section class="face f-glass">
+      <section class="face f-glass" role="group" aria-roledescription="slide" aria-label="Glass weather clock">
         <div class="fg-wstrip">
           <span class="fg-wstrip-ico j-wico">&#x26C5;</span>
           <span class="fg-wstrip-temp j-temp">--&deg;</span>
@@ -3290,7 +3323,7 @@
       </section>
 
       <!-- Face 5: Analog -->
-      <section class="face f-analog">
+      <section class="face f-analog" role="group" aria-roledescription="slide" aria-label="Analog clock and weather">
         <div class="dial" id="dial">
           <div class="hand h" id="hand-h"></div>
           <div class="hand m" id="hand-m"></div>
@@ -3312,7 +3345,7 @@
       </section>
 
       <!-- Face 6: Weather Dashboard -->
-      <section class="face f-weather">
+      <section class="face f-weather" role="group" aria-roledescription="slide" aria-label="Weather dashboard">
         <!-- Top row: time (left) + weather summary (right) -->
         <div class="fw-top">
           <div class="fw-timediv">
@@ -3400,7 +3433,7 @@
       </section>
 
       <!-- Face 7: Calendar -->
-      <section class="face f-cal">
+      <section class="face f-cal" role="group" aria-roledescription="slide" aria-label="Calendar">
         <div class="fc-left">
           <div class="fc-ring" id="fc-ring"></div>
           <div class="fc-time"><span class="j-hh24">17</span><span class="fc-colon">:</span><span class="j-mm">56</span></div>
@@ -3415,7 +3448,7 @@
       </section>
 
       <!-- Face 8: Night Weather (3D) -->
-      <section class="face f-night" id="face-night">
+      <section class="face f-night" id="face-night" role="group" aria-roledescription="slide" aria-label="Night weather">
         <div class="fn-stars" id="fn-stars"></div>
         <div class="fn-hero">
           <div class="fn-ico jn-ico">&#x1F319;</div>
@@ -3471,7 +3504,7 @@
       </section>
 
       <!-- Face 9: Sun & Moon -->
-      <section class="face f-astro">
+      <section class="face f-astro" role="group" aria-roledescription="slide" aria-label="Sun and moon">
         <div class="fa-moon">
           <svg class="fa-moondisc" viewBox="-50 -50 100 100" aria-hidden="true">
             <defs>
@@ -3523,7 +3556,7 @@
       </section>
 
       <!-- Face 10: Marine / Dive -->
-      <section class="face f-marine loading">
+      <section class="face f-marine loading" role="group" aria-roledescription="slide" aria-label="Marine and outdoor conditions">
         <div class="fm-dialwrap">
           <div class="fm-uvring">
             <svg class="fm-uvsvg" viewBox="0 0 120 120">
@@ -3582,7 +3615,7 @@
       </section>
 
     </div>
-    <div class="dots" id="dots"></div>
+    <div class="dots" id="dots" aria-hidden="true"></div>
   </div>
 
 <script>
@@ -4829,6 +4862,14 @@
   // Analog, Weather, Calendar, Night, Astro, Marine. Life has no accent of
   // its own here (falls back to white below) — same as before the reorder.
   const FACE_ACCENTS = [undefined,'#9b7bff','#6db8ff','#a78bfa','#ffb45e','#5ee6c8','#ff5a6e','#5ea8ff','#ffcf6e','#5ee6c8'];
+  // Same order as FACE_ACCENTS — read out by the sr-only announcer below
+  // whenever a swipe settles on a new face, since the position dots are
+  // purely decorative (aria-hidden) and the swipe gesture itself has no
+  // accessible semantics of its own.
+  const FACE_NAMES = ['Life dashboard','Galaxy always-on clock','Classic clock and weather',
+    'Glass weather clock','Analog clock and weather','Weather dashboard','Calendar',
+    'Night weather','Sun and moon','Marine and outdoor conditions'];
+  const faceAnnouncerEl = document.getElementById('face-announcer');
   // Every other face is landscape-designed and relies on the shared
   // `.stage` rotation to fill a portrait screen. The Life face
   // is the exception: its dashboard reads naturally upright, so once it's
@@ -4961,6 +5002,7 @@
   }
 
   function goTo(i){
+    var prev = index;
     index = Math.min(FACES-1, Math.max(0, i));
     render(0);
     markActive();
@@ -4968,6 +5010,7 @@
     if(index === NIGHT_FACE_INDEX){
       loadLocalWeather();
     }
+    if(index !== prev && faceAnnouncerEl) faceAnnouncerEl.textContent = FACE_NAMES[index] || '';
   }
   goTo(index);
 
@@ -5161,7 +5204,12 @@
       nudge.classList.remove('show');
       localStorage.setItem('installNudgeDismissed', '1');
     }
-    if(closeBtn) closeBtn.addEventListener('click', dismiss);
+    if(closeBtn){
+      closeBtn.addEventListener('click', dismiss);
+      closeBtn.addEventListener('keydown', function(ev){
+        if(ev.key === 'Enter' || ev.key === ' '){ ev.preventDefault(); dismiss(); }
+      });
+    }
     // A tap anywhere else on the nudge also counts as "seen" once shown.
     // (The close button has its own listener above, which would double-fire
     // dismiss() harmlessly since it's idempotent — but skip it anyway.)
@@ -5225,6 +5273,7 @@
       nextMedMorningDueTs: 0,
       nextMedEveningDueTs: 0,
       notifications: true,
+      rainAlerts: true,    // push once when the KNMI/Open-Meteo nowcast turns imminent
       theme: 'dark',       // 'dark' | 'light' | 'auto'
       awake: false,
       lastWakeTs: 0,
@@ -5325,18 +5374,40 @@
     var faceEl = document.getElementById('face-life');
     function initTabs(){
       if(!faceEl) return;
-      var tabs = faceEl.querySelectorAll('.lf-tab');
-      tabs.forEach(function(tab){
-        tab.addEventListener('click', function(){
-          var name = tab.dataset.lftab;
-          tabs.forEach(function(t){ t.classList.toggle('active', t === tab); });
-          faceEl.querySelectorAll('.lf-view').forEach(function(v){
-            v.classList.toggle('active', v.id === 'lf-view-' + name);
-          });
-          // Lazy-render tabs backed by an IndexedDB query only when opened,
-          // rather than keeping them constantly in sync in the background.
-          if(name === 'timeline' && typeof renderTimeline === 'function') renderTimeline();
-          if(name === 'stats' && typeof renderStats === 'function') renderStats();
+      var tabs = Array.from(faceEl.querySelectorAll('.lf-tab'));
+      function activate(tab){
+        var name = tab.dataset.lftab;
+        tabs.forEach(function(t){
+          var on = t === tab;
+          t.classList.toggle('active', on);
+          // role=tab has no native selected/focusable state of its own —
+          // aria-selected carries the same "which one is active" signal
+          // VoiceOver/NVDA users get from the .active class visually, and
+          // a roving tabindex (only the active tab is Tab-key stoppable)
+          // matches the standard tablist keyboard pattern.
+          t.setAttribute('aria-selected', on ? 'true' : 'false');
+          t.tabIndex = on ? 0 : -1;
+        });
+        faceEl.querySelectorAll('.lf-view').forEach(function(v){
+          v.classList.toggle('active', v.id === 'lf-view-' + name);
+        });
+        // Lazy-render tabs backed by an IndexedDB query only when opened,
+        // rather than keeping them constantly in sync in the background.
+        if(name === 'timeline' && typeof renderTimeline === 'function') renderTimeline();
+        if(name === 'stats' && typeof renderStats === 'function') renderStats();
+      }
+      tabs.forEach(function(tab, i){
+        tab.addEventListener('click', function(){ activate(tab); });
+        // Left/Right (and Home/End) move focus AND selection between tabs,
+        // the standard ARIA tablist keyboard pattern — Enter/Space activation
+        // is handled by the generic role=button/tab/radio delegate below.
+        tab.addEventListener('keydown', function(ev){
+          var dir = ev.key === 'ArrowRight' ? 1 : ev.key === 'ArrowLeft' ? -1 : 0;
+          var target = null;
+          if(dir) target = tabs[(i + dir + tabs.length) % tabs.length];
+          else if(ev.key === 'Home') target = tabs[0];
+          else if(ev.key === 'End') target = tabs[tabs.length - 1];
+          if(target){ ev.preventDefault(); activate(target); target.focus(); }
         });
       });
     }
@@ -5357,8 +5428,8 @@
       pill.classList.toggle('awake', S.awake);
       pill.classList.toggle('sleep', !S.awake);
       if(txt) txt.textContent = S.awake ? 'Awake' : 'Sleeping';
-      if(btnAwake) btnAwake.classList.toggle('on', S.awake);
-      if(btnSleep) btnSleep.classList.toggle('on', !S.awake);
+      if(btnAwake){ btnAwake.classList.toggle('on', S.awake); btnAwake.setAttribute('aria-pressed', S.awake ? 'true' : 'false'); }
+      if(btnSleep){ btnSleep.classList.toggle('on', !S.awake); btnSleep.setAttribute('aria-pressed', !S.awake ? 'true' : 'false'); }
     }
 
     // ---------- Wake / Sleep buttons ----------
@@ -5600,24 +5671,38 @@
       S.ntfyScheduledDate = todayKey;
       saveSettings();
     }
+    // role="alert" on #lf-reminder announces on any text change while
+    // exposed to the accessibility tree — the card sits in the DOM at all
+    // times (CSS just collapses it via max-height/opacity, not
+    // display:none), so aria-hidden has to gate that exposure by hand. Its
+    // two buttons also need their tabindex pulled while hidden, or a
+    // keyboard user could Tab onto controls a screen reader can't see (the
+    // card's CSS already sets pointer-events:none while hidden, which
+    // blocks touch/mouse but not keyboard focus).
+    function setReminderCardVisible(visible){
+      var el = document.getElementById('lf-reminder');
+      var doneBtn = document.getElementById('lf-rem-done');
+      var skipBtn = document.getElementById('lf-rem-skip');
+      if(el){ el.classList.toggle('show', visible); el.setAttribute('aria-hidden', visible ? 'false' : 'true'); }
+      if(doneBtn) doneBtn.tabIndex = visible ? 0 : -1;
+      if(skipBtn) skipBtn.tabIndex = visible ? 0 : -1;
+    }
     function showReminder(type){
       var meta = remMetaFor(type);
       remActive = type;
-      var el = document.getElementById('lf-reminder');
       var icoEl = document.getElementById('lf-rem-ico');
       var txtEl = document.getElementById('lf-rem-txt');
       var doneBtn = document.getElementById('lf-rem-done');
       if(icoEl) icoEl.textContent = meta.ico;
       if(txtEl) txtEl.textContent = meta.txt;
       if(doneBtn) doneBtn.textContent = meta.doneLabel;
-      if(el) el.classList.add('show');
+      setReminderCardVisible(true);
       notify(meta.ico + ' ' + meta.txt, 'Tap in StandBy to log it', meta.ntfyTags);
     }
     // Dismiss the active card and, after a short beat, reveal the next
     // queued reminder (if any) so two reminders due at once don't overlap.
     function hideReminderAndAdvance(){
-      var el = document.getElementById('lf-reminder');
-      if(el) el.classList.remove('show');
+      setReminderCardVisible(false);
       remActive = null;
       if(remQueue.length){
         var next = remQueue.shift();
@@ -5696,8 +5781,26 @@
             });
           }
         });
+        checkRainAlert();
       }
       updateNextReminderCard();
+    }
+    // Pushes one alert when the shared rainNowcast() (top-level function,
+    // also used by the Sun & Moon face's nowcast chip) flips from dry to
+    // imminent/raining, and re-arms once it goes dry again — so a single
+    // rain event gets exactly one ping rather than one every 60s for as
+    // long as it lasts. In-memory only: worst case a reload mid-event
+    // re-alerts once, same accepted trade-off as the water/bath reminders.
+    var rainAlertActive = false;
+    function checkRainAlert(){
+      if(!S.rainAlerts || typeof rainNowcast !== 'function') return;
+      var nc = rainNowcast();
+      if(nc.rain && !rainAlertActive){
+        rainAlertActive = true;
+        notify('🌧️ Rain incoming', nc.txt + ' near Bonaire — outdoor plans may want a rain check.', 'umbrella');
+      } else if(!nc.rain){
+        rainAlertActive = false;
+      }
     }
     function startReminders(){
       // A fresh wake (nothing scheduled yet) starts the clock now; waking
@@ -5724,8 +5827,7 @@
     }
     function stopReminders(){
       if(remCheckTimer){ clearInterval(remCheckTimer); remCheckTimer = null; }
-      var el = document.getElementById('lf-reminder');
-      if(el) el.classList.remove('show');
+      setReminderCardVisible(false);
       remActive = null;
       remQueue = [];
       updateNextReminderCard();
@@ -5810,23 +5912,22 @@
     // defined earlier in this same script) — this never issues its own
     // fetch, so the card costs zero extra network/battery.
     function updateConditionsCard(){
-      var el = document.getElementById('lf-cond-val');
-      if(!el) return;
-      if(typeof astroData === 'undefined' || !astroData || !astroData.current){
-        el.textContent = 'Loading…';
-        return;
-      }
+      // The hero half of the merged card (icon/feels-like/condition) is
+      // driven by the shared j-* classes already swept by loadWeather() —
+      // nothing to do here until Open-Meteo's current-conditions block
+      // (UV/wind/sea, used below) has also landed.
+      if(typeof astroData === 'undefined' || !astroData || !astroData.current) return;
       var c = astroData.current;
       var uv = c.uv_index != null ? Math.round(c.uv_index) : null;
       var feels = c.apparent_temperature != null ? Math.round(c.apparent_temperature) : null;
       var kt = c.wind_speed_10m != null ? Math.round(c.wind_speed_10m) : null;
       var sea = astroData.seaTemp != null ? Math.round(astroData.seaTemp) : null;
-      var parts = [];
-      if(uv != null) parts.push('UV ' + uv);
-      if(kt != null) parts.push(kt + ' kt wind');
-      if(sea != null) parts.push('Sea ' + sea + '°');
-      if(feels != null) parts.push('Feels ' + feels + '°');
-      el.textContent = parts.length ? parts.join(' · ') : '—';
+      var uvEl = document.getElementById('lf-cond-uv');
+      var windEl = document.getElementById('lf-cond-wind');
+      var seaEl = document.getElementById('lf-cond-sea');
+      if(uvEl) uvEl.textContent = uv != null ? String(uv) : '--';
+      if(windEl) windEl.textContent = kt != null ? kt + ' kt' : '--';
+      if(seaEl) seaEl.textContent = sea != null ? sea + '°' : '--';
 
       // Best time to go outside / swim — reuses the Marine face's outdoor
       // verdict + best-window logic (bestOutsideWindow / outdoorVerdict /
@@ -6034,12 +6135,26 @@
       });
     }
     function initStatsToggle(){
-      var toggles = faceEl ? faceEl.querySelectorAll('.lf-rangetab') : [];
-      toggles.forEach(function(t){
-        t.addEventListener('click', function(){
-          toggles.forEach(function(x){ x.classList.toggle('active', x === t); });
-          lfStatsRange = parseInt(t.dataset.lfrange, 10) || 7;
-          renderStats();
+      var toggles = faceEl ? Array.from(faceEl.querySelectorAll('.lf-rangetab')) : [];
+      function activate(t){
+        toggles.forEach(function(x){
+          var on = x === t;
+          x.classList.toggle('active', on);
+          x.setAttribute('aria-checked', on ? 'true' : 'false');
+          x.tabIndex = on ? 0 : -1;
+        });
+        lfStatsRange = parseInt(t.dataset.lfrange, 10) || 7;
+        renderStats();
+      }
+      toggles.forEach(function(t, i){
+        t.addEventListener('click', function(){ activate(t); });
+        t.addEventListener('keydown', function(ev){
+          var dir = ev.key === 'ArrowRight' ? 1 : ev.key === 'ArrowLeft' ? -1 : 0;
+          if(!dir) return;
+          ev.preventDefault();
+          var target = toggles[(i + dir + toggles.length) % toggles.length];
+          activate(target);
+          target.focus();
         });
       });
     }
@@ -6080,17 +6195,24 @@
         var qp = document.getElementById('lf-quickpick-' + key);
         if(!qp) return;
         qp.querySelectorAll('.lf-qp-btn').forEach(function(b){
-          b.classList.toggle('active', parseInt(b.dataset.min, 10) === S[key]);
+          var on = parseInt(b.dataset.min, 10) === S[key];
+          b.classList.toggle('active', on);
+          b.setAttribute('aria-pressed', on ? 'true' : 'false');
         });
       });
       var notifEl = document.getElementById('lf-set-notifications');
-      if(notifEl) notifEl.classList.toggle('on', !!S.notifications);
+      if(notifEl){ notifEl.classList.toggle('on', !!S.notifications); notifEl.setAttribute('aria-checked', S.notifications ? 'true' : 'false'); }
+      var rainEl = document.getElementById('lf-set-rainAlerts');
+      if(rainEl){ rainEl.classList.toggle('on', !!S.rainAlerts); rainEl.setAttribute('aria-checked', S.rainAlerts ? 'true' : 'false'); }
       var themeRow = document.getElementById('lf-set-theme');
       if(themeRow) themeRow.querySelectorAll('.lf-themebtn').forEach(function(b){
-        b.classList.toggle('active', b.dataset.theme === S.theme);
+        var on = b.dataset.theme === S.theme;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-checked', on ? 'true' : 'false');
+        b.tabIndex = on ? 0 : -1; // roving tabindex, standard radiogroup pattern
       });
       var ntfyToggle = document.getElementById('lf-set-ntfyEnabled');
-      if(ntfyToggle) ntfyToggle.classList.toggle('on', !!S.ntfyEnabled);
+      if(ntfyToggle){ ntfyToggle.classList.toggle('on', !!S.ntfyEnabled); ntfyToggle.setAttribute('aria-checked', S.ntfyEnabled ? 'true' : 'false'); }
       var ntfyTopicEl = document.getElementById('lf-set-ntfyTopic');
       if(ntfyTopicEl && document.activeElement !== ntfyTopicEl) ntfyTopicEl.value = S.ntfyTopic || '';
     }
@@ -6123,8 +6245,14 @@
       var row = document.getElementById('lf-mood-row');
       if(!row) return;
       row.querySelectorAll('.lf-mood-emoji').forEach(function(el){
-        el.classList.toggle('selected', parseInt(el.dataset.mood, 10) === value);
+        var on = parseInt(el.dataset.mood, 10) === value;
+        el.classList.toggle('selected', on);
+        el.setAttribute('aria-checked', on ? 'true' : 'false');
+        // Roving tabindex: only the checked radio (or the first, if none
+        // is set yet) is a Tab stop, per the standard radiogroup pattern.
+        el.tabIndex = on ? 0 : -1;
       });
+      if(value == null && row.firstElementChild) row.firstElementChild.tabIndex = 0;
     }
     // Reflects today's actual logged mood (or none) — shared by the initial
     // load and the day-rollover check below, so a fresh day always clears
@@ -6138,10 +6266,22 @@
     function initMoodButtons(){
       var row = document.getElementById('lf-mood-row');
       if(!row) return;
-      row.querySelectorAll('.lf-mood-emoji').forEach(function(el){
+      var emojis = Array.from(row.querySelectorAll('.lf-mood-emoji'));
+      emojis.forEach(function(el, i){
         el.addEventListener('click', function(){
           var v = parseInt(el.dataset.mood, 10);
           logMood(v).then(function(){ updateMoodRowDisplay(v); });
+        });
+        // Left/Right move focus AND selection between mood options, the
+        // standard ARIA radiogroup keyboard pattern (Enter/Space activation
+        // on the focused one is handled by the generic delegate below).
+        el.addEventListener('keydown', function(ev){
+          var dir = ev.key === 'ArrowRight' ? 1 : ev.key === 'ArrowLeft' ? -1 : 0;
+          if(!dir) return;
+          ev.preventDefault();
+          var target = emojis[(i + dir + emojis.length) % emojis.length];
+          var v = parseInt(target.dataset.mood, 10);
+          logMood(v).then(function(){ updateMoodRowDisplay(v); target.focus(); });
         });
       });
       refreshMoodDisplay();
@@ -6281,12 +6421,12 @@
             if(val) val.textContent = '✓';
             if(sub) sub.textContent = 'Taken ' + new Date(ev.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
             if(hint) hint.textContent = 'Tap to undo';
-            if(card) card.classList.add('taken');
+            if(card){ card.classList.add('taken'); card.setAttribute('aria-pressed', 'true'); }
           } else {
             if(val) val.textContent = '—';
             if(sub) sub.textContent = 'Not yet';
             if(hint) hint.textContent = '+ Tap when taken';
-            if(card) card.classList.remove('taken');
+            if(card){ card.classList.remove('taken'); card.setAttribute('aria-pressed', 'false'); }
           }
         });
       });
@@ -6299,7 +6439,29 @@
       refreshMedCards();
     }
 
+    // Every settings row is a bare <span class="lf-set-lbl"> next to an
+    // <input> — visually clear, but with no programmatic association a
+    // screen reader announces the input alone ("edit text, 07:00") with no
+    // indication it's the wake time. Wire aria-labelledby generically
+    // (label span + unit span, when present) rather than hand-adding ids
+    // to a dozen near-identical rows in the markup.
+    function wireSettingsLabels(){
+      document.querySelectorAll('#lf-view-settings .lf-set-row').forEach(function(row){
+        var lbl = row.querySelector('.lf-set-lbl');
+        var input = row.querySelector('input');
+        if(!lbl || !input) return;
+        if(!lbl.id) lbl.id = input.id + '-lbl';
+        var ids = [lbl.id];
+        var unit = row.querySelector('.lf-set-unit');
+        if(unit){
+          if(!unit.id) unit.id = input.id + '-unit';
+          ids.push(unit.id);
+        }
+        input.setAttribute('aria-labelledby', ids.join(' '));
+      });
+    }
     function initSettingsUI(){
+      wireSettingsLabels();
       populateSettingsUI();
       ['wakeTime','sleepTime','eatStart','eatEnd'].forEach(function(key){
         var el = document.getElementById('lf-set-' + key);
@@ -6356,15 +6518,35 @@
         populateSettingsUI();
         if(S.notifications) requestNotifyPermission();
       });
-      var themeRow = document.getElementById('lf-set-theme');
-      if(themeRow) themeRow.querySelectorAll('.lf-themebtn').forEach(function(b){
-        b.addEventListener('click', function(){
-          S.theme = b.dataset.theme;
-          saveSettings();
-          populateSettingsUI();
-          if(faceEl) faceEl.dataset.theme = S.theme;
-        });
+      var rainEl = document.getElementById('lf-set-rainAlerts');
+      if(rainEl) rainEl.addEventListener('click', function(){
+        S.rainAlerts = !S.rainAlerts;
+        saveSettings();
+        populateSettingsUI();
       });
+      var themeRow = document.getElementById('lf-set-theme');
+      if(themeRow){
+        var themeBtns = Array.from(themeRow.querySelectorAll('.lf-themebtn'));
+        themeBtns.forEach(function(b, i){
+          b.addEventListener('click', function(){
+            S.theme = b.dataset.theme;
+            saveSettings();
+            populateSettingsUI();
+            if(faceEl) faceEl.dataset.theme = S.theme;
+          });
+          b.addEventListener('keydown', function(ev){
+            var dir = ev.key === 'ArrowRight' ? 1 : ev.key === 'ArrowLeft' ? -1 : 0;
+            if(!dir) return;
+            ev.preventDefault();
+            var target = themeBtns[(i + dir + themeBtns.length) % themeBtns.length];
+            S.theme = target.dataset.theme;
+            saveSettings();
+            populateSettingsUI();
+            if(faceEl) faceEl.dataset.theme = S.theme;
+            target.focus();
+          });
+        });
+      }
       // ntfy push controls
       function setNtfyStatus(msg, cls){
         var st = document.getElementById('lf-ntfy-status');
@@ -6406,6 +6588,27 @@
       });
     }
 
+    // ---------- Keyboard activation for custom controls ----------
+    // None of the tappable divs across the Life face (role=button/tab/
+    // radio/switch on cards, tabs, mood emojis, toggles, theme/quickpick
+    // chips…) are native <button>/<a> elements, so unlike those they don't
+    // get Enter/Space-to-click for free from the browser — that has to be
+    // wired up by hand per the ARIA authoring practices. One delegated
+    // listener covers all of them rather than repeating the same three
+    // lines at every call site; per-control keydown handlers added above
+    // (tabs/mood/theme/range Arrow-key navigation) still fire independently
+    // since they're bound directly on each element, not delegated here.
+    function initKeyboardActivation(){
+      if(!faceEl) return;
+      faceEl.addEventListener('keydown', function(ev){
+        if(ev.key !== 'Enter' && ev.key !== ' ') return;
+        var el = ev.target.closest('[role="button"], [role="tab"], [role="radio"], [role="switch"]');
+        if(!el || el !== ev.target) return; // only the focused control itself, not a descendant
+        ev.preventDefault();
+        el.click();
+      });
+    }
+
     // ---------- Day rollover ----------
     // StandBy is meant to stay on a bedside table with the screen on for
     // days at a stretch, so the page itself may never reload across a
@@ -6436,6 +6639,7 @@
       initSettingsUI();
       initMoodButtons();
       initMedButtons();
+      initKeyboardActivation();
       updateGreeting();
       updateStatusPill();
       updateFastingRing();
