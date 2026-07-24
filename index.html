@@ -1965,13 +1965,38 @@
     text-transform: uppercase;
     letter-spacing: 0.08em;
   }
+  /* Matches the Galaxy AOD face's clock treatment (same default gradient,
+     glow, and synced-blink colon — see .f-galaxy .fgx-clock) rather than
+     the plain solid-ink digits every other Life element uses, sized down
+     to fit its corner of the dashboard instead of Galaxy's full-bleed hero
+     size. tick() drives the colon blink for both faces off the same
+     selector — see CLOCK_BLINK_SEL below. */
   .f-life .lf-clock {
+    display: flex;
+    align-items: baseline;
     font-weight: 800;
     font-size: clamp(30px, 11cqh, 96px);
     line-height: 1;
     font-variant-numeric: tabular-nums;
-    color: var(--lf-ink);
-    text-shadow: 0 2px 14px rgba(0,0,0,0.35);
+    background: linear-gradient(120deg, #4be3c0 0%, #4aa8ff 46%, #9b7bff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    filter: drop-shadow(0 0 14px rgba(74,168,255,0.3));
+  }
+  .f-life .lf-colon {
+    -webkit-text-fill-color: rgba(155,123,255,0.92);
+    color: rgba(155,123,255,0.92);
+    margin: 0 0.02em;
+  }
+  .f-life .lf-ampm {
+    -webkit-text-fill-color: rgba(220,228,238,0.6);
+    color: rgba(220,228,238,0.6);
+    font-size: 0.22em;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    margin-left: 0.16em;
   }
   .f-life .lf-date {
     font-size: clamp(9px, 2cqh, 17px);
@@ -3018,7 +3043,7 @@
           <div class="lf-home">
             <div class="lf-homeleft">
               <div class="lf-greeting" id="lf-greeting">Good Morning</div>
-              <div class="lf-clock"><span class="j-hh">--</span>:<span class="j-mm">--</span></div>
+              <div class="lf-clock"><span class="j-hh">--</span><span class="lf-colon">:</span><span class="j-mm">--</span><span class="lf-ampm j-ampm">AM</span></div>
               <div class="lf-date"><span class="j-dow">---</span> &middot; <span class="j-fulldate">---</span></div>
 
               <!-- Reminder card: sits under the clock in its own column, so
@@ -3662,7 +3687,10 @@
   const handH = document.getElementById('hand-h');
   const handM = document.getElementById('hand-m');
   const handS = document.getElementById('hand-s');
-  const fgxColonEl = document.querySelector('#face-galaxy .fgx-colon');
+  // Life's clock reuses Galaxy's gradient-clock treatment (see .f-life
+  // .lf-clock), including this synced-blink colon — both selected and
+  // blinked together rather than duplicating the interval logic below.
+  const clockColonEls = document.querySelectorAll('#face-galaxy .fgx-colon, .f-life .lf-colon');
   const fgxSecBarEl = document.getElementById('fgx-secbar');
   const secFills = document.querySelectorAll('.js-secfill');
 
@@ -3678,7 +3706,7 @@
   // filter/clip within one task forces the buffer to rebuild; no frame is
   // presented in between, so nothing visibly flashes.
   var CLOCK_REPAINT_SEL = '.f-classic .time, .f-glass .fg-time, .f-weather .fw-st-time, ' +
-    '.f-cal .fc-time, .f-galaxy .fgx-clock, .f-night .fn-dt-time, .f-astro .fa-time';
+    '.f-cal .fc-time, .f-galaxy .fgx-clock, .f-night .fn-dt-time, .f-astro .fa-time, .f-life .lf-clock';
   function forceClockRepaint(){
     document.querySelectorAll(CLOCK_REPAINT_SEL).forEach(function(el){
       el.style.filter = 'none';
@@ -3729,10 +3757,10 @@
     // Sun & Moon / Marine: live sun position, countdown, moon (cheap, guarded)
     if(typeof updateAstroLive === 'function') updateAstroLive();
 
-    // Galaxy AOD: colon blink synced to clock tick
-    if(fgxColonEl){
-      fgxColonEl.style.opacity = '1';
-      setTimeout(function(){ fgxColonEl.style.opacity = '0.18'; }, 680);
+    // Galaxy AOD + Life clock: colon blink synced to clock tick
+    if(clockColonEls.length){
+      clockColonEls.forEach(function(el){ el.style.opacity = '1'; });
+      setTimeout(function(){ clockColonEls.forEach(function(el){ el.style.opacity = '0.18'; }); }, 680);
     }
 
     // Galaxy AOD: seconds progress bar, gradient spans full container width
