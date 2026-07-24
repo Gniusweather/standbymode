@@ -2435,6 +2435,23 @@
     letter-spacing: 0.05em;
     white-space: nowrap;
   }
+  /* Cloud cover octas: the same 8-segment bar the Weather Dashboard face
+     uses (.fw-oseg, filled/emptied by the shared setOcta()), just sized
+     for this card's much smaller stat cell instead of a full tile. */
+  .f-life .lf-knmi-octa {
+    display: flex;
+    gap: 2px;
+    width: 100%;
+    max-width: 64px;
+  }
+  .f-life .lf-knmi-octa .fw-oseg {
+    flex: 1;
+    height: clamp(2px, 0.5cqh, 4px);
+    border-radius: 1px;
+    background: rgba(255,255,255,0.14);
+    transition: background 0.5s;
+  }
+  .f-life .lf-knmi-octa .fw-oseg.filled { background: var(--lf-ink); }
 
   /* ---------- Timeline tab ---------- */
   .f-life .lf-tl-list {
@@ -3149,6 +3166,7 @@
                   </div>
                   <div class="lf-knmi-stats">
                     <div class="lf-knmi-stat"><span class="lf-knmi-sval j-vis">--</span><span class="lf-knmi-slbl">&#x1F441;&#xFE0F; Visibility</span></div>
+                    <div class="lf-knmi-stat"><span class="lf-knmi-sval j-cloud">--</span><div class="lf-knmi-octa j-octa"></div><span class="lf-knmi-slbl">&#x2601;&#xFE0F; Cloud</span></div>
                     <div class="lf-knmi-stat"><span class="lf-knmi-sval j-precip">--</span><span class="lf-knmi-slbl">&#x1F327;&#xFE0F; Rain</span></div>
                     <div class="lf-knmi-stat"><span class="lf-knmi-sval j-rad">--</span><span class="lf-knmi-slbl">&#x2600;&#xFE0F; Solar</span></div>
                     <div class="lf-knmi-stat"><span class="lf-knmi-sval" id="lf-cond-uv">--</span><span class="lf-knmi-slbl">&#x2600;&#xFE0F; UV</span></div>
