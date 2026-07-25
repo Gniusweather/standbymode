@@ -5209,6 +5209,17 @@
   stage.addEventListener('pointercancel', endDrag);
 
   document.addEventListener('keydown', function(ev){
+    if(ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft') return;
+    // Left/Right also drive keyboard navigation within the Life face
+    // (tabs, mood, theme, stats range — see their own keydown handlers,
+    // which call stopPropagation()). This is a second line of defense for
+    // any focused form control or custom widget that doesn't: a native
+    // text/number/time input moving its cursor, or a future addition that
+    // forgets to stop propagation, would otherwise also silently flip the
+    // whole carousel to an adjacent face on every press.
+    var t = ev.target;
+    if(t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA')) return;
+    if(t && t.closest && t.closest('[role="tab"], [role="radio"], [role="switch"], [role="button"]')) return;
     if(ev.key === 'ArrowRight') goTo(index+1);
     if(ev.key === 'ArrowLeft') goTo(index-1);
   });
@@ -5538,7 +5549,16 @@
           if(dir) target = tabs[(i + dir + tabs.length) % tabs.length];
           else if(ev.key === 'Home') target = tabs[0];
           else if(ev.key === 'End') target = tabs[tabs.length - 1];
-          if(target){ ev.preventDefault(); activate(target); target.focus(); }
+          if(target){
+            ev.preventDefault();
+            // Left/Right/Home/End are also the carousel's own swipe-face
+            // shortcut (see the global keydown listener near the carousel
+            // setup) — without this, moving between Home/Timeline/Stats/
+            // Settings with the keyboard also flipped the whole carousel to
+            // an adjacent face on every press.
+            ev.stopPropagation();
+            activate(target); target.focus();
+          }
         });
       });
     }
@@ -6373,6 +6393,7 @@
           var dir = ev.key === 'ArrowRight' ? 1 : ev.key === 'ArrowLeft' ? -1 : 0;
           if(!dir) return;
           ev.preventDefault();
+          ev.stopPropagation(); // see the tablist keydown handler above for why
           var target = toggles[(i + dir + toggles.length) % toggles.length];
           activate(target);
           target.focus();
@@ -6502,6 +6523,7 @@
           var dir = ev.key === 'ArrowRight' ? 1 : ev.key === 'ArrowLeft' ? -1 : 0;
           if(!dir) return;
           ev.preventDefault();
+          ev.stopPropagation(); // see the tablist keydown handler above for why
           var target = emojis[(i + dir + emojis.length) % emojis.length];
           var v = parseInt(target.dataset.mood, 10);
           logMood(v).then(function(){ updateMoodRowDisplay(v); target.focus(); });
@@ -6889,6 +6911,7 @@
             var dir = ev.key === 'ArrowRight' ? 1 : ev.key === 'ArrowLeft' ? -1 : 0;
             if(!dir) return;
             ev.preventDefault();
+            ev.stopPropagation(); // see the tablist keydown handler above for why
             var target = themeBtns[(i + dir + themeBtns.length) % themeBtns.length];
             S.theme = target.dataset.theme;
             saveSettings();
