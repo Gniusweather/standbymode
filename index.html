@@ -2003,6 +2003,13 @@
     color: var(--lf-muted);
     font-weight: 500;
   }
+  /* ---------- Portrait weather hero (see life-portrait section below for
+     sizing/visibility) — a compact replica of the Weather Dashboard face's
+     own clock+hero+12-tile grid, reusing that face's exact markup shape and
+     the same shared j-* classes loadWeather() already sweeps, so it needs
+     no JS of its own. Hidden here by default; landscape Life keeps its
+     existing small clock + weather card unchanged. ---------- */
+  .f-life .lf-wxpanel { display: none; }
   /* Wake/Sleep pill buttons */
   .f-life .lf-wsrow {
     display: flex;
@@ -2157,6 +2164,232 @@
     flex-direction: column;
     gap: clamp(10px, 2.4cqh, 22px);
     overflow: visible;
+  }
+  /* The rich weather hero takes roughly the first half of the screen;
+     everything else (status/buttons/reminder + the health cards) flows
+     below it and the view scrolls if it doesn't all fit — same forgiving
+     pattern the rest of life-portrait already uses rather than a hard
+     split that could clip content on a short device. */
+  html.life-portrait #face-life .lf-wxpanel {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(6px, 1.6cqh, 14px);
+    flex: 0 0 auto;
+    height: 48dvh;
+    container-type: size;
+    background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+    border: 1px solid var(--lf-cardborder);
+    border-radius: clamp(14px, 2.4cqh, 26px);
+    padding: clamp(10px, 2.2cqh, 20px) clamp(10px, 2.6cqw, 20px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
+    overflow: hidden;
+  }
+  html.life-portrait #face-life .lf-wxtop {
+    display: flex;
+    align-items: center;
+    gap: clamp(8px, 2.6cqw, 20px);
+    flex-shrink: 0;
+  }
+  html.life-portrait #face-life .lf-wxtimediv {
+    flex: 0 0 auto;
+    max-width: 42%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  html.life-portrait #face-life .lf-wxtime {
+    display: flex;
+    align-items: baseline;
+    color: #fff;
+    font-weight: 700;
+    /* Sized off the SMALLER of height and width: cqh alone let this overflow
+       past the timediv's own 42%-width cap on narrow phones (the AM/PM
+       suffix landed on top of the weather icon on a 375px-wide screen),
+       since a tall-but-narrow panel still reports a generous cqh. */
+    font-size: clamp(22px, min(14cqh, 11cqw), 54px);
+    font-variant-numeric: tabular-nums;
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    background: linear-gradient(150deg, #fff 30%, #a8e8d8 80%, var(--lf-teal) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    white-space: nowrap;
+  }
+  html.life-portrait #face-life .lf-wxcolon {
+    -webkit-text-fill-color: rgba(168,232,216,0.85);
+    color: rgba(168,232,216,0.85);
+    margin: 0 0.02em;
+  }
+  html.life-portrait #face-life .lf-wxampm {
+    -webkit-text-fill-color: rgba(255,255,255,0.6);
+    color: rgba(255,255,255,0.6);
+    font-size: 0.32em;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-left: 0.14em;
+  }
+  html.life-portrait #face-life .lf-wxdate {
+    color: var(--lf-muted);
+    font-weight: 500;
+    font-size: clamp(9px, 3.6cqw, 14px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  html.life-portrait #face-life .lf-wxhero {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: clamp(6px, 2.2cqw, 16px);
+    overflow: hidden;
+  }
+  html.life-portrait #face-life .lf-wxbigico {
+    font-size: clamp(22px, 12cqh, 46px);
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  html.life-portrait #face-life .lf-wxheroright { min-width: 0; overflow: hidden; }
+  html.life-portrait #face-life .lf-wxbigtemp {
+    display: block;
+    font-weight: 700;
+    font-size: clamp(24px, 13cqh, 50px);
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    background: linear-gradient(165deg, #ffffff 25%, #a8ddd0 75%, var(--lf-teal) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  html.life-portrait #face-life .lf-wxcond {
+    display: block;
+    color: var(--lf-teal);
+    font-weight: 600;
+    font-size: clamp(10px, 4.2cqw, 15px);
+    margin-top: 0.1em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  html.life-portrait #face-life .lf-wxmeta {
+    display: block;
+    color: var(--lf-muted);
+    font-weight: 500;
+    font-size: clamp(8px, 3.2cqw, 12px);
+    margin-top: 0.15em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  html.life-portrait #face-life .lf-wxsep { opacity: 0.45; }
+  html.life-portrait #face-life .lf-wxgrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: 1fr;
+    gap: clamp(4px, 1.6cqw, 8px);
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+  html.life-portrait #face-life .lf-wxtile {
+    position: relative;
+    min-width: 0;
+    background:
+      radial-gradient(ellipse 120% 80% at 50% 0%, rgba(255,255,255,0.10), transparent 70%),
+      linear-gradient(160deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03) 60%);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: clamp(6px, 1.8cqw, 12px);
+    padding: clamp(4px, 1.1cqh, 8px) clamp(4px, 1.6cqw, 8px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: clamp(1px, 0.5cqh, 3px);
+    overflow: hidden;
+  }
+  html.life-portrait #face-life .lf-wxtile::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 40%;
+    height: 2px;
+    border-radius: 99px;
+    background: var(--tile-ac, rgba(94,230,200,0.5));
+  }
+  html.life-portrait #face-life .lf-wxtile.t-warm { --tile-ac: rgba(255,180,94,0.65); }
+  html.life-portrait #face-life .lf-wxtile.t-blue { --tile-ac: rgba(94,168,255,0.65); }
+  html.life-portrait #face-life .lf-wxtile.t-purple { --tile-ac: rgba(190,160,255,0.65); }
+  html.life-portrait #face-life .lf-wxtile.t-muted { --tile-ac: rgba(160,160,170,0.4); }
+  html.life-portrait #face-life .lf-wxval {
+    font-weight: 700;
+    font-size: clamp(9px, 4.4cqw, 15px);
+    color: #fff;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  html.life-portrait #face-life .lf-wxval.warm { color: #ffb45e; }
+  html.life-portrait #face-life .lf-wxval.blue { color: #5ea8ff; }
+  html.life-portrait #face-life .lf-wxsub {
+    color: var(--lf-muted);
+    font-size: clamp(6px, 2.6cqw, 10px);
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  html.life-portrait #face-life .lf-wxbar {
+    height: 2px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 99px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  html.life-portrait #face-life .lf-wxbfill {
+    height: 100%;
+    border-radius: 99px;
+    width: 0%;
+    transition: width 0.7s ease;
+    background: linear-gradient(90deg, #3aa68d, var(--lf-teal));
+  }
+  html.life-portrait #face-life .lf-wxbfill.warm { background: linear-gradient(90deg, #c77f33, #ffb45e); }
+  html.life-portrait #face-life .lf-wxbfill.blue { background: linear-gradient(90deg, #3470b8, #5ea8ff); }
+  html.life-portrait #face-life .lf-wxocta { display: flex; gap: 2px; flex-shrink: 0; }
+  html.life-portrait #face-life .lf-wxocta .fw-oseg {
+    flex: 1;
+    height: 2px;
+    border-radius: 1px;
+    background: rgba(255,255,255,0.14);
+  }
+  html.life-portrait #face-life .lf-wxocta .fw-oseg.filled { background: #ccc; }
+  html.life-portrait #face-life .lf-wxarrow { display: inline-block; color: var(--lf-teal); }
+  html.life-portrait #face-life .lf-wxlbl {
+    color: var(--lf-muted);
+    font-size: clamp(6px, 2.5cqw, 9px);
+    font-weight: 500;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* Superseded by .lf-wxpanel above — the old small clock/date and the
+     merged weather card only make sense once (landscape keeps them since
+     it doesn't get the wxpanel treatment). */
+  html.life-portrait #face-life .lf-clock,
+  html.life-portrait #face-life .lf-date,
+  html.life-portrait #face-life #lf-card-weather {
+    display: none;
   }
   html.life-portrait #face-life .lf-homeleft {
     flex: 0 0 auto;
@@ -3058,6 +3291,98 @@
         <!-- Home -->
         <div class="lf-view active" id="lf-view-home" role="tabpanel" aria-labelledby="lf-tab-home">
           <div class="lf-home">
+            <!-- Portrait-only weather hero: a compact replica of the Weather
+                 Dashboard face's own clock+hero+12-tile grid (same markup
+                 shape, same shared j-* classes loadWeather() already sweeps
+                 with setAll(), so this needs no JS of its own), sized to
+                 take about half the Life face's own screen instead of a
+                 full landscape face. Hidden outside html.life-portrait —
+                 landscape Life keeps its existing small clock + weather
+                 card unchanged, since that layout wasn't what was asked to
+                 change. See the life-portrait CSS section for the sizing. -->
+            <div class="lf-wxpanel" id="lf-wxpanel">
+              <div class="lf-wxtop">
+                <div class="lf-wxtimediv">
+                  <div class="lf-wxtime"><span class="j-hh">--</span><span class="lf-wxcolon">:</span><span class="j-mm">--</span><span class="lf-wxampm j-ampm">AM</span></div>
+                  <div class="lf-wxdate"><span class="j-dow">---</span> &middot; <span class="j-fulldate">---</span></div>
+                </div>
+                <div class="lf-wxhero">
+                  <span class="lf-wxbigico j-wico" aria-hidden="true">&#x26C5;</span>
+                  <div class="lf-wxheroright">
+                    <span class="lf-wxbigtemp j-temp">--&deg;</span>
+                    <span class="lf-wxcond j-wtext">&nbsp;</span>
+                    <span class="lf-wxmeta"><span class="j-place">Locating&hellip;</span><span class="lf-wxsep j-obssep"> &middot; </span><span class="j-obstime"></span></span>
+                  </div>
+                </div>
+              </div>
+              <div class="lf-wxgrid">
+                <div class="lf-wxtile">
+                  <span class="lf-wxval j-wind">--</span>
+                  <span class="lf-wxsub j-windbft">&nbsp;</span>
+                  <div class="lf-wxbar"><div class="lf-wxbfill j-bwind"></div></div>
+                  <span class="lf-wxlbl">&#x1F4A8; Wind</span>
+                </div>
+                <div class="lf-wxtile t-warm">
+                  <span class="lf-wxval warm j-gust">--</span>
+                  <span class="lf-wxsub j-gustsub">&nbsp;</span>
+                  <div class="lf-wxbar"><div class="lf-wxbfill warm j-bgust"></div></div>
+                  <span class="lf-wxlbl">&#x26A1; Gust</span>
+                </div>
+                <div class="lf-wxtile t-muted">
+                  <span class="lf-wxval"><span class="lf-wxarrow j-warrow">&#x2193;</span> <span class="j-winddir">--</span></span>
+                  <span class="lf-wxsub j-winddeg">&nbsp;</span>
+                  <span class="lf-wxlbl">&#x1F9ED; Direction</span>
+                </div>
+                <div class="lf-wxtile t-blue">
+                  <span class="lf-wxval blue j-rh">--%</span>
+                  <div class="lf-wxbar"><div class="lf-wxbfill blue j-brh"></div></div>
+                  <span class="lf-wxlbl">&#x1F4A7; Humidity</span>
+                </div>
+                <div class="lf-wxtile t-blue">
+                  <span class="lf-wxval j-dew">--&deg;</span>
+                  <span class="lf-wxsub j-feels">&nbsp;</span>
+                  <span class="lf-wxlbl">&#x1F4A6; Dewpoint</span>
+                </div>
+                <div class="lf-wxtile t-muted">
+                  <span class="lf-wxval j-slp">--</span>
+                  <span class="lf-wxsub j-slpstate">&nbsp;</span>
+                  <span class="lf-wxlbl">&#x1F321;&#xFE0F; Pressure</span>
+                </div>
+                <div class="lf-wxtile t-muted">
+                  <span class="lf-wxval j-vis">--</span>
+                  <span class="lf-wxsub j-visqual">&nbsp;</span>
+                  <span class="lf-wxlbl">&#x1F441;&#xFE0F; Visibility</span>
+                </div>
+                <div class="lf-wxtile t-muted">
+                  <span class="lf-wxval j-cloud">--</span>
+                  <div class="lf-wxocta j-octa"></div>
+                  <span class="lf-wxlbl">&#x2601;&#xFE0F; Cloud</span>
+                </div>
+                <div class="lf-wxtile t-blue">
+                  <span class="lf-wxval blue j-precip">--</span>
+                  <div class="lf-wxbar"><div class="lf-wxbfill blue j-bprecip"></div></div>
+                  <span class="lf-wxlbl">&#x1F327; Rain/10m</span>
+                </div>
+                <div class="lf-wxtile t-warm">
+                  <span class="lf-wxval warm j-rad">--</span>
+                  <span class="lf-wxsub j-radsub">&nbsp;</span>
+                  <div class="lf-wxbar"><div class="lf-wxbfill warm j-brad"></div></div>
+                  <span class="lf-wxlbl">&#x2600;&#xFE0F; Radiation</span>
+                </div>
+                <div class="lf-wxtile t-warm">
+                  <span class="lf-wxval warm j-uv">--</span>
+                  <span class="lf-wxsub j-uvsub">&nbsp;</span>
+                  <div class="lf-wxbar"><div class="lf-wxbfill warm j-buv"></div></div>
+                  <span class="lf-wxlbl">&#x2600;&#xFE0F; UV Index</span>
+                </div>
+                <div class="lf-wxtile t-purple">
+                  <span class="lf-wxval j-dust">--</span>
+                  <span class="lf-wxsub j-dustsub">&nbsp;</span>
+                  <div class="lf-wxbar"><div class="lf-wxbfill j-bdust"></div></div>
+                  <span class="lf-wxlbl">&#x1F32B;&#xFE0F; Dust</span>
+                </div>
+              </div>
+            </div>
             <div class="lf-homeleft">
               <div class="lf-greeting" id="lf-greeting">Good Morning</div>
               <div class="lf-clock"><span class="j-hh">--</span><span class="lf-colon">:</span><span class="j-mm">--</span><span class="lf-ampm j-ampm">AM</span></div>
@@ -3724,7 +4049,8 @@
   // filter/clip within one task forces the buffer to rebuild; no frame is
   // presented in between, so nothing visibly flashes.
   var CLOCK_REPAINT_SEL = '.f-classic .time, .f-glass .fg-time, .f-weather .fw-st-time, ' +
-    '.f-cal .fc-time, .f-galaxy .fgx-clock, .f-night .fn-dt-time, .f-astro .fa-time, .f-life .lf-clock';
+    '.f-cal .fc-time, .f-galaxy .fgx-clock, .f-night .fn-dt-time, .f-astro .fa-time, .f-life .lf-clock, ' +
+    '.f-life .lf-wxtime, .f-life .lf-wxbigtemp';
   function forceClockRepaint(){
     document.querySelectorAll(CLOCK_REPAINT_SEL).forEach(function(el){
       el.style.filter = 'none';
