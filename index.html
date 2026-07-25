@@ -2484,8 +2484,27 @@
      number you actually read across the room — gets its full type size
      instead of being flex-shrunk and clipped. */
   html.life-portrait #face-life .lf-card {
-    padding: clamp(4px, 0.9cqh, 9px) clamp(6px, 1.5cqw, 12px);
+    padding: clamp(4px, 0.9cqh, 9px) clamp(5px, 1.1cqw, 9px);
     gap: clamp(1px, 0.3cqh, 3px);
+  }
+  /* A three-up card is ~120px of usable width, and these labels ellipsised
+     there ("Next reminder", "Morning meds", "+ Tap to log a glass"). Buy the
+     room back from tracking rather than from type size, which is the thing
+     that was asked to grow. */
+  html.life-portrait #face-life .lf-card-hd { letter-spacing: 0.015em; }
+  html.life-portrait #face-life .lf-tap-hint {
+    letter-spacing: 0;
+    font-size: clamp(8px, min(1.4cqh, 2.5cqw), 12px);
+  }
+  /* "Resumes when you wake" is longer than tracking alone can rescue — let
+     the sub line wrap to a second row instead of truncating it. Only that
+     string is long enough to ever wrap; the rest ("0.3 / 3.0 L", "visits
+     today") stay on one line, so no card gains height from this. */
+  html.life-portrait #face-life .lf-card-sub {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
   html.life-portrait #face-life .lf-cards { gap: clamp(5px, 1.4cqw, 10px); }
   /* Labels sized off cqh (container HEIGHT) inflate a lot once the box is
@@ -2504,7 +2523,7 @@
     letter-spacing: 0.01em;
   }
   html.life-portrait #face-life .lf-card-hd {
-    font-size: clamp(8px, 2.7cqw, 13px);
+    font-size: clamp(8px, 2.5cqw, 13px);
   }
   /* Short phones (iPhone SE and friends) are the hard case: the weather
      panel needs its full share to keep three rows of tiles legible, which
