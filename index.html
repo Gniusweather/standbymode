@@ -4972,6 +4972,12 @@
   const LOCAL_FALLBACK = { lat: '12.15', lon: '-68.28', name: 'Bonaire' };
   let localGeoName = null;
 
+  // Returns true/false so loadLocalWeather() can tell a genuine render
+  // apart from a silently-swallowed failure and retry accordingly — this
+  // face previously had no way to distinguish "still loading" from
+  // "failed", so a bad response (or a network hiccup mid-fetch) left
+  // every dynamic field permanently blank instead of falling back to
+  // something visible or trying again.
   async function renderLocalWeather(lat, lon, nameOverride){
     try {
       // Resolve a readable place name (skip if we already have one for fallback)
@@ -5001,10 +5007,18 @@
         +'&daily=temperature_2m_max,temperature_2m_min'
         +'&temperature_unit=celsius&wind_speed_unit=kn&timezone=auto';
       const wxResp = await fetch(wxUrl);
-      if(!wxResp.ok) return;
+      if(!wxResp.ok) return false;
       const wxData = await wxResp.json();
+      // A non-JSON body, rate-limit response, or reshaped API contract can
+      // all land here as valid JSON with no `current` block — reading
+      // straight through it used to throw partway down this function,
+      // which the outer catch swallowed silently, leaving whatever had (or
+      // hadn't yet) been written to the DOM stuck exactly as it was.
+      if(!wxData || !wxData.current) return false;
       var c = wxData.current;
-      var feels = Math.round(c.apparent_temperature);   // includes wind + humidity
+      var feels = c.apparent_temperature != null ? Math.round(c.apparent_temperature)
+                : c.temperature_2m != null ? Math.round(c.temperature_2m) : null;
+      if(feels == null) return false; // no usable temperature at all — treat as a failed load
       var actual = c.temperature_2m!=null ? Math.round(c.temperature_2m) : feels;
       var cloudOcta = c.cloud_cover!=null ? Math.round(c.cloud_cover/12.5) : null;
       var precip = c.precipitation!=null ? c.precipitation : null;
@@ -5051,19 +5065,63 @@
         var dust = aq.dust!=null ? Math.round(aq.dust) : null;
         setAll('jn-dust', dust!=null ? dust+' µg' : '--');
         setAll('jn-dustsub', dustLabel(aq.dust));
-      }catch(e){}
-    } catch(e){}
+      }catch(e){} // air quality is a bonus on top of a render that already succeeded
+      return true;
+    } catch(e){ return false; }
   }
 
+  // Explicit "can't load" state for the hero, distinct from both the
+  // static pre-load placeholders and a genuinely stale-but-once-good
+  // reading — so a real failure is visibly a failure, not indistinguishable
+  // from the face simply not having loaded yet.
+  function showLocalWeatherFailed(){
+    setAll('jn-city', 'Weather unavailable');
+    setAll('jn-cond', 'Check your connection');
+    setAll('jn-temp', '--°');
+    setAll('jn-hilo', ' ');
+  }
+  var localWeatherRetryTimer = null;
+  // getCurrentPosition's own `timeout` option is supposed to guarantee the
+  // error callback fires by 8s, but real-world WebKit builds have shipped
+  // with this silently never firing when Location Services are off at the
+  // OS level (as opposed to just denied for this site) — neither callback
+  // runs, and the face is left on its static placeholders forever. Racing
+  // it against an independent timer here means a stuck geolocation call
+  // can never block the Bonaire fallback from showing.
   function loadLocalWeather(){
+    if(localWeatherRetryTimer){ clearTimeout(localWeatherRetryTimer); localWeatherRetryTimer = null; }
+    var settled = false;
+    function useFallback(){
+      if(settled) return;
+      settled = true;
+      attempt(LOCAL_FALLBACK.lat, LOCAL_FALLBACK.lon, LOCAL_FALLBACK.name);
+    }
+    // One retry ~5s after a failed attempt — long enough to ride out a
+    // transient network blip without waiting for the next 10-minute
+    // refreshWeather() cycle, short enough the face doesn't sit blank/
+    // stale for long. Only ever schedules one: a second consecutive
+    // failure falls through to showLocalWeatherFailed() instead of
+    // retrying forever.
+    function attempt(lat, lon, name, isRetry){
+      renderLocalWeather(lat, lon, name).then(function(ok){
+        if(ok) return;
+        if(isRetry){ showLocalWeatherFailed(); return; }
+        localWeatherRetryTimer = setTimeout(function(){ attempt(lat, lon, name, true); }, 5000);
+      });
+    }
     if(navigator.geolocation){
       navigator.geolocation.getCurrentPosition(
-        function(pos){ renderLocalWeather(pos.coords.latitude.toFixed(2), pos.coords.longitude.toFixed(2)); },
-        function(err){ renderLocalWeather(LOCAL_FALLBACK.lat, LOCAL_FALLBACK.lon, LOCAL_FALLBACK.name); },
+        function(pos){
+          if(settled) return; // the safety timer already fell back to Bonaire
+          settled = true;
+          attempt(pos.coords.latitude.toFixed(2), pos.coords.longitude.toFixed(2));
+        },
+        useFallback,
         { enableHighAccuracy:false, timeout:8000, maximumAge:600000 }
       );
+      setTimeout(useFallback, 9000);
     } else {
-      renderLocalWeather(LOCAL_FALLBACK.lat, LOCAL_FALLBACK.lon, LOCAL_FALLBACK.name);
+      useFallback();
     }
   }
   function markActive(){
