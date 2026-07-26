@@ -2011,6 +2011,7 @@
      existing small clock + weather card unchanged. ---------- */
   .f-life .lf-wxpanel { display: none; }
   .f-life .lf-condpanel { display: none; }
+  .f-life .lf-wsfastring { display: none; }
   /* Wake/Sleep pill buttons */
   .f-life .lf-wsrow {
     display: flex;
@@ -2439,7 +2440,12 @@
   html.life-portrait #face-life .lf-date,
   html.life-portrait #face-life #lf-card-weather,
   html.life-portrait #face-life .lf-greeting,
-  html.life-portrait #face-life .lf-statuspill {
+  html.life-portrait #face-life .lf-statuspill,
+  /* The fasting card itself is gone from portrait — its ring moved up into
+     the wake/sleep row (see .lf-wsfastring) and the descriptive text
+     (state/sub/remaining/streak) isn't shown anywhere here anymore, freeing
+     up the row it used to occupy for the outdoors panel below. */
+  html.life-portrait #face-life #lf-card-fast {
     display: none;
   }
   html.life-portrait #face-life .lf-homeleft {
@@ -2449,26 +2455,15 @@
   /* The card grid is the flexible section: it takes whatever height is left
      after the weather panel and the wake/sleep block, and its rows share
      that so the cards stretch to the bottom of the screen instead of
-     leaving it blank. The last row (the full-width fasting card, pushed
-     there by `order` below) is content-sized — it stacks five lines beside
-     the ring and got clipped when forced to the same 1fr as the three-up
-     rows; the two rows above it split what's left. */
+     leaving it blank. Two rows now (not three) — the fasting card's own
+     content-sized row is gone along with the card itself. */
   html.life-portrait #face-life .lf-cards {
     flex: 1 1 auto;
     min-height: 0;
-    /* A floor (not 0) on the two 3-up rows: the fasting row is auto-sized
-       to its own five lines regardless of what's left over, and with a pure
-       0 floor here it was claiming almost the entire card grid's budget,
-       crushing the other two rows down to unreadable slivers. */
-    grid-template-rows: minmax(76px, 1fr) minmax(76px, 1fr) auto;
+    grid-template-rows: minmax(76px, 1fr) minmax(76px, 1fr);
     grid-auto-rows: minmax(76px, 1fr);
     overflow: hidden;
   }
-  /* Fasting moved to the bottom: `order` (not reordering the markup) so the
-     JS that reads these cards by id, and the DOM tab order, stay untouched
-     — only where the grid auto-placement drops the item changes. Every
-     other card keeps the implicit order:0, so this one alone sorts last. */
-  html.life-portrait #face-life #lf-card-fast { order: 1; }
   /* No floor here (landscape uses 74-132px): the grid rows above are now
      sized from the space actually left on screen, so a min-height only
      fights that — it pushed the bottom row off the edge on a short phone
@@ -2483,27 +2478,38 @@
   html.life-portrait #face-life .lf-condpanel {
     display: flex;
     flex-direction: column;
-    gap: clamp(4px, 1.1cqh, 9px);
+    gap: clamp(5px, 1.3cqh, 11px);
     flex: 0 0 auto;
-    height: 16dvh;
+    /* Grown from 16dvh now that removing the fasting card (see above) freed
+       up real room — this section was reported too small/cramped, and the
+       freed space is earmarked for it rather than the lifestyle cards. */
+    height: 26dvh;
     container-type: size;
     background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
     border: 1px solid var(--lf-cardborder);
     border-radius: clamp(12px, 2cqh, 22px);
-    padding: clamp(5px, 1.2cqh, 12px) clamp(9px, 2.2cqw, 16px);
+    padding: clamp(8px, 1.8cqh, 16px) clamp(11px, 2.6cqw, 20px);
     overflow: hidden;
+  }
+  html.life-portrait #face-life .lf-cond-title {
+    color: var(--lf-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+    font-size: clamp(10px, min(2.2cqh, 3.2cqw), 15px);
   }
   html.life-portrait #face-life .lf-condtop {
     display: flex;
     align-items: center;
-    gap: clamp(8px, 2.4cqw, 16px);
+    gap: clamp(10px, 3cqw, 20px);
     flex-shrink: 0;
   }
   html.life-portrait #face-life .lf-conddial {
     position: relative;
     flex: 0 0 auto;
-    width: clamp(42px, 12cqh, 68px);
-    height: clamp(42px, 12cqh, 68px);
+    width: clamp(56px, 15cqh, 90px);
+    height: clamp(56px, 15cqh, 90px);
   }
   html.life-portrait #face-life .lf-conduvsvg { width: 100%; height: 100%; transform: rotate(-90deg); }
   html.life-portrait #face-life .lf-conduvtrack { fill: none; stroke: rgba(255,255,255,0.14); stroke-width: 9; }
@@ -2533,35 +2539,35 @@
     color: #fff;
     font-weight: 800;
     font-variant-numeric: tabular-nums;
-    font-size: clamp(14px, min(4.6cqh, 9cqw), 24px);
+    font-size: clamp(18px, min(5.6cqh, 11cqw), 30px);
   }
   html.life-portrait #face-life .lf-conduvlbl {
     color: var(--lf-muted);
     font-weight: 700;
     letter-spacing: 0.04em;
     margin-top: 1px;
-    font-size: clamp(5px, min(1.6cqh, 3cqw), 8px);
+    font-size: clamp(7px, min(2cqh, 3.6cqw), 11px);
   }
   html.life-portrait #face-life .lf-condverdict {
     flex: 1 1 0;
     min-width: 0;
     display: flex;
     align-items: center;
-    gap: clamp(6px, 2cqw, 12px);
+    gap: clamp(8px, 2.4cqw, 14px);
     overflow: hidden;
   }
-  html.life-portrait #face-life .lf-condverdict-ico { font-size: clamp(20px, 9cqh, 36px); line-height: 1; flex-shrink: 0; }
-  html.life-portrait #face-life .lf-condverdict-txt { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
+  html.life-portrait #face-life .lf-condverdict-ico { font-size: clamp(26px, 11cqh, 44px); line-height: 1; flex-shrink: 0; }
+  html.life-portrait #face-life .lf-condverdict-txt { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
   html.life-portrait #face-life .lf-condverdict-hd {
     color: #fff;
     font-weight: 700;
-    font-size: clamp(11px, min(4cqh, 4.6cqw), 17px);
+    font-size: clamp(15px, min(4.8cqh, 5.6cqw), 22px);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   html.life-portrait #face-life .lf-condverdict-sub {
     color: var(--lf-teal);
     font-weight: 500;
-    font-size: clamp(8px, min(2.4cqh, 3cqw), 12px);
+    font-size: clamp(10px, min(2.8cqh, 3.6cqw), 15px);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   html.life-portrait #face-life .lf-condstats {
@@ -2570,36 +2576,36 @@
     color: var(--lf-muted);
     font-weight: 500;
     flex-shrink: 0;
-    font-size: clamp(8px, min(2.2cqh, 2.8cqw), 12px);
+    font-size: clamp(10px, min(2.6cqh, 3.4cqw), 15px);
   }
   html.life-portrait #face-life .lf-condbest {
     display: flex;
     align-items: center;
-    gap: clamp(6px, 2cqw, 12px);
+    gap: clamp(8px, 2.4cqw, 14px);
     flex-shrink: 0;
   }
-  html.life-portrait #face-life .lf-condbest-ico { font-size: clamp(16px, 6cqh, 26px); line-height: 1; flex-shrink: 0; }
-  html.life-portrait #face-life .lf-condbest-txt { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
+  html.life-portrait #face-life .lf-condbest-ico { font-size: clamp(22px, 7.5cqh, 34px); line-height: 1; flex-shrink: 0; }
+  html.life-portrait #face-life .lf-condbest-txt { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
   html.life-portrait #face-life .lf-condbest-lbl {
     color: var(--lf-muted);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    font-size: clamp(7px, min(1.8cqh, 2.6cqw), 10px);
+    font-size: clamp(9px, min(2.2cqh, 3cqw), 12px);
   }
   html.life-portrait #face-life .lf-condbest-val {
     color: #fff;
     font-weight: 700;
-    font-size: clamp(11px, min(3.4cqh, 4.2cqw), 16px);
+    font-size: clamp(15px, min(4.2cqh, 5cqw), 20px);
   }
   html.life-portrait #face-life .lf-condbest-sub {
     color: var(--lf-muted);
-    font-size: clamp(7px, min(1.8cqh, 2.6cqw), 10px);
+    font-size: clamp(9px, min(2.2cqh, 3cqw), 12px);
   }
   html.life-portrait #face-life .lf-condspark {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 3px;
     flex: 1 1 0;
     min-height: 0;
   }
@@ -2608,15 +2614,16 @@
     justify-content: space-between;
     color: var(--lf-muted);
     font-weight: 600;
-    font-size: clamp(7px, min(1.8cqh, 2.6cqw), 10px);
+    font-size: clamp(9px, min(2.2cqh, 3cqw), 12px);
   }
   html.life-portrait #face-life .lf-condspark-hd span:last-child { color: #fff; font-weight: 700; }
   /* Overrides the base .f-life .fm-spark-svg height (24-50px, tuned for the
-     Stats tab's own full-height chart cards) — this panel budgets much less
-     per chart, so cap it smaller. Colors/stroke come for free from that same
-     base rule's .warm/.teal variants. */
+     Stats tab's own full-height chart cards) — grown along with everything
+     else in this panel, though still capped below that base rule's own max
+     since two charts share this budget, not one. Colors/stroke come for
+     free from that same base rule's .warm/.teal variants. */
   html.life-portrait #face-life .lf-condpanel .fm-spark-svg {
-    height: clamp(16px, 5.5cqh, 34px);
+    height: clamp(22px, 7.5cqh, 44px);
     margin-top: 0;
   }
   html.life-portrait #face-life .lf-wsbtn {
@@ -2626,6 +2633,35 @@
   html.life-portrait #face-life .lf-notice { font-size: clamp(10px, 2.9cqw, 14px); }
   html.life-portrait #face-life .lf-wsrow { margin-top: 0; }
   html.life-portrait #face-life .lf-notice { margin-top: 0; }
+  /* Fasting ring badge, sitting between the two wake/sleep buttons — a
+     normal flex sibling (not absolutely positioned), so the two buttons
+     just share a bit less width to make room for it. */
+  html.life-portrait #face-life .lf-wsfastring {
+    display: block;
+    position: relative;
+    flex: 0 0 auto;
+    width: clamp(40px, 8.5cqh, 60px);
+    height: clamp(40px, 8.5cqh, 60px);
+  }
+  html.life-portrait #face-life .lf-wsfastsvg { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+  html.life-portrait #face-life .lf-wsfasttrack { fill: none; stroke: rgba(255,255,255,0.14); stroke-width: 9; }
+  html.life-portrait #face-life .lf-wsfastfill {
+    fill: none;
+    stroke: var(--lf-teal);
+    stroke-width: 9;
+    stroke-linecap: round;
+    stroke-dasharray: 327;
+    stroke-dashoffset: 327;
+    transition: stroke-dashoffset 0.9s ease, stroke 0.9s ease;
+    filter: drop-shadow(0 0 6px currentColor);
+  }
+  html.life-portrait #face-life .lf-wsfastcenter {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: clamp(16px, 4.4cqh, 30px);
+    line-height: 1;
+  }
   /* The fasting ring was sized for the taller landscape card (up to 96px),
      then for the shrunk-but-still-generous card min-height, and is now
      scaled down again now that the marine-conditions panel below also
@@ -3699,6 +3735,21 @@
               </div>
               <div class="lf-wsrow" role="group" aria-label="Awake/asleep status">
                 <div class="lf-wsbtn on awake" id="lf-btn-awake" role="button" tabindex="0" aria-pressed="true"><span class="lf-wsico" aria-hidden="true">&#x1F31E;</span>I'm Awake</div>
+                <!-- Fasting ring, relocated here from the (now-removed, in
+                     portrait) fasting card below — same visual, driven by
+                     the same updateFastingRing(), just a second target by
+                     id (see fill2/iconEl2 there) since the landscape layout
+                     still shows the original ring inside its own card.
+                     Hidden outside html.life-portrait. -->
+                <div class="lf-wsfastring" id="lf-wsfastring" aria-hidden="true">
+                  <svg class="lf-wsfastsvg" viewBox="0 0 120 120">
+                    <circle class="lf-wsfasttrack" cx="60" cy="60" r="52"/>
+                    <circle class="lf-wsfastfill" id="lf-fastfill2" cx="60" cy="60" r="52"/>
+                  </svg>
+                  <div class="lf-wsfastcenter">
+                    <span class="lf-wsfasticon" id="lf-fasticon2">&#x1F37D;&#xFE0F;</span>
+                  </div>
+                </div>
                 <div class="lf-wsbtn" id="lf-btn-sleep" role="button" tabindex="0" aria-pressed="false"><span class="lf-wsico" aria-hidden="true">&#x1F319;</span>I'm Sleeping</div>
               </div>
               <div class="lf-notice">Reminders work best while StandBy stays open</div>
@@ -3805,6 +3856,7 @@
                  buildSpark() calls — see renderMarine() below. Hidden
                  outside html.life-portrait, same as the weather hero above. -->
             <div class="lf-condpanel" id="lf-condpanel">
+              <div class="lf-cond-title">&#x1F3D6;&#xFE0F; Outdoors</div>
               <div class="lf-condtop">
                 <div class="lf-conddial">
                   <svg class="lf-conduvsvg" viewBox="0 0 120 120">
@@ -6393,6 +6445,18 @@
       if(subEl) subEl.textContent = (f.eating ? 'Window closes ' : 'Eating opens ') + f.winEnd.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
       if(remainEl) remainEl.textContent = fmtHM(f.remainMs) + ' remaining';
       if(iconEl) iconEl.textContent = f.eating ? '\u{1F37D}\u{FE0F}' : '⏳';
+      // Second ring between the wake/sleep buttons (life-portrait only —
+      // see .lf-wsfastring). Same fill/icon, no separate state text since
+      // that card is gone in portrait; a null check keeps this harmless on
+      // every other face/layout, same pattern as the marine sparklines.
+      var fill2 = document.getElementById('lf-fastfill2');
+      var iconEl2 = document.getElementById('lf-fasticon2');
+      if(fill2){
+        fill2.style.strokeDasharray = LF_FAST_CIRC.toFixed(1);
+        fill2.style.strokeDashoffset = (LF_FAST_CIRC * (1 - f.progress)).toFixed(1);
+        fill2.style.stroke = col;
+      }
+      if(iconEl2) iconEl2.textContent = f.eating ? '\u{1F37D}\u{FE0F}' : '⏳';
     }
     // Ring progress spans hours and the remaining-time text is in whole
     // minutes — a 10s cadence is indistinguishable from 1s and 10x cheaper.
