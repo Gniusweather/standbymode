@@ -2489,20 +2489,20 @@
        rather than relying on the clamp ceiling, which left title/ring/
        verdict/stats/best-time eating the panel's entire height budget and
        crushing both sparklines down to ~6px (see .lf-condspark's floor). */
-    gap: clamp(3px, 0.7cqh, 6px);
+    gap: clamp(2px, 0.5cqh, 3px);
     flex: 0 0 auto;
     /* Grown from 16dvh now that removing the fasting card (see above) freed
        up real room — this section was reported too small/cramped repeatedly.
-       This is the actual ceiling: wxpanel needs its own 26dvh floor and
-       .lf-cards needs its two-row floor (~157px) or it clips — this is
-       whatever's left after both of those, not an independently chosen
-       number. */
-    height: 25dvh;
+       26dvh is the ceiling: wxpanel needs its own 26dvh floor and .lf-cards
+       needs its two-row floor (~157px) or it clips, so the last 1dvh here
+       had to be paid for by shrinking the oversized wake/sleep icons above
+       rather than taken from either of those. */
+    height: 26dvh;
     container-type: size;
     background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
     border: 1px solid var(--lf-cardborder);
     border-radius: clamp(12px, 2cqh, 22px);
-    padding: clamp(5px, 1cqh, 9px) clamp(11px, 2.6cqw, 20px);
+    padding: clamp(5px, 0.9cqh, 7px) clamp(11px, 2.6cqw, 20px);
     overflow: hidden;
   }
   html.life-portrait #face-life .lf-cond-title {
@@ -2511,7 +2511,7 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
     flex-shrink: 0;
-    font-size: clamp(12px, min(2.5cqh, 3.5cqw), 17px);
+    font-size: clamp(14px, min(2.5cqh, 3.5cqw), 19px);
   }
   html.life-portrait #face-life .lf-condtop {
     display: flex;
@@ -2522,8 +2522,8 @@
   html.life-portrait #face-life .lf-conddial {
     position: relative;
     flex: 0 0 auto;
-    width: clamp(54px, 15cqh, 88px);
-    height: clamp(54px, 15cqh, 88px);
+    width: clamp(52px, 13.5cqh, 70px);
+    height: clamp(52px, 13.5cqh, 70px);
   }
   html.life-portrait #face-life .lf-conduvsvg { width: 100%; height: 100%; transform: rotate(-90deg); }
   html.life-portrait #face-life .lf-conduvtrack { fill: none; stroke: rgba(255,255,255,0.14); stroke-width: 9; }
@@ -2553,14 +2553,19 @@
     color: #fff;
     font-weight: 800;
     font-variant-numeric: tabular-nums;
-    font-size: clamp(20px, min(6cqh, 11.5cqw), 34px);
+    font-size: clamp(23px, min(6cqh, 11.5cqw), 34px);
   }
+  /* One line, always: at the ring's compact size this caption wrapped to
+     "UV" / "INDEX" and the second line ran straight through the ring's
+     stroke. Tighter tracking buys the width to keep it on a single line
+     inside the circle instead. */
   html.life-portrait #face-life .lf-conduvlbl {
     color: var(--lf-muted);
     font-weight: 700;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.01em;
     margin-top: 1px;
-    font-size: clamp(9px, min(2.4cqh, 4cqw), 13px);
+    white-space: nowrap;
+    font-size: clamp(9px, min(2.4cqh, 4cqw), 12px);
   }
   html.life-portrait #face-life .lf-condverdict {
     flex: 1 1 0;
@@ -2570,18 +2575,18 @@
     gap: clamp(8px, 2.4cqw, 14px);
     overflow: hidden;
   }
-  html.life-portrait #face-life .lf-condverdict-ico { font-size: clamp(30px, 12cqh, 48px); line-height: 1; flex-shrink: 0; }
+  html.life-portrait #face-life .lf-condverdict-ico { font-size: clamp(26px, 10cqh, 40px); line-height: 1; flex-shrink: 0; }
   html.life-portrait #face-life .lf-condverdict-txt { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
   html.life-portrait #face-life .lf-condverdict-hd {
     color: #fff;
     font-weight: 700;
-    font-size: clamp(18px, min(5.4cqh, 6.4cqw), 25px);
+    font-size: clamp(21px, min(5.4cqh, 6.4cqw), 28px);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   html.life-portrait #face-life .lf-condverdict-sub {
     color: var(--lf-teal);
     font-weight: 500;
-    font-size: clamp(12px, min(3.2cqh, 4.2cqw), 17px);
+    font-size: clamp(14px, min(3.2cqh, 4.2cqw), 19px);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   html.life-portrait #face-life .lf-condstats {
@@ -2590,7 +2595,7 @@
     color: var(--lf-muted);
     font-weight: 500;
     flex-shrink: 0;
-    font-size: clamp(12px, min(3cqh, 4cqw), 17px);
+    font-size: clamp(14px, min(3cqh, 4cqw), 19px);
   }
   html.life-portrait #face-life .lf-condbest {
     display: flex;
@@ -2598,23 +2603,23 @@
     gap: clamp(8px, 2.4cqw, 14px);
     flex-shrink: 0;
   }
-  html.life-portrait #face-life .lf-condbest-ico { font-size: clamp(24px, 8cqh, 37px); line-height: 1; flex-shrink: 0; }
+  html.life-portrait #face-life .lf-condbest-ico { font-size: clamp(22px, 7cqh, 32px); line-height: 1; flex-shrink: 0; }
   html.life-portrait #face-life .lf-condbest-txt { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
   html.life-portrait #face-life .lf-condbest-lbl {
     color: var(--lf-muted);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    font-size: clamp(11px, min(2.7cqh, 3.5cqw), 14px);
+    font-size: clamp(13px, min(2.7cqh, 3.5cqw), 16px);
   }
   html.life-portrait #face-life .lf-condbest-val {
     color: #fff;
     font-weight: 700;
-    font-size: clamp(18px, min(4.8cqh, 5.6cqw), 23px);
+    font-size: clamp(21px, min(4.8cqh, 5.6cqw), 26px);
   }
   html.life-portrait #face-life .lf-condbest-sub {
     color: var(--lf-muted);
-    font-size: clamp(11px, min(2.7cqh, 3.5cqw), 14px);
+    font-size: clamp(13px, min(2.7cqh, 3.5cqw), 16px);
   }
   /* A real floor, not 0: the fixed-content rows above (title/ring/verdict/
      stats/best-time) were eating the panel's whole budget, leaving these
@@ -2627,14 +2632,14 @@
     flex-direction: column;
     gap: 3px;
     flex: 1 1 0;
-    min-height: 26px;
+    min-height: 34px;
   }
   html.life-portrait #face-life .lf-condspark-hd {
     display: flex;
     justify-content: space-between;
     color: var(--lf-muted);
     font-weight: 600;
-    font-size: clamp(11px, min(2.7cqh, 3.5cqw), 14px);
+    font-size: clamp(13px, min(2.7cqh, 3.5cqw), 16px);
   }
   html.life-portrait #face-life .lf-condspark-hd span:last-child { color: #fff; font-weight: 700; }
   /* Overrides the base .f-life .fm-spark-svg height (24-50px, tuned for the
@@ -2643,13 +2648,18 @@
      since two charts share this budget, not one. Colors/stroke come for
      free from that same base rule's .warm/.teal variants. */
   html.life-portrait #face-life .lf-condpanel .fm-spark-svg {
-    height: clamp(22px, 7.5cqh, 44px);
+    height: clamp(16px, 5cqh, 20px);
     margin-top: 0;
   }
   html.life-portrait #face-life .lf-wsbtn {
     padding: clamp(3px, 0.8cqh, 7px) clamp(4px, 1cqw, 8px);
     font-size: clamp(13px, 4.4cqw, 21px);
   }
+  /* The base rule caps these at 36px, which is oversized next to the label
+     under them and is the only real slack left anywhere on this screen —
+     reclaimed to fund the outdoors panel's larger type below, since the
+     weather panel and card grid are both already at their own floors. */
+  html.life-portrait #face-life .lf-wsbtn .lf-wsico { font-size: clamp(16px, 4cqh, 26px); }
   html.life-portrait #face-life .lf-notice { font-size: clamp(10px, 2.9cqw, 14px); }
   html.life-portrait #face-life .lf-wsrow { margin-top: 0; }
   html.life-portrait #face-life .lf-notice { margin-top: 0; }
