@@ -2491,13 +2491,13 @@
        crushing both sparklines down to ~6px (see .lf-condspark's floor). */
     gap: clamp(2px, 0.5cqh, 3px);
     flex: 0 0 auto;
-    /* Grown from 16dvh now that removing the fasting card (see above) freed
-       up real room — this section was reported too small/cramped repeatedly.
-       26dvh is the ceiling: wxpanel needs its own 26dvh floor and .lf-cards
-       needs its two-row floor (~157px) or it clips, so the last 1dvh here
-       had to be paid for by shrinking the oversized wake/sleep icons above
-       rather than taken from either of those. */
-    height: 26dvh;
+    /* Was 26dvh (grown from 16dvh to fit two sparkline charts). Those charts
+       are gone now (replaced by the sea/feels dials, which sit inline with
+       the existing UV dial rather than needing extra rows), which left
+       ~33px of dead space at the bottom of the panel — given back to
+       .lf-cards below instead, which has been sitting at its bare row
+       floor all session. */
+    height: 23dvh;
     container-type: size;
     background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
     border: 1px solid var(--lf-cardborder);
@@ -2516,7 +2516,7 @@
   html.life-portrait #face-life .lf-condtop {
     display: flex;
     align-items: center;
-    gap: clamp(10px, 3cqw, 20px);
+    justify-content: space-between;
     flex-shrink: 0;
   }
   html.life-portrait #face-life .lf-conddial {
@@ -2540,6 +2540,25 @@
     transition: stroke-dashoffset 0.9s ease, stroke 0.9s ease;
     filter: drop-shadow(0 0 6px currentColor);
   }
+  /* Sea/feels have no natural 0-max scale the way UV (0-12) does, so their
+     rings are just fully drawn in a fixed accent color instead of an
+     animated fill fraction — dashoffset:0 draws the whole circumference. */
+  html.life-portrait #face-life .lf-condfill-sea {
+    fill: none;
+    stroke: var(--lf-blue);
+    stroke-width: 9;
+    stroke-dasharray: 327;
+    stroke-dashoffset: 0;
+    filter: drop-shadow(0 0 6px currentColor);
+  }
+  html.life-portrait #face-life .lf-condfill-feels {
+    fill: none;
+    stroke: var(--lf-warm);
+    stroke-width: 9;
+    stroke-dasharray: 327;
+    stroke-dashoffset: 0;
+    filter: drop-shadow(0 0 6px currentColor);
+  }
   html.life-portrait #face-life .lf-condcenter {
     position: absolute;
     left: 50%; top: 50%;
@@ -2549,7 +2568,10 @@
     align-items: center;
     line-height: 1;
   }
-  html.life-portrait #face-life .lf-condcenter .jm-uv {
+  /* :first-child (not .jm-uv specifically) so the same rule sizes all three
+     dials' value line — UV's is a bare span, sea/feels wrap the number with
+     a degree sign, but each is still the first child of .lf-condcenter. */
+  html.life-portrait #face-life .lf-condcenter > span:first-child {
     color: #fff;
     font-weight: 800;
     font-variant-numeric: tabular-nums;
@@ -2568,7 +2590,10 @@
     font-size: clamp(9px, min(2.4cqh, 4cqw), 12px);
   }
   html.life-portrait #face-life .lf-condverdict {
-    flex: 1 1 0;
+    /* flex:1 1 0 made sense sharing a row with the UV dial (fill the rest
+       of that row's width); now on its own row in the column layout, it
+       just needs its natural height. */
+    flex: 0 0 auto;
     min-width: 0;
     display: flex;
     align-items: center;
@@ -2620,36 +2645,6 @@
   html.life-portrait #face-life .lf-condbest-sub {
     color: var(--lf-muted);
     font-size: clamp(13px, min(2.7cqh, 3.5cqw), 16px);
-  }
-  /* A real floor, not 0: the fixed-content rows above (title/ring/verdict/
-     stats/best-time) were eating the panel's whole budget, leaving these
-     two flex:1 1 0 sections just ~6px each — nowhere near enough for their
-     own header line plus a legible chart, so the sparklines rendered as
-     barely-visible slivers. min-height:0 let flexbox take that away from
-     them first instead of shrinking anything else. */
-  html.life-portrait #face-life .lf-condspark {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    flex: 1 1 0;
-    min-height: 34px;
-  }
-  html.life-portrait #face-life .lf-condspark-hd {
-    display: flex;
-    justify-content: space-between;
-    color: var(--lf-muted);
-    font-weight: 600;
-    font-size: clamp(13px, min(2.7cqh, 3.5cqw), 16px);
-  }
-  html.life-portrait #face-life .lf-condspark-hd span:last-child { color: #fff; font-weight: 700; }
-  /* Overrides the base .f-life .fm-spark-svg height (24-50px, tuned for the
-     Stats tab's own full-height chart cards) — grown along with everything
-     else in this panel, though still capped below that base rule's own max
-     since two charts share this budget, not one. Colors/stroke come for
-     free from that same base rule's .warm/.teal variants. */
-  html.life-portrait #face-life .lf-condpanel .fm-spark-svg {
-    height: clamp(16px, 5cqh, 20px);
-    margin-top: 0;
   }
   html.life-portrait #face-life .lf-wsbtn {
     padding: clamp(3px, 0.8cqh, 7px) clamp(4px, 1cqw, 8px);
@@ -3912,6 +3907,15 @@
                  outside html.life-portrait, same as the weather hero above. -->
             <div class="lf-condpanel" id="lf-condpanel">
               <div class="lf-cond-title">&#x1F3D6;&#xFE0F; Outdoors</div>
+              <!-- Three dials, same ring markup/style as the UV one (which
+                   drives it live via .jm-uvfill + renderMarine()) — Sea and
+                   Feels have no natural 0-max scale to animate a fill
+                   fraction against, so their rings are a fixed, fully-drawn
+                   accent color instead (.lf-condfill-sea/-feels below) rather
+                   than inventing an arbitrary temperature scale. Values
+                   still update live: jm-watertemp/jm-feels are the same
+                   classes renderMarine() already sweeps for the text this
+                   replaces. -->
               <div class="lf-condtop">
                 <div class="lf-conddial">
                   <svg class="lf-conduvsvg" viewBox="0 0 120 120">
@@ -3923,16 +3927,35 @@
                     <span class="lf-conduvlbl">UV INDEX</span>
                   </div>
                 </div>
-                <div class="lf-condverdict">
-                  <span class="lf-condverdict-ico jm-verdicon">&#x1F3D6;&#xFE0F;</span>
-                  <div class="lf-condverdict-txt">
-                    <span class="lf-condverdict-hd jm-verdict-hd">&mdash;</span>
-                    <span class="lf-condverdict-sub jm-verdict-sub">&mdash;</span>
+                <div class="lf-conddial">
+                  <svg class="lf-conduvsvg" viewBox="0 0 120 120">
+                    <circle class="lf-conduvtrack" cx="60" cy="60" r="52"/>
+                    <circle class="lf-conduvfill lf-condfill-sea" cx="60" cy="60" r="52"/>
+                  </svg>
+                  <div class="lf-condcenter">
+                    <span><span class="jm-watertemp">--</span>&deg;</span>
+                    <span class="lf-conduvlbl">SEA</span>
+                  </div>
+                </div>
+                <div class="lf-conddial">
+                  <svg class="lf-conduvsvg" viewBox="0 0 120 120">
+                    <circle class="lf-conduvtrack" cx="60" cy="60" r="52"/>
+                    <circle class="lf-conduvfill lf-condfill-feels" cx="60" cy="60" r="52"/>
+                  </svg>
+                  <div class="lf-condcenter">
+                    <span><span class="jm-feels">--</span>&deg;</span>
+                    <span class="lf-conduvlbl">FEELS</span>
                   </div>
                 </div>
               </div>
+              <div class="lf-condverdict">
+                <span class="lf-condverdict-ico jm-verdicon">&#x1F3D6;&#xFE0F;</span>
+                <div class="lf-condverdict-txt">
+                  <span class="lf-condverdict-hd jm-verdict-hd">&mdash;</span>
+                  <span class="lf-condverdict-sub jm-verdict-sub">&mdash;</span>
+                </div>
+              </div>
               <div class="lf-condstats">
-                <span>Sea <span class="jm-watertemp">--</span>&deg; &middot; feels <span class="jm-feels">--</span>&deg;</span>
                 <span>Wind <span class="jm-windnow">--</span></span>
               </div>
               <div class="lf-condbest">
@@ -3942,22 +3965,6 @@
                   <span class="lf-condbest-val jm-besttime">&mdash;</span>
                   <span class="lf-condbest-sub jm-bestsub">&mdash;</span>
                 </div>
-              </div>
-              <div class="lf-condspark">
-                <div class="lf-condspark-hd"><span>&#x2600;&#xFE0F; UV index &middot; today</span><span class="jm-uvrange">--</span></div>
-                <svg class="fm-spark-svg" viewBox="0 0 300 56" preserveAspectRatio="none">
-                  <polygon class="fm-spark-area warm" id="lf-mr-uvspark-fill" points=""/>
-                  <polyline class="fm-spark-line warm" id="lf-mr-uvspark" points=""/>
-                  <circle class="fm-spark-dot warm" id="lf-mr-uvspark-dot" r="3.5" cx="-10" cy="-10"/>
-                </svg>
-              </div>
-              <div class="lf-condspark">
-                <div class="lf-condspark-hd"><span>&#x1F4A8; Wind &middot; 24h</span><span class="jm-windrange">--</span></div>
-                <svg class="fm-spark-svg" viewBox="0 0 300 56" preserveAspectRatio="none">
-                  <polygon class="fm-spark-area teal" id="lf-mr-windspark-fill" points=""/>
-                  <polyline class="fm-spark-line teal" id="lf-mr-windspark" points=""/>
-                  <circle class="fm-spark-dot teal" id="lf-mr-windspark-dot" r="3.5" cx="-10" cy="-10"/>
-                </svg>
               </div>
             </div>
           </div>
@@ -5462,11 +5469,6 @@
       var winds = (hh.wind_speed_10m || []).slice(i0, i0+24).filter(function(x){ return x != null; });
       buildSpark('fm-uvspark', uvs);
       buildSpark('fm-windspark', winds);
-      // Same series, feeding the compact life-portrait replica's own spark
-      // elements (see lf-condpanel markup above) — buildSpark no-ops if an
-      // id isn't present, so this is safe on every other face too.
-      buildSpark('lf-mr-uvspark', uvs);
-      buildSpark('lf-mr-windspark', winds);
       if(uvs.length) setAll('jm-uvrange', 'peak ' + Math.round(Math.max.apply(null, uvs)));
       if(winds.length) setAll('jm-windrange', Math.round(Math.min.apply(null,winds))+'–'+Math.round(Math.max.apply(null,winds))+' kt');
     }
