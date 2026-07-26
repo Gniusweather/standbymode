@@ -2766,21 +2766,21 @@
      on a 932px screen, and oversizing it there only gets the value clipped.
      Scaled down again from the previous 16-28px now that each card's own
      row is shorter — the marine panel above claims part of that budget. */
-  html.life-portrait #face-life .lf-card-val { font-size: clamp(13px, min(2.6cqh, 6.8cqw), 20px); }
+  html.life-portrait #face-life .lf-card-val { font-size: clamp(15px, min(2.9cqh, 7.4cqw), 22px); }
   /* The fasting card's "value" is a status word ("Eating"/"Fasting"), not a
      metric — at the full card-val size it stacked five tall lines and made
      its content-sized row eat the space the two rows above it need (it now
      sits last, sized to content, so an oversized value here pushes the
      whole row past what's left and gets clipped by .lf-cards' overflow). */
-  html.life-portrait #face-life #lf-card-fast .lf-card-val { font-size: clamp(13px, min(2.6cqh, 5.4cqw), 19px); }
+  html.life-portrait #face-life #lf-card-fast .lf-card-val { font-size: clamp(15px, min(2.9cqh, 6cqw), 21px); }
   html.life-portrait #face-life .lf-card-sub,
   html.life-portrait #face-life .lf-card-last,
-  html.life-portrait #face-life .lf-fast-streak { font-size: clamp(8px, min(1.4cqh, 2.6cqw), 12px); }
+  html.life-portrait #face-life .lf-fast-streak { font-size: clamp(10px, min(1.6cqh, 2.9cqw), 13px); }
   /* Kept a notch smaller than .lf-card-sub: these carry the longest strings
      in any card ("+ Tap to log a glass") in the same ~120px column, and
      truncated at the shared size. */
-  html.life-portrait #face-life .lf-tap-hint { font-size: clamp(8px, min(1.2cqh, 2.1cqw), 10px); }
-  html.life-portrait #face-life .lf-mood-emoji { font-size: clamp(14px, min(2.7cqh, 5.8cqw), 21px); }
+  html.life-portrait #face-life .lf-tap-hint { font-size: clamp(9px, min(1.3cqh, 2.3cqw), 11px); }
+  html.life-portrait #face-life .lf-mood-emoji { font-size: clamp(15px, min(2.9cqh, 6.2cqw), 22px); }
   /* Tiles trimmed a bit smaller (tighter padding/gap) than before, freeing
      height for the weather panel's bigger type below — and with the padding
      cut, the value line still gets to render at full, bigger size instead
@@ -2814,7 +2814,7 @@
      but the browser's own sub-pixel rounding at paint time still rendered
      as truncated — scrollWidth vs clientWidth isn't precise enough right at
      the boundary. */
-  html.life-portrait #face-life .lf-card-hd { letter-spacing: -0.04em; }
+  html.life-portrait #face-life .lf-card-hd { letter-spacing: -0.09em; }
   html.life-portrait #face-life .lf-tap-hint { letter-spacing: 0; }
   /* "Resumes when you wake" is longer than tracking alone can rescue — let
      the sub line wrap to a second row instead of truncating it. Only that
@@ -2846,7 +2846,7 @@
      names — WATER, BATHROOM, MOOD, etc. — pop at a glance instead of
      blending into the sub-text below them. */
   html.life-portrait #face-life .lf-card-hd {
-    font-size: clamp(9px, 2.8cqw, 14px);
+    font-size: clamp(10px, 3cqw, 15px);
     color: var(--lf-teal);
   }
   /* Short phones (iPhone SE and friends) are the hard case: the weather
