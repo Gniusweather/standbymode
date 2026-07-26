@@ -2172,6 +2172,12 @@
     flex: 1 1 auto;
     min-height: 0;
     overflow: visible;
+    /* The swipe-dots indicator (.dots, a fixed overlay shared by every face)
+       can reach a few px past the face's own bottom padding. Harmless when
+       the last thing on screen is decorative, but the fasting card's last
+       line ("0-day streak") now lands exactly there since cards fill to the
+       view's bottom edge above — hold this much clear of it. */
+    padding-bottom: clamp(8px, 2.2cqh, 20px);
   }
   /* The rich weather hero takes roughly the first half of the screen;
      everything else (status/buttons/reminder + the health cards) flows
@@ -2183,11 +2189,11 @@
     flex-direction: column;
     gap: clamp(6px, 1.6cqh, 14px);
     flex: 0 0 auto;
-    /* Shorter than before (was 48dvh, sized for 12 tiles) — 8 tiles across
-       3 rows needs a lot less height, and the panel was the single biggest
-       reason the rest of the page (status/buttons/health cards) didn't fit
-       on screen without scrolling. */
-    height: 29dvh;
+    /* Taller than the previous 29dvh, to host bigger tile type — borrowed
+       from the lifestyle cards below, which is why their own tiles read a
+       bit smaller now. Still well short of the original 48dvh (sized for
+       12 tiles), so the page still never needs to scroll. */
+    height: 30dvh;
     container-type: size;
     background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
     border: 1px solid var(--lf-cardborder);
@@ -2196,23 +2202,32 @@
     box-shadow: 0 10px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
     overflow: hidden;
   }
+  /* Was time squeezed to the left with the hero force-filling the rest of
+     the row (flex:1 1 0) — center the pair as a group instead. Stacking
+     time above the hero (a separate row each) was tried first and reads
+     nicely, but it costs a full extra row of the panel's fixed height,
+     which starved the tile grid below down to slivers; centering within
+     the existing single row keeps the same height budget. */
   html.life-portrait #face-life .lf-wxtop {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: clamp(8px, 2.6cqw, 20px);
     flex-shrink: 0;
   }
   html.life-portrait #face-life .lf-wxtimediv {
     flex: 0 0 auto;
-    max-width: 42%;
+    max-width: 48%;
     min-width: 0;
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 2px;
   }
   html.life-portrait #face-life .lf-wxtime {
     display: flex;
     align-items: baseline;
+    justify-content: center;
     color: #fff;
     font-weight: 700;
     /* Sized off the SMALLER of height and width: cqh alone let this overflow
@@ -2247,12 +2262,13 @@
     color: var(--lf-muted);
     font-weight: 500;
     font-size: clamp(9px, 3.6cqw, 14px);
+    text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   html.life-portrait #face-life .lf-wxhero {
-    flex: 1 1 0;
+    flex: 0 1 auto;
     min-width: 0;
     display: flex;
     align-items: center;
@@ -2325,11 +2341,11 @@
       linear-gradient(160deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03) 60%);
     border: 1px solid rgba(255,255,255,0.10);
     border-radius: clamp(6px, 1.8cqw, 12px);
-    padding: clamp(5px, 1.6cqh, 10px) clamp(4px, 1.8cqw, 9px);
+    padding: clamp(4px, 1.5cqh, 9px) clamp(4px, 1.7cqw, 8px);
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: clamp(1px, 0.8cqh, 4px);
+    gap: clamp(1px, 0.7cqh, 3px);
     overflow: hidden;
   }
   html.life-portrait #face-life .lf-wxtile::before {
@@ -2353,7 +2369,7 @@
        applies here since the merged wind tile ("13 kt ↓ ESE") carries
        longer text than a 1-of-4-column tile is wide, in a container whose
        height (cqh basis) doesn't know anything about that width limit. */
-    font-size: clamp(11px, min(7.5cqh, 4.4cqw), 21px);
+    font-size: clamp(12px, min(7.8cqh, 4.6cqw), 22px);
     color: #fff;
     line-height: 1;
     font-variant-numeric: tabular-nums;
@@ -2365,7 +2381,7 @@
   html.life-portrait #face-life .lf-wxval.blue { color: #5ea8ff; }
   html.life-portrait #face-life .lf-wxsub {
     color: var(--lf-muted);
-    font-size: clamp(7px, min(3.8cqh, 2.6cqw), 12px);
+    font-size: clamp(7px, min(4cqh, 2.7cqw), 12.5px);
     font-weight: 500;
     line-height: 1;
     white-space: nowrap;
@@ -2399,7 +2415,7 @@
   html.life-portrait #face-life .lf-wxarrow { display: inline-block; color: var(--lf-teal); }
   html.life-portrait #face-life .lf-wxlbl {
     color: var(--lf-muted);
-    font-size: clamp(7px, min(3.2cqh, 2.9cqw), 12px);
+    font-size: clamp(7px, min(3.4cqh, 3cqw), 12.5px);
     font-weight: 600;
     line-height: 1;
     text-transform: uppercase;
@@ -2429,17 +2445,22 @@
   /* The card grid is the flexible section: it takes whatever height is left
      after the weather panel and the wake/sleep block, and its rows share
      that so the cards stretch to the bottom of the screen instead of
-     leaving it blank. Row 1 (the full-width fasting card) is content-sized
-     — it stacks five lines beside the ring and got clipped when forced to
-     the same 1fr as the three-up rows; the two rows below it split what's
-     left. */
+     leaving it blank. The last row (the full-width fasting card, pushed
+     there by `order` below) is content-sized — it stacks five lines beside
+     the ring and got clipped when forced to the same 1fr as the three-up
+     rows; the two rows above it split what's left. */
   html.life-portrait #face-life .lf-cards {
     flex: 1 1 auto;
     min-height: 0;
-    grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto;
     grid-auto-rows: minmax(0, 1fr);
     overflow: hidden;
   }
+  /* Fasting moved to the bottom: `order` (not reordering the markup) so the
+     JS that reads these cards by id, and the DOM tab order, stay untouched
+     — only where the grid auto-placement drops the item changes. Every
+     other card keeps the implicit order:0, so this one alone sorts last. */
+  html.life-portrait #face-life #lf-card-fast { order: 1; }
   /* No floor here (landscape uses 74-132px): the grid rows above are now
      sized from the space actually left on screen, so a min-height only
      fights that — it pushed the bottom row off the edge on a short phone
@@ -2469,33 +2490,35 @@
   /* The cqh term does the work of keeping short phones honest: a five-line
      card on a 667px-tall screen genuinely cannot host the same type as one
      on a 932px screen, and oversizing it there only gets the value clipped. */
-  html.life-portrait #face-life .lf-card-val { font-size: clamp(15px, min(3.4cqh, 8cqw), 28px); }
+  html.life-portrait #face-life .lf-card-val { font-size: clamp(16px, min(3.3cqh, 8.4cqw), 28px); }
   /* The fasting card's "value" is a status word ("Eating"/"Fasting"), not a
      metric — at the full card-val size it stacked five tall lines and made
-     its content-sized row eat the space the two rows below it need. */
-  html.life-portrait #face-life #lf-card-fast .lf-card-val { font-size: clamp(14px, min(3.4cqh, 6.6cqw), 24px); }
+     its content-sized row eat the space the two rows above it need (it now
+     sits last, sized to content, so an oversized value here pushes the
+     whole row past what's left and gets clipped by .lf-cards' overflow). */
+  html.life-portrait #face-life #lf-card-fast .lf-card-val { font-size: clamp(15px, min(3.4cqh, 6.8cqw), 25px); }
   html.life-portrait #face-life .lf-card-sub,
   html.life-portrait #face-life .lf-card-last,
-  html.life-portrait #face-life .lf-tap-hint,
-  html.life-portrait #face-life .lf-fast-streak { font-size: clamp(8px, min(1.4cqh, 2.8cqw), 12px); }
-  html.life-portrait #face-life .lf-mood-emoji { font-size: clamp(15px, min(3.2cqh, 6.8cqw), 25px); }
-  /* A tappable card stacks five lines (header, value, sub, timestamp, hint).
-     Padding and gaps stay tight so the value line — the one that carries the
-     number you actually read across the room — gets its full type size
-     instead of being flex-shrunk and clipped. */
+  html.life-portrait #face-life .lf-fast-streak { font-size: clamp(8px, min(1.5cqh, 2.9cqw), 13px); }
+  /* Kept a notch smaller than .lf-card-sub: these carry the longest strings
+     in any card ("+ Tap to log a glass") in the same ~120px column, and
+     truncated at the shared size. */
+  html.life-portrait #face-life .lf-tap-hint { font-size: clamp(8px, min(1.3cqh, 2.4cqw), 11px); }
+  html.life-portrait #face-life .lf-mood-emoji { font-size: clamp(16px, min(3.4cqh, 7.2cqw), 26px); }
+  /* Tiles trimmed a bit smaller (tighter padding/gap) than before, freeing
+     height for the weather panel's bigger type below — and with the padding
+     cut, the value line still gets to render at full, bigger size instead
+     of being flex-shrunk and clipped. */
   html.life-portrait #face-life .lf-card {
-    padding: clamp(4px, 0.9cqh, 9px) clamp(5px, 1.1cqw, 9px);
+    padding: clamp(3px, 0.8cqh, 8px) clamp(4px, 1.1cqw, 8px);
     gap: clamp(1px, 0.3cqh, 3px);
   }
   /* A three-up card is ~120px of usable width, and these labels ellipsised
      there ("Next reminder", "Morning meds", "+ Tap to log a glass"). Buy the
      room back from tracking rather than from type size, which is the thing
      that was asked to grow. */
-  html.life-portrait #face-life .lf-card-hd { letter-spacing: 0.015em; }
-  html.life-portrait #face-life .lf-tap-hint {
-    letter-spacing: 0;
-    font-size: clamp(8px, min(1.4cqh, 2.5cqw), 12px);
-  }
+  html.life-portrait #face-life .lf-card-hd { letter-spacing: -0.005em; }
+  html.life-portrait #face-life .lf-tap-hint { letter-spacing: 0; }
   /* "Resumes when you wake" is longer than tracking alone can rescue — let
      the sub line wrap to a second row instead of truncating it. Only that
      string is long enough to ever wrap; the rest ("0.3 / 3.0 L", "visits
@@ -2506,7 +2529,7 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
   }
-  html.life-portrait #face-life .lf-cards { gap: clamp(5px, 1.4cqw, 10px); }
+  html.life-portrait #face-life .lf-cards { gap: clamp(4px, 1.2cqw, 9px); }
   /* Labels sized off cqh (container HEIGHT) inflate a lot once the box is
      truly tall instead of the thin rotated strip they were tuned for, and
      then don't fit the still-narrow WIDTH — "SETTINGS"/"BATHROOM" etc. got
@@ -2523,7 +2546,7 @@
     letter-spacing: 0.01em;
   }
   html.life-portrait #face-life .lf-card-hd {
-    font-size: clamp(8px, 2.5cqw, 13px);
+    font-size: clamp(8px, 2.6cqw, 13px);
   }
   /* Short phones (iPhone SE and friends) are the hard case: the weather
      panel needs its full share to keep three rows of tiles legible, which
