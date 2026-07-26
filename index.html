@@ -2196,8 +2196,12 @@
     gap: clamp(6px, 1.6cqh, 14px);
     flex: 0 0 auto;
     /* Taller than the original 29dvh, to host bigger tile type — borrowed
-       from the lifestyle cards below. Trimmed back down from 30dvh now that
-       the new marine-conditions panel also needs a share of this budget. */
+       from the lifestyle cards below. Tried trimming this further (to fund
+       a bigger outdoors panel) down to 21dvh, but that broke the weather
+       tiles outright (severe text overlap, not just minor squash) — 26dvh
+       is this panel's actual floor for its fixed 8-tile/3-row layout, so
+       the outdoors panel has to fit the budget left AFTER this, not the
+       other way around. */
     height: 26dvh;
     container-type: size;
     background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
@@ -2478,22 +2482,27 @@
   html.life-portrait #face-life .lf-condpanel {
     display: flex;
     flex-direction: column;
-    gap: clamp(5px, 1.3cqh, 11px);
+    /* NB: this gap/padding sit on the element that DECLARES container-type:
+       size below, so they resolve against the next OUTER container (the
+       full-viewport .stage), not against this panel's own ~250px box — a
+       cqh/cqw unit here is much bigger than it looks. Kept tight explicitly
+       rather than relying on the clamp ceiling, which left title/ring/
+       verdict/stats/best-time eating the panel's entire height budget and
+       crushing both sparklines down to ~6px (see .lf-condspark's floor). */
+    gap: clamp(3px, 0.7cqh, 6px);
     flex: 0 0 auto;
     /* Grown from 16dvh now that removing the fasting card (see above) freed
-       up real room — this section was reported too small/cramped, and the
-       freed space is earmarked for it rather than the lifestyle cards.
-       Trimmed back slightly from 26dvh: at the full 26dvh, .lf-cards below
-       was left shorter than its own two row-floors add up to (a pre-existing
-       bug — .lf-cards' grid needs >150px but was only getting ~144px — so
-       .lf-cards' overflow:hidden was silently clipping the bottom couple px
-       off the second card row, cutting into "+ Tap when taken"). */
-    height: 24dvh;
+       up real room — this section was reported too small/cramped repeatedly.
+       This is the actual ceiling: wxpanel needs its own 26dvh floor and
+       .lf-cards needs its two-row floor (~157px) or it clips — this is
+       whatever's left after both of those, not an independently chosen
+       number. */
+    height: 25dvh;
     container-type: size;
     background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
     border: 1px solid var(--lf-cardborder);
     border-radius: clamp(12px, 2cqh, 22px);
-    padding: clamp(8px, 1.8cqh, 16px) clamp(11px, 2.6cqw, 20px);
+    padding: clamp(5px, 1cqh, 9px) clamp(11px, 2.6cqw, 20px);
     overflow: hidden;
   }
   html.life-portrait #face-life .lf-cond-title {
@@ -2502,7 +2511,7 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
     flex-shrink: 0;
-    font-size: clamp(10px, min(2.2cqh, 3.2cqw), 15px);
+    font-size: clamp(12px, min(2.5cqh, 3.5cqw), 17px);
   }
   html.life-portrait #face-life .lf-condtop {
     display: flex;
@@ -2513,8 +2522,8 @@
   html.life-portrait #face-life .lf-conddial {
     position: relative;
     flex: 0 0 auto;
-    width: clamp(56px, 15cqh, 90px);
-    height: clamp(56px, 15cqh, 90px);
+    width: clamp(54px, 15cqh, 88px);
+    height: clamp(54px, 15cqh, 88px);
   }
   html.life-portrait #face-life .lf-conduvsvg { width: 100%; height: 100%; transform: rotate(-90deg); }
   html.life-portrait #face-life .lf-conduvtrack { fill: none; stroke: rgba(255,255,255,0.14); stroke-width: 9; }
@@ -2544,14 +2553,14 @@
     color: #fff;
     font-weight: 800;
     font-variant-numeric: tabular-nums;
-    font-size: clamp(18px, min(5.6cqh, 11cqw), 30px);
+    font-size: clamp(20px, min(6cqh, 11.5cqw), 34px);
   }
   html.life-portrait #face-life .lf-conduvlbl {
     color: var(--lf-muted);
     font-weight: 700;
     letter-spacing: 0.04em;
     margin-top: 1px;
-    font-size: clamp(8px, min(2.2cqh, 3.8cqw), 12px);
+    font-size: clamp(9px, min(2.4cqh, 4cqw), 13px);
   }
   html.life-portrait #face-life .lf-condverdict {
     flex: 1 1 0;
@@ -2561,18 +2570,18 @@
     gap: clamp(8px, 2.4cqw, 14px);
     overflow: hidden;
   }
-  html.life-portrait #face-life .lf-condverdict-ico { font-size: clamp(26px, 11cqh, 44px); line-height: 1; flex-shrink: 0; }
-  html.life-portrait #face-life .lf-condverdict-txt { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+  html.life-portrait #face-life .lf-condverdict-ico { font-size: clamp(30px, 12cqh, 48px); line-height: 1; flex-shrink: 0; }
+  html.life-portrait #face-life .lf-condverdict-txt { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
   html.life-portrait #face-life .lf-condverdict-hd {
     color: #fff;
     font-weight: 700;
-    font-size: clamp(15px, min(4.8cqh, 5.6cqw), 22px);
+    font-size: clamp(18px, min(5.4cqh, 6.4cqw), 25px);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   html.life-portrait #face-life .lf-condverdict-sub {
     color: var(--lf-teal);
     font-weight: 500;
-    font-size: clamp(10px, min(2.8cqh, 3.6cqw), 15px);
+    font-size: clamp(12px, min(3.2cqh, 4.2cqw), 17px);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   html.life-portrait #face-life .lf-condstats {
@@ -2581,7 +2590,7 @@
     color: var(--lf-muted);
     font-weight: 500;
     flex-shrink: 0;
-    font-size: clamp(10px, min(2.6cqh, 3.4cqw), 15px);
+    font-size: clamp(12px, min(3cqh, 4cqw), 17px);
   }
   html.life-portrait #face-life .lf-condbest {
     display: flex;
@@ -2589,37 +2598,43 @@
     gap: clamp(8px, 2.4cqw, 14px);
     flex-shrink: 0;
   }
-  html.life-portrait #face-life .lf-condbest-ico { font-size: clamp(22px, 7.5cqh, 34px); line-height: 1; flex-shrink: 0; }
-  html.life-portrait #face-life .lf-condbest-txt { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+  html.life-portrait #face-life .lf-condbest-ico { font-size: clamp(24px, 8cqh, 37px); line-height: 1; flex-shrink: 0; }
+  html.life-portrait #face-life .lf-condbest-txt { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
   html.life-portrait #face-life .lf-condbest-lbl {
     color: var(--lf-muted);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    font-size: clamp(10px, min(2.4cqh, 3.2cqw), 13px);
+    font-size: clamp(11px, min(2.7cqh, 3.5cqw), 14px);
   }
   html.life-portrait #face-life .lf-condbest-val {
     color: #fff;
     font-weight: 700;
-    font-size: clamp(15px, min(4.2cqh, 5cqw), 20px);
+    font-size: clamp(18px, min(4.8cqh, 5.6cqw), 23px);
   }
   html.life-portrait #face-life .lf-condbest-sub {
     color: var(--lf-muted);
-    font-size: clamp(10px, min(2.4cqh, 3.2cqw), 13px);
+    font-size: clamp(11px, min(2.7cqh, 3.5cqw), 14px);
   }
+  /* A real floor, not 0: the fixed-content rows above (title/ring/verdict/
+     stats/best-time) were eating the panel's whole budget, leaving these
+     two flex:1 1 0 sections just ~6px each — nowhere near enough for their
+     own header line plus a legible chart, so the sparklines rendered as
+     barely-visible slivers. min-height:0 let flexbox take that away from
+     them first instead of shrinking anything else. */
   html.life-portrait #face-life .lf-condspark {
     display: flex;
     flex-direction: column;
     gap: 3px;
     flex: 1 1 0;
-    min-height: 0;
+    min-height: 26px;
   }
   html.life-portrait #face-life .lf-condspark-hd {
     display: flex;
     justify-content: space-between;
     color: var(--lf-muted);
     font-weight: 600;
-    font-size: clamp(10px, min(2.4cqh, 3.2cqw), 13px);
+    font-size: clamp(11px, min(2.7cqh, 3.5cqw), 14px);
   }
   html.life-portrait #face-life .lf-condspark-hd span:last-child { color: #fff; font-weight: 700; }
   /* Overrides the base .f-life .fm-spark-svg height (24-50px, tuned for the
@@ -2632,7 +2647,7 @@
     margin-top: 0;
   }
   html.life-portrait #face-life .lf-wsbtn {
-    padding: clamp(4px, 1cqh, 9px) clamp(4px, 1cqw, 8px);
+    padding: clamp(3px, 0.8cqh, 7px) clamp(4px, 1cqw, 8px);
     font-size: clamp(13px, 4.4cqw, 21px);
   }
   html.life-portrait #face-life .lf-notice { font-size: clamp(10px, 2.9cqw, 14px); }
@@ -2716,6 +2731,15 @@
        but outside the rounded-corner clip path, which rect measurements
        don't account for. */
     border-radius: clamp(7px, 1cqh, 12px);
+    /* Base rule centers content vertically, which looked fine when every
+       card had enough lines to fill its box. Mood (2 lines) and Next
+       Reminder (3, often just a placeholder dash) don't, so centering left
+       their header floating a third of the way down the tile with a big
+       gap above it — visibly misaligned against neighbors like Morning
+       Meds that fill the same row height. Top-align everything instead, so
+       every card's header sits at the same offset regardless of how much
+       it has below it. */
+    justify-content: flex-start;
   }
   /* A three-up card is ~120px of usable width, and these labels ellipsised
      there ("Next reminder", "Morning meds", "+ Tap to log a glass"). Buy the
