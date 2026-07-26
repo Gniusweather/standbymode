@@ -2386,7 +2386,7 @@
   html.life-portrait #face-life .lf-wxval.blue { color: #5ea8ff; }
   html.life-portrait #face-life .lf-wxsub {
     color: var(--lf-muted);
-    font-size: clamp(7px, min(4cqh, 2.7cqw), 12.5px);
+    font-size: clamp(8px, min(4.2cqh, 2.9cqw), 13.5px);
     font-weight: 500;
     line-height: 1;
     white-space: nowrap;
@@ -2420,7 +2420,7 @@
   html.life-portrait #face-life .lf-wxarrow { display: inline-block; color: var(--lf-teal); }
   html.life-portrait #face-life .lf-wxlbl {
     color: var(--lf-muted);
-    font-size: clamp(7px, min(3.4cqh, 3cqw), 12.5px);
+    font-size: clamp(8px, min(3.6cqh, 3.2cqw), 13.5px);
     font-weight: 600;
     line-height: 1;
     text-transform: uppercase;
@@ -2482,8 +2482,13 @@
     flex: 0 0 auto;
     /* Grown from 16dvh now that removing the fasting card (see above) freed
        up real room — this section was reported too small/cramped, and the
-       freed space is earmarked for it rather than the lifestyle cards. */
-    height: 26dvh;
+       freed space is earmarked for it rather than the lifestyle cards.
+       Trimmed back slightly from 26dvh: at the full 26dvh, .lf-cards below
+       was left shorter than its own two row-floors add up to (a pre-existing
+       bug — .lf-cards' grid needs >150px but was only getting ~144px — so
+       .lf-cards' overflow:hidden was silently clipping the bottom couple px
+       off the second card row, cutting into "+ Tap when taken"). */
+    height: 24dvh;
     container-type: size;
     background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
     border: 1px solid var(--lf-cardborder);
@@ -2546,7 +2551,7 @@
     font-weight: 700;
     letter-spacing: 0.04em;
     margin-top: 1px;
-    font-size: clamp(7px, min(2cqh, 3.6cqw), 11px);
+    font-size: clamp(8px, min(2.2cqh, 3.8cqw), 12px);
   }
   html.life-portrait #face-life .lf-condverdict {
     flex: 1 1 0;
@@ -2591,7 +2596,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    font-size: clamp(9px, min(2.2cqh, 3cqw), 12px);
+    font-size: clamp(10px, min(2.4cqh, 3.2cqw), 13px);
   }
   html.life-portrait #face-life .lf-condbest-val {
     color: #fff;
@@ -2600,7 +2605,7 @@
   }
   html.life-portrait #face-life .lf-condbest-sub {
     color: var(--lf-muted);
-    font-size: clamp(9px, min(2.2cqh, 3cqw), 12px);
+    font-size: clamp(10px, min(2.4cqh, 3.2cqw), 13px);
   }
   html.life-portrait #face-life .lf-condspark {
     display: flex;
@@ -2614,7 +2619,7 @@
     justify-content: space-between;
     color: var(--lf-muted);
     font-weight: 600;
-    font-size: clamp(9px, min(2.2cqh, 3cqw), 12px);
+    font-size: clamp(10px, min(2.4cqh, 3.2cqw), 13px);
   }
   html.life-portrait #face-life .lf-condspark-hd span:last-child { color: #fff; font-weight: 700; }
   /* Overrides the base .f-life .fm-spark-svg height (24-50px, tuned for the
@@ -2691,25 +2696,37 @@
   html.life-portrait #face-life #lf-card-fast .lf-card-val { font-size: clamp(13px, min(2.6cqh, 5.4cqw), 19px); }
   html.life-portrait #face-life .lf-card-sub,
   html.life-portrait #face-life .lf-card-last,
-  html.life-portrait #face-life .lf-fast-streak { font-size: clamp(7px, min(1.2cqh, 2.3cqw), 11px); }
+  html.life-portrait #face-life .lf-fast-streak { font-size: clamp(8px, min(1.4cqh, 2.6cqw), 12px); }
   /* Kept a notch smaller than .lf-card-sub: these carry the longest strings
      in any card ("+ Tap to log a glass") in the same ~120px column, and
      truncated at the shared size. */
-  html.life-portrait #face-life .lf-tap-hint { font-size: clamp(7px, min(1cqh, 1.9cqw), 9px); }
+  html.life-portrait #face-life .lf-tap-hint { font-size: clamp(8px, min(1.2cqh, 2.1cqw), 10px); }
   html.life-portrait #face-life .lf-mood-emoji { font-size: clamp(14px, min(2.7cqh, 5.8cqw), 21px); }
   /* Tiles trimmed a bit smaller (tighter padding/gap) than before, freeing
      height for the weather panel's bigger type below — and with the padding
      cut, the value line still gets to render at full, bigger size instead
      of being flex-shrunk and clipped. */
   html.life-portrait #face-life .lf-card {
-    padding: clamp(2px, 0.5cqh, 6px) clamp(3px, 0.9cqw, 7px);
+    padding: clamp(2px, 0.5cqh, 6px) clamp(2px, 0.7cqw, 6px);
     gap: clamp(0px, 0.2cqh, 2px);
+    /* The base 10-20px radius was sized for the much taller landscape card.
+       On this compact a tile (~76-90px), that big a corner curve clipped
+       the bottom-left of the tap-hint line — geometrically inside the
+       card's rectangular box (bounding-rect checks reported no overflow)
+       but outside the rounded-corner clip path, which rect measurements
+       don't account for. */
+    border-radius: clamp(7px, 1cqh, 12px);
   }
   /* A three-up card is ~120px of usable width, and these labels ellipsised
      there ("Next reminder", "Morning meds", "+ Tap to log a glass"). Buy the
      room back from tracking rather than from type size, which is the thing
      that was asked to grow. */
-  html.life-portrait #face-life .lf-card-hd { letter-spacing: -0.005em; }
+  /* Genuine margin, not an exact fit: "Next reminder" measured need===avail
+     to the pixel at -0.02em, which DOM measurement called "0px overflow"
+     but the browser's own sub-pixel rounding at paint time still rendered
+     as truncated — scrollWidth vs clientWidth isn't precise enough right at
+     the boundary. */
+  html.life-portrait #face-life .lf-card-hd { letter-spacing: -0.04em; }
   html.life-portrait #face-life .lf-tap-hint { letter-spacing: 0; }
   /* "Resumes when you wake" is longer than tracking alone can rescue — let
      the sub line wrap to a second row instead of truncating it. Only that
@@ -2737,8 +2754,12 @@
     padding: clamp(9px, 2.4cqw, 15px) clamp(3px, 0.8cqw, 8px);
     letter-spacing: 0.01em;
   }
+  /* Highlighted (was the same muted gray as every other label) so the card
+     names — WATER, BATHROOM, MOOD, etc. — pop at a glance instead of
+     blending into the sub-text below them. */
   html.life-portrait #face-life .lf-card-hd {
-    font-size: clamp(8px, 2.6cqw, 13px);
+    font-size: clamp(9px, 2.8cqw, 14px);
+    color: var(--lf-teal);
   }
   /* Short phones (iPhone SE and friends) are the hard case: the weather
      panel needs its full share to keep three rows of tiles legible, which
@@ -2750,11 +2771,11 @@
   @media (max-height: 730px) {
     html.life-portrait #face-life .lf-card-val,
     html.life-portrait #face-life #lf-card-fast .lf-card-val { font-size: clamp(13px, min(2.7cqh, 6.5cqw), 20px); }
-    html.life-portrait #face-life .lf-card-hd { font-size: clamp(7px, 2.3cqw, 11px); }
+    html.life-portrait #face-life .lf-card-hd { font-size: clamp(8px, 2.5cqw, 12px); }
     html.life-portrait #face-life .lf-card-sub,
     html.life-portrait #face-life .lf-card-last,
     html.life-portrait #face-life .lf-tap-hint,
-    html.life-portrait #face-life .lf-fast-streak { font-size: clamp(7px, min(1.2cqh, 2.4cqw), 10px); }
+    html.life-portrait #face-life .lf-fast-streak { font-size: clamp(8px, min(1.3cqh, 2.5cqw), 11px); }
   }
   /* KNMI card text is cqh-sized for the rotated strip; re-base on cqw in
      true portrait, same as the other labels above. */
