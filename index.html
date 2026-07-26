@@ -1892,6 +1892,46 @@
         linear-gradient(165deg, #eaf7f4 0%, #dcf0ea 55%, #cfe9e2 100%);
     }
   }
+  /* "Constructive" — after the CMS admin dashboard reference: near-black
+     navy base, violet/cyan/orange/magenta accents standing in for the
+     teal/blue/warm/red slots the rest of this face already keys off. */
+  .f-life[data-theme="constructive"] {
+    --lf-teal: #22d3ee;
+    --lf-warm: #ff8a4c;
+    --lf-blue: #7c5cff;
+    --lf-red: #ff4d8d;
+    --lf-bg1: #0a0b16;
+    --lf-bg2: #12132a;
+    --lf-bg3: #191a3a;
+    --lf-ink: #f5f6fb;
+    --lf-muted: rgba(210,213,235,0.62);
+    --lf-card: linear-gradient(160deg, rgba(160,140,255,0.10), rgba(255,255,255,0.02));
+    --lf-cardborder: rgba(170,150,255,0.18);
+    background:
+      radial-gradient(ellipse 55% 60% at 18% 40%, rgba(124,92,255,0.16), transparent 62%),
+      radial-gradient(ellipse 55% 55% at 88% 85%, rgba(34,211,238,0.14), transparent 60%),
+      linear-gradient(165deg, var(--lf-bg1) 0%, var(--lf-bg2) 55%, var(--lf-bg3) 100%);
+  }
+  /* "Vision" — after the Vision UI Free dashboard reference: deep
+     blue-to-violet base with a vivid blue primary accent and a green
+     "safety gauge" accent standing in for teal. */
+  .f-life[data-theme="vision"] {
+    --lf-teal: #01b574;
+    --lf-warm: #7551ff;
+    --lf-blue: #0075ff;
+    --lf-red: #e3395d;
+    --lf-bg1: #0b1437;
+    --lf-bg2: #141b4d;
+    --lf-bg3: #1c1454;
+    --lf-ink: #ffffff;
+    --lf-muted: rgba(205,212,240,0.64);
+    --lf-card: linear-gradient(160deg, rgba(90,120,255,0.16), rgba(20,25,60,0.05));
+    --lf-cardborder: rgba(120,150,255,0.22);
+    background:
+      radial-gradient(ellipse 55% 60% at 18% 40%, rgba(0,117,255,0.18), transparent 62%),
+      radial-gradient(ellipse 55% 55% at 88% 85%, rgba(117,81,255,0.18), transparent 60%),
+      linear-gradient(165deg, var(--lf-bg1) 0%, var(--lf-bg2) 55%, var(--lf-bg3) 100%);
+  }
 
   /* Tab strip */
   .f-life .lf-tabs {
@@ -3332,7 +3372,17 @@
     transition: transform 0.25s ease;
   }
   .f-life .lf-notif-toggle.on .lf-notif-knob { transform: translateX(calc(clamp(36px, 7cqw, 52px) - clamp(20px, 4cqh, 28px))); }
-  .f-life .lf-themerow { display: flex; gap: 6px; }
+  .f-life .lf-themerow { display: flex; flex-wrap: wrap; gap: 6px; }
+  /* The theme row grew from 3 buttons (Dark/Light/Auto) to 5 once
+     Constructive/Vision were added — space-between with the label crowded
+     it, so this row alone stacks the label above a full-width, wrapping
+     button row instead of fighting it for horizontal space. */
+  .f-life .lf-set-row:has(#lf-set-theme) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: clamp(6px, 1.2cqh, 10px);
+  }
+  .f-life .lf-set-row:has(#lf-set-theme) .lf-themerow { width: 100%; }
   /* Quick-pick chips under the interval fields, so common cadences don't
      need typing on a number keypad — the field above still accepts any
      custom value, this is just a shortcut. */
@@ -3355,8 +3405,11 @@
     cursor: pointer;
   }
   .f-life .lf-themebtn.active {
-    background: linear-gradient(160deg, rgba(94,230,200,0.32), rgba(94,230,200,0.1));
-    border-color: rgba(94,230,200,0.45);
+    /* color-mix rather than a fixed teal rgba() so the active pill follows
+       whichever theme is actually selected — Constructive/Vision key their
+       accent color off the same --lf-teal slot but to very different hues. */
+    background: linear-gradient(160deg, color-mix(in srgb, var(--lf-teal) 32%, transparent), color-mix(in srgb, var(--lf-teal) 10%, transparent));
+    border-color: color-mix(in srgb, var(--lf-teal) 45%, transparent);
     color: var(--lf-ink);
   }
   /* ntfy push section in Settings */
@@ -4160,6 +4213,8 @@
                 <div class="lf-themebtn" data-theme="dark" role="radio" aria-checked="false" tabindex="-1">Dark</div>
                 <div class="lf-themebtn" data-theme="light" role="radio" aria-checked="false" tabindex="-1">Light</div>
                 <div class="lf-themebtn" data-theme="auto" role="radio" aria-checked="false" tabindex="-1">Auto</div>
+                <div class="lf-themebtn" data-theme="constructive" role="radio" aria-checked="false" tabindex="-1">Constructive</div>
+                <div class="lf-themebtn" data-theme="vision" role="radio" aria-checked="false" tabindex="-1">Vision</div>
               </div>
             </div>
             <div class="lf-set-section">Push reminders (ntfy.sh)</div>
