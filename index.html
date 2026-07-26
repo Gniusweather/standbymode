@@ -2164,11 +2164,12 @@
   html.life-portrait #face-life .lf-home {
     display: flex;
     flex-direction: column;
-    /* Tighter than before (was 8-18px): now stacking four sections instead
-       of three (weather / wake-sleep / cards / marine conditions), so the
-       three gaps between them add up fast — reclaiming a few px here goes
-       straight back to the weather panel below. */
-    gap: clamp(6px, 1.2cqh, 14px);
+    /* Tighter than before (was 8-18px, then 6-14px): now stacking four
+       sections instead of three (weather / wake-sleep / cards / marine
+       conditions), so the three gaps between them add up fast — reclaimed
+       again to help fund the new weekly-forecast rows in the outdoors
+       panel below. */
+    gap: clamp(4px, 0.9cqh, 10px);
     /* Fill the view rather than stacking to natural content height: with
        everything content-sized the column ended around two thirds down a
        tall phone and left a dead zone under the last card row. Growing to
@@ -2183,7 +2184,7 @@
        the last thing on screen is decorative, but the fasting card's last
        line ("0-day streak") now lands exactly there since cards fill to the
        view's bottom edge above — hold this much clear of it. */
-    padding-bottom: clamp(8px, 2.2cqh, 20px);
+    padding-bottom: clamp(6px, 1.9cqh, 17px);
   }
   /* The rich weather hero takes roughly the first half of the screen;
      everything else (status/buttons/reminder + the health cards) flows
@@ -2491,18 +2492,18 @@
        crushing both sparklines down to ~6px (see .lf-condspark's floor). */
     gap: clamp(2px, 0.5cqh, 3px);
     flex: 0 0 auto;
-    /* Was 26dvh (grown from 16dvh to fit two sparkline charts). Those charts
-       are gone now (replaced by the sea/feels dials, which sit inline with
-       the existing UV dial rather than needing extra rows), which left
-       ~33px of dead space at the bottom of the panel — given back to
-       .lf-cards below instead, which has been sitting at its bare row
-       floor all session. */
-    height: 23dvh;
+    /* Was 26dvh (charts), then 23dvh (charts replaced by dials, freeing
+       room for .lf-cards). Grown again to fit the new weekly-forecast rows
+       (.lf-condweek) — mostly funded by tightening .lf-home's own gap and
+       the wake/sleep button padding above, with .lf-cards giving back part
+       of the room it was given last round but staying above its own
+       ~157px two-row floor. */
+    height: 28dvh;
     container-type: size;
     background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
     border: 1px solid var(--lf-cardborder);
     border-radius: clamp(12px, 2cqh, 22px);
-    padding: clamp(5px, 0.9cqh, 7px) clamp(11px, 2.6cqw, 20px);
+    padding: clamp(4px, 0.75cqh, 6px) clamp(11px, 2.6cqw, 20px);
     overflow: hidden;
   }
   html.life-portrait #face-life .lf-cond-title {
@@ -2516,14 +2517,20 @@
   html.life-portrait #face-life .lf-condtop {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    /* space-between stretched the gap between dials to fill the panel's
+       full width — fine on the narrow phones this was tuned on, but on a
+       wider one it spread the three rings apart with a huge, oddly-shaped
+       gap. A capped gap plus centering keeps them a fixed group regardless
+       of how wide the panel actually renders. */
+    justify-content: center;
+    gap: clamp(16px, 6cqw, 40px);
     flex-shrink: 0;
   }
   html.life-portrait #face-life .lf-conddial {
     position: relative;
     flex: 0 0 auto;
-    width: clamp(52px, 13.5cqh, 70px);
-    height: clamp(52px, 13.5cqh, 70px);
+    width: clamp(47px, 13.5cqh, 70px);
+    height: clamp(47px, 13.5cqh, 70px);
   }
   html.life-portrait #face-life .lf-conduvsvg { width: 100%; height: 100%; transform: rotate(-90deg); }
   html.life-portrait #face-life .lf-conduvtrack { fill: none; stroke: rgba(255,255,255,0.14); stroke-width: 9; }
@@ -2540,23 +2547,29 @@
     transition: stroke-dashoffset 0.9s ease, stroke 0.9s ease;
     filter: drop-shadow(0 0 6px currentColor);
   }
-  /* Sea/feels have no natural 0-max scale the way UV (0-12) does, so their
-     rings are just fully drawn in a fixed accent color instead of an
-     animated fill fraction — dashoffset:0 draws the whole circumference. */
+  /* Sea/feels have no natural 0-max scale the way UV (0-12) does, so
+     renderMarine() fills them against a fixed comfortable-range instead
+     (24-32°C sea, 24-42°C feels) rather than an arbitrary full circle —
+     same start-empty-then-animate-in treatment as .lf-conduvfill above,
+     just a fixed accent color instead of a level-based one. */
   html.life-portrait #face-life .lf-condfill-sea {
     fill: none;
     stroke: var(--lf-blue);
     stroke-width: 9;
+    stroke-linecap: round;
     stroke-dasharray: 327;
-    stroke-dashoffset: 0;
+    stroke-dashoffset: 327;
+    transition: stroke-dashoffset 0.9s ease;
     filter: drop-shadow(0 0 6px currentColor);
   }
   html.life-portrait #face-life .lf-condfill-feels {
     fill: none;
     stroke: var(--lf-warm);
     stroke-width: 9;
+    stroke-linecap: round;
     stroke-dasharray: 327;
-    stroke-dashoffset: 0;
+    stroke-dashoffset: 327;
+    transition: stroke-dashoffset 0.9s ease;
     filter: drop-shadow(0 0 6px currentColor);
   }
   html.life-portrait #face-life .lf-condcenter {
@@ -2646,8 +2659,54 @@
     color: var(--lf-muted);
     font-size: clamp(13px, min(2.7cqh, 3.5cqw), 16px);
   }
+  /* Week summary: three single-line rows (icon, label, value) rather than
+     .lf-condbest's icon+stacked-text pattern — three of those would cost
+     far more height than this panel has spare, and each row here only
+     ever holds one short fact (a day + an hour range), so a single line
+     is enough. */
+  html.life-portrait #face-life .lf-condweek {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1px, 0.35cqh, 3px);
+    flex-shrink: 0;
+  }
+  html.life-portrait #face-life .lf-condweek-title {
+    color: var(--lf-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: clamp(10px, min(2.2cqh, 3.2cqw), 14px);
+  }
+  html.life-portrait #face-life .lf-condweek-row {
+    display: flex;
+    align-items: baseline;
+    gap: clamp(6px, 1.8cqw, 10px);
+  }
+  html.life-portrait #face-life .lf-condweek-ico {
+    font-size: clamp(11px, min(2.4cqh, 3.4cqw), 15px);
+    flex-shrink: 0;
+  }
+  html.life-portrait #face-life .lf-condweek-lbl {
+    color: var(--lf-muted);
+    font-weight: 600;
+    flex-shrink: 0;
+    white-space: nowrap;
+    /* "Most rain" is the widest label — the previous clamp ceiling (72px)
+       was narrower than it needed at this font size, so it wrapped onto a
+       second line and roughly doubled that row's height. */
+    width: clamp(58px, 17cqw, 84px);
+    font-size: clamp(11px, min(2.4cqh, 3.2cqw), 15px);
+  }
+  html.life-portrait #face-life .lf-condweek-val {
+    color: #fff;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: clamp(11px, min(2.4cqh, 3.2cqw), 15px);
+  }
   html.life-portrait #face-life .lf-wsbtn {
-    padding: clamp(3px, 0.8cqh, 7px) clamp(4px, 1cqw, 8px);
+    padding: clamp(2px, 0.6cqh, 5px) clamp(4px, 1cqw, 8px);
     font-size: clamp(13px, 4.4cqw, 21px);
   }
   /* The base rule caps these at 36px, which is oversized next to the label
@@ -3907,13 +3966,12 @@
                  outside html.life-portrait, same as the weather hero above. -->
             <div class="lf-condpanel" id="lf-condpanel">
               <div class="lf-cond-title">&#x1F3D6;&#xFE0F; Outdoors</div>
-              <!-- Three dials, same ring markup/style as the UV one (which
-                   drives it live via .jm-uvfill + renderMarine()) — Sea and
-                   Feels have no natural 0-max scale to animate a fill
-                   fraction against, so their rings are a fixed, fully-drawn
-                   accent color instead (.lf-condfill-sea/-feels below) rather
-                   than inventing an arbitrary temperature scale. Values
-                   still update live: jm-watertemp/jm-feels are the same
+              <!-- Three dials, same animated-gauge ring markup/style as the
+                   UV one — UV fills against its real 0-12 index; Sea/Feels
+                   have no natural equivalent scale, so renderMarine() fills
+                   them against a fixed comfortable-range instead (24-32°C
+                   sea, 24-42°C feels — see .lf-condfill-sea/-feels there).
+                   Values update live off jm-watertemp/jm-feels, the same
                    classes renderMarine() already sweeps for the text this
                    replaces. -->
               <div class="lf-condtop">
@@ -3964,6 +4022,30 @@
                   <span class="lf-condbest-lbl">Best time to go outside</span>
                   <span class="lf-condbest-val jm-besttime">&mdash;</span>
                   <span class="lf-condbest-sub jm-bestsub">&mdash;</span>
+                </div>
+              </div>
+              <!-- Week-ahead summary: best/warmest/rainiest day, each with
+                   its own hour window, computed by computeWeekSummary() from
+                   the same 7-day Curaçao forecast loadAstroMarine() already
+                   fetches (bumped from forecast_days=2). Hidden by
+                   renderWeekSummary() itself if that data isn't ready yet,
+                   same as the rest of this panel just starting from "—". -->
+              <div class="lf-condweek" id="lf-week">
+                <div class="lf-condweek-title">&#x1F4C5; This week</div>
+                <div class="lf-condweek-row">
+                  <span class="lf-condweek-ico" aria-hidden="true">&#x1F3C6;</span>
+                  <span class="lf-condweek-lbl">Best day</span>
+                  <span class="lf-condweek-val" id="lf-week-best">&mdash;</span>
+                </div>
+                <div class="lf-condweek-row">
+                  <span class="lf-condweek-ico" aria-hidden="true">&#x1F321;&#xFE0F;</span>
+                  <span class="lf-condweek-lbl">Warmest</span>
+                  <span class="lf-condweek-val" id="lf-week-warm">&mdash;</span>
+                </div>
+                <div class="lf-condweek-row">
+                  <span class="lf-condweek-ico" aria-hidden="true">&#x1F327;&#xFE0F;</span>
+                  <span class="lf-condweek-lbl">Most rain</span>
+                  <span class="lf-condweek-val" id="lf-week-rain">&mdash;</span>
                 </div>
               </div>
             </div>
@@ -5355,10 +5437,13 @@
     return a.hh + ' ' + a.ap + '–' + b.hh + ' ' + b.ap;
   }
 
-  // Score each upcoming daylight hour and return the most pleasant window to be out
-  function bestOutsideWindow(hh, i0){
+  // Score each daylight hour in [i0, end) and return the most pleasant
+  // window inside that range — factored out of bestOutsideWindow so the
+  // weekly summary (computeWeekSummary) can run the identical scoring
+  // per-day instead of only ever looking at "the next 24h from now".
+  function bestWindowInRange(hh, i0, end){
     if(!hh || !hh.time || !hh.uv_index) return null;
-    var end = Math.min(hh.time.length, i0 + 24);
+    end = Math.min(hh.time.length, end);
     function feelsAt(i){
       if(hh.apparent_temperature && hh.apparent_temperature[i] != null) return hh.apparent_temperature[i];
       if(hh.temperature_2m && hh.temperature_2m[i] != null) return hh.temperature_2m[i];
@@ -5389,8 +5474,106 @@
     return {
       time: fmtHourRange(isoHour(hh.time[lo]), isoHour(hh.time[hi]) + 1),
       sub: feelsB + '° feels · ' + uvTxt,
-      isNow: (i0 >= lo && i0 <= hi)
+      score: bestScore,
+      loIdx: lo, hiIdx: hi
     };
+  }
+  // "Now" case only: window scored across the next 24h, flagging whether
+  // the current hour falls inside it.
+  function bestOutsideWindow(hh, i0){
+    var w = bestWindowInRange(hh, i0, i0 + 24);
+    if(!w) return null;
+    return { time: w.time, sub: w.sub, isNow: (i0 >= w.loIdx && i0 <= w.hiIdx) };
+  }
+  // Find the single daylight hour in [i0, end) where valueAt() peaks, then
+  // widen by up to an hour each side for a short, readable range — same
+  // shape of result as bestWindowInRange's "time" but driven by a plain
+  // max instead of the multi-factor comfort score (used for "warmest hour"
+  // and "rainiest hour" in the weekly summary, where the metric itself
+  // already picked the day — this only needs to say *when* on that day).
+  function peakHourWindow(hh, i0, end, valueAt){
+    end = Math.min(hh.time.length, end);
+    var best = -1, bestVal = -Infinity;
+    for(var i = i0; i < end; i++){
+      var h = isoHour(hh.time[i]);
+      if(h < 5 || h > 19) continue;
+      var v = valueAt(i);
+      if(v != null && v > bestVal){ bestVal = v; best = i; }
+    }
+    if(best < 0) return null;
+    var lo = best, hi = best;
+    if(lo - 1 >= i0) lo--;
+    if(hi + 1 < end) hi++;
+    return { time: fmtHourRange(isoHour(hh.time[lo]), isoHour(hh.time[hi]) + 1), peakVal: bestVal };
+  }
+  // Best/warmest/rainiest day across the week Open-Meteo returns (7 days,
+  // forecast_days=7 below), each paired with the specific hours on that
+  // day — reuses bestWindowInRange's own comfort score for "best", so a
+  // week's "best day" is the same scoring bestOutsideWindow already uses
+  // for "right now", just run once per day instead of once for the next
+  // 24h. Hourly data is 24 contiguous entries per calendar day starting at
+  // local midnight (Open-Meteo's default), so day d is simply hourly
+  // indices [d*24, d*24+24) — no date-string matching needed.
+  var WEEK_DAYNAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  function computeWeekSummary(){
+    if(!astroData) return null;
+    var hh = astroData.hourly, dy = astroData.daily;
+    if(!hh || !hh.time || !dy || !dy.time) return null;
+    var days = [];
+    for(var d = 0; d < dy.time.length; d++){
+      var i0 = d * 24, end = Math.min(hh.time.length, i0 + 24);
+      if(end <= i0) continue;
+      var dow = new Date(dy.time[d] + 'T12:00:00').getDay();
+      days.push({
+        idx: d, dayName: WEEK_DAYNAMES[dow], isToday: d === 0,
+        i0: i0, end: end,
+        maxTemp: (dy.temperature_2m_max && dy.temperature_2m_max[d] != null) ? dy.temperature_2m_max[d] : null,
+        rainSum: (dy.precipitation_sum && dy.precipitation_sum[d] != null) ? dy.precipitation_sum[d] : null,
+        rainProbMax: (dy.precipitation_probability_max && dy.precipitation_probability_max[d] != null) ? dy.precipitation_probability_max[d] : null,
+        best: bestWindowInRange(hh, i0, end)
+      });
+    }
+    if(!days.length) return null;
+
+    var bestDay = null;
+    days.forEach(function(x){ if(x.best && (!bestDay || x.best.score < bestDay.best.score)) bestDay = x; });
+
+    var warmDay = null;
+    days.forEach(function(x){ if(x.maxTemp != null && (!warmDay || x.maxTemp > warmDay.maxTemp)) warmDay = x; });
+
+    var rainDay = null, rainDayVal = -Infinity;
+    days.forEach(function(x){
+      var v = x.rainSum != null ? x.rainSum : (x.rainProbMax != null ? x.rainProbMax / 100 : null);
+      if(v != null && v > rainDayVal){ rainDayVal = v; rainDay = x; }
+    });
+
+    var out = { best: null, warm: null, rain: null };
+    if(bestDay){
+      out.best = { dayName: bestDay.dayName, isToday: bestDay.isToday, time: bestDay.best.time, sub: bestDay.best.sub };
+    }
+    if(warmDay){
+      var wh = peakHourWindow(hh, warmDay.i0, warmDay.end, function(i){ return hh.temperature_2m ? hh.temperature_2m[i] : null; });
+      out.warm = { dayName: warmDay.dayName, isToday: warmDay.isToday, temp: Math.round(warmDay.maxTemp), time: wh ? wh.time : null };
+    }
+    if(rainDay){
+      var rh = peakHourWindow(hh, rainDay.i0, rainDay.end, function(i){ return hh.precipitation_probability ? hh.precipitation_probability[i] : null; });
+      var pct = rainDay.rainProbMax != null ? Math.round(rainDay.rainProbMax) : (rh ? Math.round(rh.peakVal) : null);
+      out.rain = { dayName: rainDay.dayName, isToday: rainDay.isToday, pct: pct, mm: rainDay.rainSum != null ? Math.round(rainDay.rainSum * 10) / 10 : null, time: rh ? rh.time : null };
+    }
+    return out;
+  }
+  function renderWeekSummary(){
+    var w = computeWeekSummary();
+    var wrap = document.getElementById('lf-week');
+    if(!w){ if(wrap) wrap.style.display = 'none'; return; }
+    if(wrap) wrap.style.display = '';
+    function dayLabel(d){ return d.isToday ? 'Today' : d.dayName; }
+    var bestEl = document.getElementById('lf-week-best');
+    if(bestEl) bestEl.textContent = w.best ? (dayLabel(w.best) + ' · ' + w.best.time) : '—';
+    var warmEl = document.getElementById('lf-week-warm');
+    if(warmEl) warmEl.textContent = w.warm ? (dayLabel(w.warm) + (w.warm.time ? ' · ' + w.warm.time : '') + ' · ' + w.warm.temp + '°') : '—';
+    var rainEl = document.getElementById('lf-week-rain');
+    if(rainEl) rainEl.textContent = w.rain ? (dayLabel(w.rain) + (w.rain.time ? ' · ' + w.rain.time : '') + (w.rain.pct != null ? ' · ' + w.rain.pct + '%' : '')) : '—';
   }
 
   // Comfort curve across the daylight hours ahead, for the "best time to go
@@ -5446,6 +5629,20 @@
       el.style.strokeDashoffset = (UV_CIRC * (1 - frac)).toFixed(1);
       el.style.stroke = lv.col;
     });
+    // Sea/feels rings: same animated-gauge treatment as UV, against a
+    // fixed comfortable-range scale rather than UV's real 0-12 index,
+    // since neither temperature has an equivalent natural ceiling.
+    document.querySelectorAll('.lf-condfill-sea').forEach(function(el){
+      var t = astroData.seaTemp;
+      var frac = t != null ? Math.max(0, Math.min((t - 24) / (32 - 24), 1)) : 0;
+      el.style.strokeDasharray = UV_CIRC.toFixed(1);
+      el.style.strokeDashoffset = (UV_CIRC * (1 - frac)).toFixed(1);
+    });
+    document.querySelectorAll('.lf-condfill-feels').forEach(function(el){
+      var frac = feels != null ? Math.max(0, Math.min((feels - 24) / (42 - 24), 1)) : 0;
+      el.style.strokeDasharray = UV_CIRC.toFixed(1);
+      el.style.strokeDashoffset = (UV_CIRC * (1 - frac)).toFixed(1);
+    });
 
     var v = outdoorVerdict(uv, kt, feels, rainProb);
     setAll('jm-verdicon', v.ico);
@@ -5472,16 +5669,21 @@
       if(uvs.length) setAll('jm-uvrange', 'peak ' + Math.round(Math.max.apply(null, uvs)));
       if(winds.length) setAll('jm-windrange', Math.round(Math.min.apply(null,winds))+'–'+Math.round(Math.max.apply(null,winds))+' kt');
     }
+    renderWeekSummary();
   }
 
   async function loadAstroMarine(){
     try{
+      // forecast_days bumped from 2 to 7 (and the daily block grown to
+      // match) so computeWeekSummary() has a full week of hourly + daily
+      // data to pick a best/warmest/rainiest day from, not just today and
+      // tomorrow.
       var url = 'https://api.open-meteo.com/v1/forecast?latitude=12.17&longitude=-68.99'
         + '&current=temperature_2m,apparent_temperature,wind_speed_10m,wind_gusts_10m,wind_direction_10m,weather_code,uv_index,precipitation_probability'
         + '&hourly=temperature_2m,apparent_temperature,wind_speed_10m,uv_index,precipitation_probability'
         + '&minutely_15=precipitation'
-        + '&daily=sunrise,sunset,temperature_2m_max,temperature_2m_min'
-        + '&wind_speed_unit=kn&timezone=auto&forecast_days=2';
+        + '&daily=sunrise,sunset,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max'
+        + '&wind_speed_unit=kn&timezone=auto&forecast_days=7';
       var r = await fetch(url);
       if(!r.ok) throw new Error('http '+r.status);
       var d = await r.json();
@@ -5489,6 +5691,7 @@
       astroData = {
         current: d.current || {},
         hourly: d.hourly || null,
+        daily: dy,
         m15times: d.minutely_15 ? d.minutely_15.time : null,
         m15precip: d.minutely_15 ? d.minutely_15.precipitation : null,
         seaTemp: (astroData && astroData.seaTemp != null) ? astroData.seaTemp : null,
