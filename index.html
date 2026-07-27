@@ -6467,31 +6467,38 @@
     window.addEventListener('focus', checkForUpdate);
 
     // When a new service worker takes over, reload once to run the new
-    // version — but not immediately if the app is open and visible right
-    // now. checkForUpdate() fires on every open (pageshow/focus/visible),
-    // so opening the app shortly after a fresh deploy landed the new SW
-    // and an unconditional reload() in the same breath: the page would
-    // start rendering, then get yanked into a reload mid-frame, which on
-    // real Safari showed up as exactly the kind of garbled/double-exposed
-    // text a torn frame produces (not a paint bug in any single element).
-    // Deferring the reload to the next time the app goes hidden — locked,
-    // backgrounded, swiped away — applies the update invisibly instead.
+    // version — but not in the same breath if the app is open and visible
+    // right now. checkForUpdate() fires on every open (pageshow/focus/
+    // visible), so opening the app shortly after a fresh deploy landed the
+    // new SW and an unconditional reload() together: the page would start
+    // rendering, then get yanked into a reload mid-frame, which on real
+    // Safari showed up as garbled/double-exposed text (not a paint bug in
+    // any single element). Reloading the instant the app goes hidden
+    // avoids that, but a StandBy display's entire point is staying open
+    // and visible for long stretches — waiting indefinitely for "hidden"
+    // meant the update might never actually land. A short grace timer
+    // gives the current render a moment to settle either way: reload
+    // immediately if already hidden, otherwise on whichever comes first —
+    // going hidden, or 4s passing.
     var reloaded = false;
-    var updateReady = false;
     navigator.serviceWorker.addEventListener('controllerchange', function(){
       if(reloaded) return;
+      function doReload(){
+        if(reloaded) return;
+        reloaded = true;
+        location.reload();
+      }
       if(document.visibilityState === 'hidden'){
-        reloaded = true;
-        location.reload();
-      } else {
-        updateReady = true;
+        doReload();
+        return;
       }
-    });
-    document.addEventListener('visibilitychange', function(){
-      if(document.visibilityState === 'hidden' && updateReady && !reloaded){
-        reloaded = true;
-        location.reload();
-      }
+      var graceTimer = setTimeout(doReload, 4000);
+      document.addEventListener('visibilitychange', function onHide(){
+        if(document.visibilityState !== 'hidden') return;
+        clearTimeout(graceTimer);
+        document.removeEventListener('visibilitychange', onHide);
+        doReload();
+      });
     });
   }
 
