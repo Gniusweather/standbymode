@@ -47,6 +47,22 @@
   .face.is-active > *:nth-child(2) { animation-delay: 0.06s; }
   .face.is-active > *:nth-child(3) { animation-delay: 0.12s; }
   .face.is-active > *:nth-child(4) { animation-delay: 0.18s; }
+  /* #lf-view-home holds the gradient-clipped clock/temp text (see the
+     .lf-wxtime comment further down) and is also Face 1's own default
+     view — the very first thing on screen when the app opens. Turning off
+     JUST its entrance transform stops that ancestor from translateY-
+     animating while tick() sets the clock's real value milliseconds
+     later, which on real Safari is what produced the ghosted digits: the
+     gradient text mask getting re-rasterized mid-transform right as its
+     content changes. Opacity alone (removing translateY, not the whole
+     animation) still gives the same fade-in without the clash. */
+  #lf-view-home {
+    animation: face-in-fade 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+  @keyframes face-in-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
   @keyframes face-in {
     from { opacity: 0; transform: translateY(14px); }
     to   { opacity: 1; transform: translateY(0); }
