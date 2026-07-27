@@ -2284,6 +2284,24 @@
     align-items: center;
     gap: 2px;
   }
+  /* The site-wide [class*="j-"] rule gives value text a smooth color
+     fade on updates (nice for e.g. a wind-speed tile shifting tiers), but
+     .j-hh/.j-mm tick every minute and sit inside a background-clip:text
+     gradient here — on real Safari that combination has shown a ghosting
+     glitch where the outgoing digit's solid inherited color briefly
+     double-exposes under the incoming gradient-clipped one right after a
+     reload. A ticking clock should snap to the new value anyway, not
+     crossfade, so this turns the transition off rather than working
+     around the repaint bug indirectly. */
+  html.life-portrait #face-life .lf-wxtime,
+  html.life-portrait #face-life .lf-wxtime .j-hh,
+  html.life-portrait #face-life .lf-wxtime .j-mm,
+  html.life-portrait #face-life .lf-wxtime .j-ampm,
+  html.life-portrait #face-life .lf-wxbigtemp,
+  html.life-portrait #face-life .lf-wxdate .j-dow,
+  html.life-portrait #face-life .lf-wxdate .j-fulldate {
+    transition: none;
+  }
   html.life-portrait #face-life .lf-wxtime {
     display: flex;
     align-items: baseline;
@@ -2304,6 +2322,12 @@
     -webkit-text-fill-color: transparent;
     color: transparent;
     white-space: nowrap;
+    /* Forces this onto its own stable compositing layer, which is the
+       standard mitigation for the ghosting bug described above — without
+       it Safari has occasionally left a stale painted frame behind on
+       text-content updates instead of fully repainting the clipped
+       gradient. */
+    transform: translateZ(0);
   }
   html.life-portrait #face-life .lf-wxcolon {
     -webkit-text-fill-color: rgba(168,232,216,0.85);
@@ -2353,6 +2377,7 @@
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
+    transform: translateZ(0); /* see .lf-wxtime's comment above */
   }
   html.life-portrait #face-life .lf-wxcond {
     display: block;
