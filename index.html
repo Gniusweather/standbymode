@@ -6459,12 +6459,32 @@
     window.addEventListener('pageshow', checkForUpdate);
     window.addEventListener('focus', checkForUpdate);
 
-    // When a new service worker takes over, reload once to run the new version
+    // When a new service worker takes over, reload once to run the new
+    // version — but not immediately if the app is open and visible right
+    // now. checkForUpdate() fires on every open (pageshow/focus/visible),
+    // so opening the app shortly after a fresh deploy landed the new SW
+    // and an unconditional reload() in the same breath: the page would
+    // start rendering, then get yanked into a reload mid-frame, which on
+    // real Safari showed up as exactly the kind of garbled/double-exposed
+    // text a torn frame produces (not a paint bug in any single element).
+    // Deferring the reload to the next time the app goes hidden — locked,
+    // backgrounded, swiped away — applies the update invisibly instead.
     var reloaded = false;
+    var updateReady = false;
     navigator.serviceWorker.addEventListener('controllerchange', function(){
       if(reloaded) return;
-      reloaded = true;
-      location.reload();
+      if(document.visibilityState === 'hidden'){
+        reloaded = true;
+        location.reload();
+      } else {
+        updateReady = true;
+      }
+    });
+    document.addEventListener('visibilitychange', function(){
+      if(document.visibilityState === 'hidden' && updateReady && !reloaded){
+        reloaded = true;
+        location.reload();
+      }
     });
   }
 
