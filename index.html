@@ -2269,14 +2269,14 @@
     flex-direction: column;
     gap: clamp(6px, 1.6cqh, 14px);
     flex: 0 0 auto;
-    /* Taller than the original 29dvh, to host bigger tile type — borrowed
-       from the lifestyle cards below. Tried trimming this further (to fund
-       a bigger outdoors panel) down to 21dvh, but that broke the weather
-       tiles outright (severe text overlap, not just minor squash) — 26dvh
-       is this panel's actual floor for its fixed 8-tile/3-row layout, so
-       the outdoors panel has to fit the budget left AFTER this, not the
-       other way around. */
-    height: 26dvh;
+    /* 26dvh was this panel's floor for the hero+8-tile/3-row layout alone.
+       The clock row moved back in above the hero (see .lf-clockrow) added
+       real height of its own that has to come out of this same fixed
+       budget, and without growing it to match, the tile grid was
+       genuinely squashed — text overlapping within a tile, not just a
+       measurement false-negative. Funded from the Outdoors panel's own
+       slack below. */
+    height: 32dvh;
     container-type: size;
     background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
     border: 1px solid var(--lf-cardborder);
@@ -2292,28 +2292,20 @@
     gap: clamp(8px, 2.6cqw, 20px);
     flex-shrink: 0;
   }
-  /* Time+date used to share this row with the weather hero, capped to 48%
-     of the panel's width — fine for a short "12:34 PM", but once both got
-     bigger (see the font bumps below/elsewhere) that shared row was
+  /* Time+date used to share the row below with the weather hero, capped to
+     48% of the panel's width — fine for a short "12:34 PM", but once both
+     got bigger (see the font bumps below/elsewhere) that shared row was
      genuinely too narrow to lay the clock out without collision, which is
      what real Safari's overlap/glitch reports actually were: not a paint
-     bug, a cramped column. Own row now, full width, no cap. */
+     bug, a cramped column. Back in the same wxpanel card, but stacked as
+     its own full-width row above the hero row instead of squeezed beside
+     it. */
   html.life-portrait #face-life .lf-clockrow {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 2px;
     flex: 0 0 auto;
-    /* inline-size, not size: this row is content-sized (auto height), and
-       container-type:size would force it to 0 height without an explicit
-       height the way .lf-wxpanel has. Only cqw is used below as a result —
-       no cqh term, since block-size querying isn't available here. */
-    container-type: inline-size;
-    background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
-    border: 1px solid var(--lf-cardborder);
-    border-radius: clamp(14px, 4cqw, 26px);
-    padding: clamp(6px, 2.4cqw, 14px) clamp(10px, 2.6cqw, 20px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
   }
   html.life-portrait #face-life .lf-wxtimediv {
     min-width: 0;
@@ -3937,16 +3929,18 @@
                  landscape Life keeps its existing small clock + weather
                  card unchanged, since that layout wasn't what was asked to
                  change. See the life-portrait CSS section for the sizing. -->
-            <!-- Own row, not sharing space with the weather hero (see the
-                 lf-wxtimediv comment in the CSS for why) — full width, no
-                 longer capped to a fraction of the panel. -->
-            <div class="lf-clockrow">
-              <div class="lf-wxtimediv">
-                <div class="lf-wxtime"><span class="j-hh">--</span><span class="lf-wxcolon">:</span><span class="j-mm">--</span><span class="lf-wxampm j-ampm">AM</span></div>
-                <div class="lf-wxdate"><span class="j-dow">---</span> &middot; <span class="j-fulldate">---</span></div>
-              </div>
-            </div>
             <div class="lf-wxpanel" id="lf-wxpanel">
+              <!-- Its own full-width row again, stacked above the hero
+                   rather than sharing a 48%-capped column with it (see the
+                   lf-wxtimediv CSS comment for why that didn't fit once
+                   the type grew) — merged back into one card instead of
+                   sitting in a separate one above it. -->
+              <div class="lf-clockrow">
+                <div class="lf-wxtimediv">
+                  <div class="lf-wxtime"><span class="j-hh">--</span><span class="lf-wxcolon">:</span><span class="j-mm">--</span><span class="lf-wxampm j-ampm">AM</span></div>
+                  <div class="lf-wxdate"><span class="j-dow">---</span> &middot; <span class="j-fulldate">---</span></div>
+                </div>
+              </div>
               <div class="lf-wxtop">
                 <div class="lf-wxhero">
                   <span class="lf-wxbigico j-wico" aria-hidden="true">&#x26C5;</span>
