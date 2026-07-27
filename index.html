@@ -2285,12 +2285,6 @@
     box-shadow: 0 10px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
     overflow: hidden;
   }
-  /* Was time squeezed to the left with the hero force-filling the rest of
-     the row (flex:1 1 0) — center the pair as a group instead. Stacking
-     time above the hero (a separate row each) was tried first and reads
-     nicely, but it costs a full extra row of the panel's fixed height,
-     which starved the tile grid below down to slivers; centering within
-     the existing single row keeps the same height budget. */
   html.life-portrait #face-life .lf-wxtop {
     display: flex;
     align-items: center;
@@ -2298,9 +2292,30 @@
     gap: clamp(8px, 2.6cqw, 20px);
     flex-shrink: 0;
   }
-  html.life-portrait #face-life .lf-wxtimediv {
+  /* Time+date used to share this row with the weather hero, capped to 48%
+     of the panel's width — fine for a short "12:34 PM", but once both got
+     bigger (see the font bumps below/elsewhere) that shared row was
+     genuinely too narrow to lay the clock out without collision, which is
+     what real Safari's overlap/glitch reports actually were: not a paint
+     bug, a cramped column. Own row now, full width, no cap. */
+  html.life-portrait #face-life .lf-clockrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
     flex: 0 0 auto;
-    max-width: 48%;
+    /* inline-size, not size: this row is content-sized (auto height), and
+       container-type:size would force it to 0 height without an explicit
+       height the way .lf-wxpanel has. Only cqw is used below as a result —
+       no cqh term, since block-size querying isn't available here. */
+    container-type: inline-size;
+    background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+    border: 1px solid var(--lf-cardborder);
+    border-radius: clamp(14px, 4cqw, 26px);
+    padding: clamp(6px, 2.4cqw, 14px) clamp(10px, 2.6cqw, 20px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  html.life-portrait #face-life .lf-wxtimediv {
     min-width: 0;
     display: flex;
     flex-direction: column;
@@ -2331,11 +2346,10 @@
     justify-content: center;
     color: #fff;
     font-weight: 700;
-    /* Sized off the SMALLER of height and width: cqh alone let this overflow
-       past the timediv's own 42%-width cap on narrow phones (the AM/PM
-       suffix landed on top of the weather icon on a 375px-wide screen),
-       since a tall-but-narrow panel still reports a generous cqh. */
-    font-size: clamp(26px, min(15cqh, 12cqw), 64px);
+    /* cqw-only now that this sits in its own full-width, content-sized row
+       (see .lf-clockrow) rather than sharing a 48%-capped column with the
+       weather hero. */
+    font-size: clamp(32px, 15cqw, 72px);
     font-variant-numeric: tabular-nums;
     line-height: 0.9;
     letter-spacing: -0.02em;
@@ -2368,7 +2382,7 @@
   html.life-portrait #face-life .lf-wxdate {
     color: var(--lf-teal);
     font-weight: 700;
-    font-size: clamp(13px, 5cqw, 20px);
+    font-size: clamp(14px, 5.5cqw, 22px);
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
@@ -3923,12 +3937,17 @@
                  landscape Life keeps its existing small clock + weather
                  card unchanged, since that layout wasn't what was asked to
                  change. See the life-portrait CSS section for the sizing. -->
+            <!-- Own row, not sharing space with the weather hero (see the
+                 lf-wxtimediv comment in the CSS for why) — full width, no
+                 longer capped to a fraction of the panel. -->
+            <div class="lf-clockrow">
+              <div class="lf-wxtimediv">
+                <div class="lf-wxtime"><span class="j-hh">--</span><span class="lf-wxcolon">:</span><span class="j-mm">--</span><span class="lf-wxampm j-ampm">AM</span></div>
+                <div class="lf-wxdate"><span class="j-dow">---</span> &middot; <span class="j-fulldate">---</span></div>
+              </div>
+            </div>
             <div class="lf-wxpanel" id="lf-wxpanel">
               <div class="lf-wxtop">
-                <div class="lf-wxtimediv">
-                  <div class="lf-wxtime"><span class="j-hh">--</span><span class="lf-wxcolon">:</span><span class="j-mm">--</span><span class="lf-wxampm j-ampm">AM</span></div>
-                  <div class="lf-wxdate"><span class="j-dow">---</span> &middot; <span class="j-fulldate">---</span></div>
-                </div>
                 <div class="lf-wxhero">
                   <span class="lf-wxbigico j-wico" aria-hidden="true">&#x26C5;</span>
                   <div class="lf-wxheroright">
