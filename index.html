@@ -6451,7 +6451,12 @@
   // ---------- PWA: service worker with auto-update ----------
   if('serviceWorker' in navigator){
     var swReg = null;
-    navigator.serviceWorker.register('sw.js').then(function(reg){
+    // updateViaCache:'none' — without it, the browser's own HTTP cache is
+    // allowed to serve a stale sw.js/import back to update() checks, on
+    // top of whatever caching GitHub Pages' CDN does in front of it. This
+    // doesn't touch the CDN side, but removes the browser layer as a
+    // reason a shipped fix might not actually reach the device promptly.
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function(reg){
       swReg = reg;
       // Check for a new version every 15 minutes while the app stays open
       setInterval(function(){ reg.update().catch(function(){}); }, 15*60*1000);
