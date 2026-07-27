@@ -2337,18 +2337,15 @@
     font-variant-numeric: tabular-nums;
     line-height: 0.9;
     letter-spacing: -0.02em;
-    background: linear-gradient(150deg, #fff 30%, #a8e8d8 80%, var(--lf-teal) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
     white-space: nowrap;
-    /* Forces this onto its own stable compositing layer, which is the
-       standard mitigation for the ghosting bug described above — without
-       it Safari has occasionally left a stale painted frame behind on
-       text-content updates instead of fully repainting the clipped
-       gradient. */
-    transform: translateZ(0);
+    /* Was a background-clip:text gradient like .lf-wxbigtemp still uses.
+       .lf-wxbigtemp only repaints every ~10min (a weather refresh) and
+       has never shown a problem; this ticks every minute, and on real
+       Safari that turned out to be the actual trigger — two rounds of
+       mitigating around the gradient (transition:none, translateZ(0) for
+       a stable compositing layer) didn't stop it, so the gradient itself
+       has to go for the one element that updates often enough to hit it.
+       Plain solid white instead. */
   }
   html.life-portrait #face-life .lf-wxcolon {
     -webkit-text-fill-color: rgba(168,232,216,0.85);
@@ -4773,6 +4770,13 @@
   var CLOCK_REPAINT_SEL = '.f-classic .time, .f-glass .fg-time, .f-weather .fw-st-time, ' +
     '.f-cal .fc-time, .f-galaxy .fgx-clock, .f-night .fn-dt-time, .f-astro .fa-time, .f-life .lf-clock, ' +
     '.f-life .lf-wxtime, .f-life .lf-wxbigtemp';
+  // .lf-wxdate never had a filter or background-clip to toggle (plain
+  // solid color), so it was left out of the sweep above — but it changes
+  // in the exact same tick() batch as the clock and showed the identical
+  // symptom on real Safari, just without a gradient involved. Opacity is
+  // a property every element already has, so this nudges it the same way
+  // regardless of what it's actually styled with.
+  var DATE_REPAINT_SEL = '.f-life .lf-wxdate';
   function forceClockRepaint(){
     document.querySelectorAll(CLOCK_REPAINT_SEL).forEach(function(el){
       el.style.filter = 'none';
@@ -4780,6 +4784,11 @@
       void el.offsetWidth;                 // commit, dirtying the layer
       el.style.filter = '';
       el.style.webkitBackgroundClip = '';  // back to the stylesheet values
+    });
+    document.querySelectorAll(DATE_REPAINT_SEL).forEach(function(el){
+      el.style.opacity = '0.999';
+      void el.offsetWidth;
+      el.style.opacity = '';
     });
   }
 
