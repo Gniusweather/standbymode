@@ -96,16 +96,6 @@
     display: flex;
     align-items: center;
     overflow: hidden;
-    /* All 10 faces sit in the DOM at once (translateX on .carousel is what
-       switches between them), so on cold load the browser was doing style/
-       layout/paint work for nine dashboards nobody can see yet before Face 1
-       (Life, always the one shown first — see `let index = 0` below) could
-       finish. content-visibility skips that work for whichever faces are
-       actually off in the transformed carousel strip and only pays for it
-       when a face is swiped into view; sizing is already pinned by the
-       flex-basis/width above so no contain-intrinsic-size placeholder is
-       needed. Unsupported browsers just ignore the property. */
-    content-visibility: auto;
     padding:
       calc(env(safe-area-inset-top) + clamp(6px, 2cqh, 20px))
       calc(env(safe-area-inset-right) + clamp(8px, 1.8cqw, 28px))
@@ -114,6 +104,23 @@
   }
   /* Safety net: nothing inside a face may push past its edges */
   .face > * { max-width: 100%; overflow: hidden; }
+  /* All 10 faces sit in the DOM at once (translateX on .carousel is what
+     switches between them), so on cold load the browser was doing style/
+     layout/paint work for nine dashboards nobody can see yet before Face 1
+     (Life, always the one shown first — see `let index = 0` below) could
+     finish. content-visibility skips that work for whichever faces are
+     actually off in the transformed carousel strip. Scoped to :not(.is-
+     active) rather than every .face — applying it to the active face too
+     briefly stuck Face 1's own first paint in a half-rendered state on
+     real Safari (content-visibility's on-screen determination is async
+     and raced the very first frame), only resolved by forcing a fresh
+     layout — e.g. swiping away and back. The active face was never who
+     needed this anyway. Sizing is already pinned by the flex-basis/width
+     above so no contain-intrinsic-size placeholder is needed; unsupported
+     browsers just ignore the property. */
+  .face:not(.is-active) {
+    content-visibility: auto;
+  }
 
   /* ---------- Face 1: Classic ---------- */
   .f-classic {
@@ -3896,7 +3903,7 @@
     <div class="carousel" id="carousel">
 
       <!-- Face 1: Life (Smart Daily Dashboard & Health Assistant) -->
-      <section class="face f-life" id="face-life" data-theme="dark" role="group" aria-roledescription="slide" aria-label="Life dashboard">
+      <section class="face f-life is-active" id="face-life" data-theme="dark" role="group" aria-roledescription="slide" aria-label="Life dashboard">
         <div class="lf-tabs" role="tablist" aria-label="Life dashboard sections">
           <div class="lf-tab active" data-lftab="home" role="tab" aria-selected="true" aria-controls="lf-view-home" id="lf-tab-home" tabindex="0">Home</div>
           <div class="lf-tab" data-lftab="timeline" role="tab" aria-selected="false" aria-controls="lf-view-timeline" id="lf-tab-timeline" tabindex="-1">Timeline</div>
