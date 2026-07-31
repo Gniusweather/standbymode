@@ -4735,14 +4735,33 @@
   const DAYS = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
+  // Run work that isn't needed for the first paint once the browser is
+  // idle. The timeout is the guarantee: requestIdleCallback alone can be
+  // starved indefinitely, and a face must still be built before someone
+  // can plausibly swipe to it.
+  function deferIdle(fn, timeout){
+    if(typeof requestIdleCallback === 'function') requestIdleCallback(fn, { timeout: timeout || 500 });
+    else setTimeout(fn, 1);
+  }
+
+  // Every j-* target lives in the initial HTML — nothing creates elements
+  // carrying these classes at runtime — so the node lists are stable and
+  // worth caching. querySelectorAll walks the whole 10-face document, and
+  // between the per-minute clock block and a weather refresh this is hit
+  // ~40 times in a burst; re-scanning for each was pure overhead.
+  var _clsCache = Object.create(null);
+  function byClass(cls){
+    return _clsCache[cls] || (_clsCache[cls] = document.querySelectorAll('.' + cls));
+  }
   function setAll(cls, text){
     // Skip identical writes: setting textContent always replaces the text
     // node, so on a display that ticks every second this avoids pointless
     // DOM churn for values that only change once a minute (or less).
     var s = String(text);
-    document.querySelectorAll('.' + cls).forEach(function(el){
-      if(el.textContent !== s) el.textContent = s;
-    });
+    var list = byClass(cls);
+    for(var i = 0; i < list.length; i++){
+      if(list[i].textContent !== s) list[i].textContent = s;
+    }
   }
 
   // ---------- Clock ----------
@@ -4753,6 +4772,11 @@
   // .lf-clock), including this synced-blink colon — both selected and
   // blinked together rather than duplicating the interval logic below.
   const clockColonEls = document.querySelectorAll('#face-galaxy .fgx-colon, .f-life .lf-colon');
+  // Split out so the blink below can skip Life's colon in portrait: that
+  // selector is the LANDSCAPE clock (.lf-clock), which portrait hides
+  // outright — the portrait clock's colon is .lf-wxcolon and is
+  // intentionally left static.
+  const gxColonEls = document.querySelectorAll('#face-galaxy .fgx-colon');
   const fgxSecBarEl = document.getElementById('fgx-secbar');
   const secFills = document.querySelectorAll('.js-secfill');
 
@@ -4795,23 +4819,29 @@
     '.f-glass .fg-time, .f-glass .fg-date, .f-weather .fw-st-time, .f-weather .fw-st-date, ' +
     '.f-galaxy .fgx-clock, .f-galaxy .fgx-date, .f-night .fn-dt-time, .f-night .fn-dt-date, ' +
     '.f-astro .fa-time, .f-astro .fa-date, .f-cal .fc-time';
+  // Both sweeps below batch their writes and take ONE forced flush for the
+  // whole set. Doing the read per element instead — write, read, write,
+  // read — costs a full synchronous document layout per element per call;
+  // across these selectors and the several startup invocations that
+  // measured at ~30% of all startup CPU in a throttled profile, which is
+  // far more than the bug they guard against is worth.
   function forceClockRelayout(){
-    document.querySelectorAll(CLOCK_RELAYOUT_SEL).forEach(function(el){
-      var prev = el.style.display;
-      el.style.display = 'none';
-      void el.offsetHeight;
-      el.style.display = prev;   // '' restores the stylesheet's own value
-      void el.offsetHeight;
-    });
+    var els = document.querySelectorAll(CLOCK_RELAYOUT_SEL), prev = [], i;
+    for(i = 0; i < els.length; i++){ prev[i] = els[i].style.display; els[i].style.display = 'none'; }
+    void document.body.offsetHeight;                 // single flush, boxes gone
+    for(i = 0; i < els.length; i++) els[i].style.display = prev[i]; // '' restores the stylesheet value
   }
   function forceClockRepaint(){
-    document.querySelectorAll(CLOCK_REPAINT_SEL).forEach(function(el){
-      el.style.filter = 'none';
-      el.style.webkitBackgroundClip = 'border-box';
-      void el.offsetWidth;                 // commit, dirtying the layer
-      el.style.filter = '';
-      el.style.webkitBackgroundClip = '';  // back to the stylesheet values
-    });
+    var els = document.querySelectorAll(CLOCK_REPAINT_SEL), i;
+    for(i = 0; i < els.length; i++){
+      els[i].style.filter = 'none';
+      els[i].style.webkitBackgroundClip = 'border-box';
+    }
+    void document.body.offsetWidth;                  // single flush, layers dirtied
+    for(i = 0; i < els.length; i++){
+      els[i].style.filter = '';
+      els[i].style.webkitBackgroundClip = '';
+    }
     forceClockRelayout();
   }
 
@@ -4839,7 +4869,13 @@
 
       // Rebuild the calendar only when the date changes
       const calKey = now.getFullYear() + '-' + now.getMonth() + '-' + now.getDate();
-      if(calKey !== lastCalKey){ lastCalKey = calKey; buildCalendar(now); }
+      // Face 7's month grid — another ~44 elements, and the first tick()
+      // runs during startup, so building it inline put it on Face 1's
+      // critical path too. It only changes once a day.
+      if(calKey !== lastCalKey){
+        lastCalKey = calKey;
+        deferIdle(function(){ buildCalendar(now); });
+      }
 
       // The digits just changed — make sure they actually get painted.
       forceClockRepaint();
@@ -4856,9 +4892,17 @@
     if(typeof updateAstroLive === 'function') updateAstroLive();
 
     // Galaxy AOD + Life clock: colon blink synced to clock tick
-    if(clockColonEls.length){
-      clockColonEls.forEach(function(el){ el.style.opacity = '1'; });
-      setTimeout(function(){ clockColonEls.forEach(function(el){ el.style.opacity = '0.18'; }); }, 680);
+    // In portrait, .f-life .lf-colon is inside the display:none landscape
+    // clock, so blinking it wrote opacity to hidden nodes and armed a
+    // throwaway timer every second for the life of the app — measurable
+    // churn on a screen that is meant to stay open all day.
+    var blinkEls = document.documentElement.classList.contains('life-portrait')
+      ? gxColonEls : clockColonEls;
+    if(blinkEls.length){
+      for(var ci = 0; ci < blinkEls.length; ci++) blinkEls[ci].style.opacity = '1';
+      setTimeout(function(){
+        for(var cj = 0; cj < blinkEls.length; cj++) blinkEls[cj].style.opacity = '0.18';
+      }, 680);
     }
 
     // Galaxy AOD: seconds progress bar, gradient spans full container width
@@ -4893,16 +4937,17 @@
   // invalidate metrics again just after it: the webfont swapping in (glyph
   // widths change under text that is already laid out) and the first
   // weather paint. Re-run on both rather than hope the initial pass held.
-  if(document.fonts && document.fonts.ready){
-    document.fonts.ready.then(forceClockRelayout).catch(function(){});
-  }
-  window.addEventListener('load', function(){
-    forceClockRelayout();
-    setTimeout(forceClockRelayout, 400);
-  });
+  // One post-load pass is enough: tick()'s own first run already relayouts,
+  // and this app renders in system fonts (-apple-system), so fonts.ready
+  // resolves essentially immediately and was near-duplicating that call
+  // rather than catching a real webfont swap.
+  window.addEventListener('load', function(){ forceClockRelayout(); });
 
-  // Analog dial tick marks
-  (function(){
+  // Analog dial tick marks. Deferred (like the two builders below it):
+  // these are ~174 decorative elements, each with inline styles, for faces
+  // 5/7/8 — none of it is on screen at launch, but building it inline was
+  // happening before Face 1 (always the face shown first) could finish.
+  deferIdle(function(){
     const dial = document.getElementById('dial');
     if(!dial) return;
     for (let i = 0; i < 60; i++){
@@ -4920,10 +4965,10 @@
       d.style.top = n[2] + '%';
       dial.insertBefore(d, dial.firstChild);
     });
-  })();
+  });
 
   // Calendar face: dashed squircle ring of marks around the clock
-  (function(){
+  deferIdle(function(){
     const ring = document.getElementById('fc-ring');
     if(!ring) return;
     const N = 64, n = 4; // squircle exponent
@@ -4940,10 +4985,10 @@
       d.style.transform = 'translate(-50%,-50%) rotate(' + ang + 'deg)';
       ring.appendChild(d);
     }
-  })();
+  });
 
   // Night weather face: sprinkle a starfield in the upper sky
-  (function(){
+  deferIdle(function(){
     const sky = document.getElementById('fn-stars');
     if(!sky) return;
     for(let i=0;i<46;i++){
@@ -4955,7 +5000,7 @@
       s.style.animationDelay = (Math.random()*4) + 's';
       sky.appendChild(s);
     }
-  })();
+  });
 
   // ISO-8601 week number (weeks start Monday; week 1 holds the year's
   // first Thursday) — matches the calendar grid's Monday-first layout.
@@ -5212,9 +5257,8 @@
     return ' · steady';
   }
   function setBarAll(cls, pct){
-    document.querySelectorAll('.'+cls).forEach(function(el){
-      el.style.width=Math.min(100,Math.max(0,pct))+'%';
-    });
+    var list = byClass(cls), w = Math.min(100,Math.max(0,pct))+'%';
+    for(var i=0;i<list.length;i++) list[i].style.width = w;
   }
   // Build 8 octa segments inside each .j-octa container
   document.querySelectorAll('.j-octa').forEach(function(wrap){
@@ -5224,13 +5268,15 @@
       wrap.appendChild(s);
     }
   });
+  // Segment lists cached per wrapper for the same reason as byClass above —
+  // these are built once, just above, and never change afterwards.
   function setOcta(octa){
-    document.querySelectorAll('.j-octa').forEach(function(wrap){
-      var filled=octa!=null?Math.round(octa):0;
-      wrap.querySelectorAll('.fw-oseg').forEach(function(s,i){
-        s.classList.toggle('filled', i<filled);
-      });
-    });
+    var wraps = byClass('j-octa');
+    var filled = octa!=null?Math.round(octa):0;
+    for(var w=0; w<wraps.length; w++){
+      var segs = wraps[w]._segs || (wraps[w]._segs = wraps[w].querySelectorAll('.fw-oseg'));
+      for(var i=0;i<segs.length;i++) segs[i].classList.toggle('filled', i<filled);
+    }
   }
 
   // Derive icon/text from cloud cover + precipitation (for KNMI data)
@@ -6344,7 +6390,15 @@
       useFallback();
     }
   }
+  // Seeded from the markup, which ships Face 1 with is-active already set:
+  // without this the first goTo() would strip that class, force a reflow,
+  // and re-add it — restarting an entrance animation that is already
+  // running, and paying a synchronous layout for it during startup.
+  var lastActiveIdx = Array.prototype.indexOf.call(
+    carousel.children, carousel.querySelector('.face.is-active'));
   function markActive(){
+    if(lastActiveIdx === index) return;   // nothing to restart
+    lastActiveIdx = index;
     const faces = carousel.children;
     for(let i=0;i<faces.length;i++) faces[i].classList.remove('is-active');
     void carousel.offsetWidth; // force reflow so the animation restarts
@@ -6938,6 +6992,7 @@
         }
       });
     }
+    var _fastEls = null, _lastWinEndTs = null, _lastWinEndStr = '';
     function updateFastingRing(){
       if(!faceEl) return;
       var now = new Date();
@@ -6949,11 +7004,18 @@
       lastFastingEating = f.eating;
       checkFastMilestones(f);
 
-      var fill = document.getElementById('lf-fastfill');
-      var stateEl = document.getElementById('lf-fast-state');
-      var subEl = document.getElementById('lf-fast-sub');
-      var remainEl = document.getElementById('lf-fast-remain');
-      var iconEl = document.getElementById('lf-fasticon');
+      // Looked up once and reused: this runs every 10s forever, and these
+      // seven nodes are all in the initial markup.
+      var E = _fastEls || (_fastEls = {
+        fill:   document.getElementById('lf-fastfill'),
+        state:  document.getElementById('lf-fast-state'),
+        sub:    document.getElementById('lf-fast-sub'),
+        remain: document.getElementById('lf-fast-remain'),
+        icon:   document.getElementById('lf-fasticon'),
+        fill2:  document.getElementById('lf-fastfill2'),
+        icon2:  document.getElementById('lf-fasticon2')
+      });
+      var fill = E.fill, stateEl = E.state, subEl = E.sub, remainEl = E.remain, iconEl = E.icon;
       var col = f.eating ? 'var(--lf-teal)' : 'var(--lf-warm)';
       if(fill){
         fill.style.strokeDasharray = LF_FAST_CIRC.toFixed(1);
@@ -6964,15 +7026,24 @@
         stateEl.textContent = f.eating ? 'Eating' : 'Fasting';
         stateEl.style.color = col;
       }
-      if(subEl) subEl.textContent = (f.eating ? 'Window closes ' : 'Eating opens ') + f.winEnd.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      // toLocaleTimeString spins up Intl formatting on every call; the
+      // window boundary only moves a couple of times a day, so cache it.
+      if(subEl){
+        var wEnd = f.winEnd.getTime();
+        if(wEnd !== _lastWinEndTs){
+          _lastWinEndTs = wEnd;
+          _lastWinEndStr = f.winEnd.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        }
+        subEl.textContent = (f.eating ? 'Window closes ' : 'Eating opens ') + _lastWinEndStr;
+      }
       if(remainEl) remainEl.textContent = fmtHM(f.remainMs) + ' remaining';
       if(iconEl) iconEl.textContent = f.eating ? '\u{1F37D}\u{FE0F}' : '⏳';
       // Second ring between the wake/sleep buttons (life-portrait only —
       // see .lf-wsfastring). Same fill/icon, no separate state text since
       // that card is gone in portrait; a null check keeps this harmless on
       // every other face/layout, same pattern as the marine sparklines.
-      var fill2 = document.getElementById('lf-fastfill2');
-      var iconEl2 = document.getElementById('lf-fasticon2');
+      var fill2 = E.fill2;
+      var iconEl2 = E.icon2;
       if(fill2){
         fill2.style.strokeDasharray = LF_FAST_CIRC.toFixed(1);
         fill2.style.strokeDashoffset = (LF_FAST_CIRC * (1 - f.progress)).toFixed(1);
