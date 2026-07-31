@@ -7067,8 +7067,8 @@
     // for today — see checkReminders below, which checks the event log
     // before showing/pushing anything.
     var MED_REM_META = {
-      medMorning: { ico: '\u{1F305}', txt: 'Time for morning meds', timeKey: 'medMorningTime', dueKey: 'nextMedMorningDueTs', doneLabel: '✓ Taken', ntfyTags: 'pill', label: 'Morning meds' },
-      medEvening: { ico: '\u{1F319}', txt: 'Time for evening meds', timeKey: 'medEveningTime', dueKey: 'nextMedEveningDueTs', doneLabel: '✓ Taken', ntfyTags: 'pill', label: 'Evening meds' }
+      medMorning: { ico: '\u{1F305}', txt: 'Time for morning meds', timeKey: 'medMorningTime', dueKey: 'nextMedMorningDueTs', doneLabel: '✓ Taken', skipLabel: 'Not taken', ntfyTags: 'pill', label: 'Morning meds' },
+      medEvening: { ico: '\u{1F319}', txt: 'Time for evening meds', timeKey: 'medEveningTime', dueKey: 'nextMedEveningDueTs', doneLabel: '✓ Taken', skipLabel: 'Not taken', ntfyTags: 'pill', label: 'Evening meds' }
     };
     function remMetaFor(type){ return REM_META[type] || MED_REM_META[type]; }
     var remQueue = [];
@@ -7206,9 +7206,15 @@
       var icoEl = document.getElementById('lf-rem-ico');
       var txtEl = document.getElementById('lf-rem-txt');
       var doneBtn = document.getElementById('lf-rem-done');
+      var skipBtn = document.getElementById('lf-rem-skip');
       if(icoEl) icoEl.textContent = meta.ico;
       if(txtEl) txtEl.textContent = meta.txt;
       if(doneBtn) doneBtn.textContent = meta.doneLabel;
+      // Water/bath don't set skipLabel — "Skip" there means "remind me
+      // later", which the default already says. For meds this button means
+      // "I didn't take it", a genuinely different action worth its own
+      // wording rather than reusing a label that means something else.
+      if(skipBtn) skipBtn.textContent = meta.skipLabel || 'Skip';
       setReminderCardVisible(true);
       notify(meta.ico + ' ' + meta.txt, 'Tap in StandBy to log it', meta.ntfyTags);
     }
