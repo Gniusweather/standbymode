@@ -4770,13 +4770,40 @@
   var CLOCK_REPAINT_SEL = '.f-classic .time, .f-glass .fg-time, .f-weather .fw-st-time, ' +
     '.f-cal .fc-time, .f-galaxy .fgx-clock, .f-night .fn-dt-time, .f-astro .fa-time, .f-life .lf-clock, ' +
     '.f-life .lf-wxtime, .f-life .lf-wxbigtemp';
-  // .lf-wxdate never had a filter or background-clip to toggle (plain
-  // solid color), so it was left out of the sweep above — but it changes
-  // in the exact same tick() batch as the clock and showed the identical
-  // symptom on real Safari, just without a gradient involved. Opacity is
-  // a property every element already has, so this nudges it the same way
-  // regardless of what it's actually styled with.
-  var DATE_REPAINT_SEL = '.f-life .lf-wxdate';
+  // A SECOND, distinct WebKit bug lives in the same elements, and the
+  // repaint sweep above cannot fix it: sometimes the spans update their
+  // text but keep their OLD inline-box positions, so each one paints its
+  // new glyphs at a stale x-offset. On screen that reads as digits piled
+  // on top of each other ("04" and "21" overlapping), and on the date as
+  // "MON" drawn over the " · " separator with the year clipped off at the
+  // container's old, narrower width.
+  //
+  // That is a layout invalidation failure, not a paint one, which is why
+  // it survives every paint-level nudge (filter, background-clip,
+  // opacity, transition:none, translateZ) — those all redraw the box
+  // where layout still believes it belongs. Only the multi-span elements
+  // suffer it: a lone span like .lf-wxbigtemp has no siblings to collide
+  // with, which is exactly why the temperature never glitched while the
+  // clock beside it did.
+  //
+  // Toggling display drops each element out of the box tree and rebuilds
+  // it from scratch on restore, forcing genuine relayout. Both reads
+  // below are needed: the first flushes with the box gone, the second
+  // with it back. Runs once a minute, so the cost is irrelevant.
+  var CLOCK_RELAYOUT_SEL = '.f-life .lf-wxtime, .f-life .lf-wxdate, ' +
+    '.f-life .lf-clock, .f-life .lf-date, .f-classic .time, .f-classic .date, ' +
+    '.f-glass .fg-time, .f-glass .fg-date, .f-weather .fw-st-time, .f-weather .fw-st-date, ' +
+    '.f-galaxy .fgx-clock, .f-galaxy .fgx-date, .f-night .fn-dt-time, .f-night .fn-dt-date, ' +
+    '.f-astro .fa-time, .f-astro .fa-date, .f-cal .fc-time';
+  function forceClockRelayout(){
+    document.querySelectorAll(CLOCK_RELAYOUT_SEL).forEach(function(el){
+      var prev = el.style.display;
+      el.style.display = 'none';
+      void el.offsetHeight;
+      el.style.display = prev;   // '' restores the stylesheet's own value
+      void el.offsetHeight;
+    });
+  }
   function forceClockRepaint(){
     document.querySelectorAll(CLOCK_REPAINT_SEL).forEach(function(el){
       el.style.filter = 'none';
@@ -4785,11 +4812,7 @@
       el.style.filter = '';
       el.style.webkitBackgroundClip = '';  // back to the stylesheet values
     });
-    document.querySelectorAll(DATE_REPAINT_SEL).forEach(function(el){
-      el.style.opacity = '0.999';
-      void el.offsetWidth;
-      el.style.opacity = '';
-    });
+    forceClockRelayout();
   }
 
   let lastMinKey = '';
@@ -4862,6 +4885,20 @@
       // the clock buffers unconditionally on every return to foreground.
       forceClockRepaint();
     }
+  });
+  // App open is when the stale-layout bug actually bites, because that is
+  // the one moment every span jumps from a placeholder ("--", "---") to a
+  // real value — by far the biggest geometry change these elements ever
+  // see. tick()'s own first run relayouts already, but two things can
+  // invalidate metrics again just after it: the webfont swapping in (glyph
+  // widths change under text that is already laid out) and the first
+  // weather paint. Re-run on both rather than hope the initial pass held.
+  if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(forceClockRelayout).catch(function(){});
+  }
+  window.addEventListener('load', function(){
+    forceClockRelayout();
+    setTimeout(forceClockRelayout, 400);
   });
 
   // Analog dial tick marks
