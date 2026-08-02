@@ -6871,6 +6871,11 @@
 
     // ---------- Greeting + status pill ----------
     function updateGreeting(){
+      // #lf-greeting is display:none in life-portrait (landscape-only
+      // element) — same class of bug as the colon blink and
+      // updateConditionsCard fixed earlier: this ran on a 30s interval
+      // forever, computing and writing to a node nobody can see.
+      if(document.documentElement.classList.contains('life-portrait')) return;
       var h = new Date().getHours();
       var g = h < 12 ? 'Good Morning' : (h < 18 ? 'Good Afternoon' : 'Good Evening');
       var el = document.getElementById('lf-greeting');
