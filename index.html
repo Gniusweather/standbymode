@@ -7494,6 +7494,13 @@
     // defined earlier in this same script) — this never issues its own
     // fetch, so the card costs zero extra network/battery.
     function updateConditionsCard(){
+      // #lf-card-weather (everything this function writes to) is
+      // display:none in life-portrait — that layout shows the Outdoors
+      // panel instead, kept current by renderMarine(), not this. Skipping
+      // here cuts out a getElementById sweep plus outdoorVerdict()/
+      // bestOutsideWindow() recomputation that ran every 30s forever for
+      // nothing, on exactly the layout this app actually ships in.
+      if(document.documentElement.classList.contains('life-portrait')) return;
       // The hero half of the merged card (icon/feels-like/condition) is
       // driven by the shared j-* classes already swept by loadWeather() —
       // nothing to do here until Open-Meteo's current-conditions block
