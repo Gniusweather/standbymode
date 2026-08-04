@@ -6439,10 +6439,12 @@
   let dragStart = null, dragDx = 0, dragT = 0, dragStartTarget = null;
   stage.addEventListener('pointerdown', function(ev){
     if(ev.target.closest && ev.target.closest(STAGE_TAP_TARGETS)) return;
-    // A genuine carousel drag always plays out in the normal rotated
-    // geometry shared by every face, even if it starts (or will end) on
-    // the Life face — see updateLifePortraitMode above.
-    document.documentElement.classList.remove('life-portrait');
+    // life-portrait used to be stripped right here, on pointerdown alone —
+    // meaning every tap on Face 1's background (anywhere not covered by
+    // STAGE_TAP_TARGETS) flipped the layout to landscape for the instant
+    // between press and release, then back once endDrag's tap branch below
+    // restored it. Deferred to pointermove instead (see there), which only
+    // fires on actual movement, so a plain tap never touches it at all.
     dragStart = axisPos(ev);
     dragDx = 0;
     dragT = Date.now();
@@ -6453,6 +6455,15 @@
   stage.addEventListener('pointermove', function(ev){
     if(dragStart === null) return;
     dragDx = axisPos(ev) - dragStart;
+    // A genuine carousel drag always plays out in the normal rotated
+    // geometry shared by every face, even if it starts (or will end) on
+    // the Life face — see updateLifePortraitMode above. Gated on the same
+    // 8px threshold endDrag uses to tell a tap from a drag below, since
+    // real touchscreens report a few px of sensor jitter even on a still
+    // finger — without this a plain tap could still clear pointermove's
+    // dragStart!==null check and flash into landscape geometry for a
+    // frame before endDrag's tap branch restored it.
+    if(Math.abs(dragDx) >= 8) document.documentElement.classList.remove('life-portrait');
     // resist dragging past the ends
     if((index===0 && dragDx>0) || (index===FACES-1 && dragDx<0)) dragDx *= 0.35;
     render(dragDx);
