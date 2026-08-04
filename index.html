@@ -2811,7 +2811,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    font-size: clamp(18px, min(3.7cqh, 4.7cqw), 21px);
+    font-size: clamp(20px, min(4cqh, 5cqw), 23px);
   }
   html.life-portrait #face-life .lf-condweek-row {
     display: flex;
@@ -2819,7 +2819,7 @@
     gap: clamp(6px, 1.8cqw, 10px);
   }
   html.life-portrait #face-life .lf-condweek-ico {
-    font-size: clamp(18px, min(3.7cqh, 4.7cqw), 21px);
+    font-size: clamp(20px, min(4cqh, 5cqw), 23px);
     flex-shrink: 0;
   }
   html.life-portrait #face-life .lf-condweek-lbl {
@@ -2829,9 +2829,10 @@
     white-space: nowrap;
     /* "Most rain" is the widest label — the previous clamp ceiling (72px)
        was narrower than it needed at this font size, so it wrapped onto a
-       second line and roughly doubled that row's height. */
-    width: clamp(90px, 23cqw, 118px);
-    font-size: clamp(18px, min(3.5cqh, 4.3cqw), 20px);
+       second line and roughly doubled that row's height. Widened along
+       with the font bump below so it still fits on one line. */
+    width: clamp(98px, 25cqw, 128px);
+    font-size: clamp(20px, min(3.8cqh, 4.6cqw), 22px);
   }
   html.life-portrait #face-life .lf-condweek-val {
     color: #fff;
@@ -2839,7 +2840,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: clamp(18px, min(3.5cqh, 4.3cqw), 20px);
+    font-size: clamp(20px, min(3.8cqh, 4.6cqw), 22px);
   }
   html.life-portrait #face-life .lf-wsbtn {
     padding: clamp(2px, 0.6cqh, 5px) clamp(4px, 1cqw, 8px);
