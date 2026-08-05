@@ -4236,8 +4236,6 @@
           <div class="lf-stats-daily" id="lf-stats-daily">
             <div class="lf-stat-chip"><div class="lf-card-hd">Water today</div><div class="lf-card-val blue" id="lf-st-water">0%</div></div>
             <div class="lf-stat-chip"><div class="lf-card-hd">Bathroom</div><div class="lf-card-val" id="lf-st-bath">0</div></div>
-            <div class="lf-stat-chip"><div class="lf-card-hd">Fasted today</div><div class="lf-card-val teal" id="lf-st-fasted">0h</div></div>
-            <div class="lf-stat-chip"><div class="lf-card-hd">Streak</div><div class="lf-card-val warm" id="lf-st-streak">0</div></div>
           </div>
           <div class="lf-today-log" id="lf-today-log"></div>
           <div class="lf-mood-strip" id="lf-mood-strip"></div>
@@ -4261,14 +4259,6 @@
                 <polygon class="fm-spark-area warm" id="lf-chart-bath-fill" points=""/>
                 <polyline class="fm-spark-line warm" id="lf-chart-bath" points=""/>
                 <circle class="fm-spark-dot warm" id="lf-chart-bath-dot" r="3.5" cx="-10" cy="-10"/>
-              </svg>
-            </div>
-            <div class="lf-chart-card">
-              <div class="lf-card-hd">&#x23F1;&#xFE0F; Fasting hours</div>
-              <svg class="fm-spark-svg" viewBox="0 0 300 56" preserveAspectRatio="none">
-                <polygon class="fm-spark-area teal" id="lf-chart-fast-fill" points=""/>
-                <polyline class="fm-spark-line teal" id="lf-chart-fast" points=""/>
-                <circle class="fm-spark-dot teal" id="lf-chart-fast-dot" r="3.5" cx="-10" cy="-10"/>
               </svg>
             </div>
           </div>
@@ -4307,15 +4297,6 @@
             </div>
             <div class="lf-set-row"><span class="lf-set-lbl">Water goal</span><input type="number" min="0.5" max="10" step="0.1" id="lf-set-waterGoalL" class="lf-set-input lf-set-num"><span class="lf-set-unit">L</span></div>
             <div class="lf-set-row"><span class="lf-set-lbl">Water portion / tap</span><input type="number" min="50" max="1000" step="50" id="lf-set-waterPortionMl" class="lf-set-input lf-set-num"><span class="lf-set-unit">mL</span></div>
-            <div class="lf-set-row"><span class="lf-set-lbl">Bathroom reminder every</span><input type="number" min="10" max="240" id="lf-set-bathIntervalMin" class="lf-set-input lf-set-num"><span class="lf-set-unit">min</span></div>
-            <div class="lf-quickpick" id="lf-quickpick-bathIntervalMin" role="group" aria-label="Bathroom reminder quick picks">
-              <div class="lf-themebtn lf-qp-btn" data-min="0" role="button" aria-pressed="false" tabindex="0">Off</div>
-              <div class="lf-themebtn lf-qp-btn" data-min="30" role="button" aria-pressed="false" tabindex="0">30m</div>
-              <div class="lf-themebtn lf-qp-btn" data-min="45" role="button" aria-pressed="false" tabindex="0">45m</div>
-              <div class="lf-themebtn lf-qp-btn" data-min="60" role="button" aria-pressed="false" tabindex="0">1h</div>
-              <div class="lf-themebtn lf-qp-btn" data-min="90" role="button" aria-pressed="false" tabindex="0">1h30</div>
-              <div class="lf-themebtn lf-qp-btn" data-min="120" role="button" aria-pressed="false" tabindex="0">2h</div>
-            </div>
             <div class="lf-set-row"><span class="lf-set-lbl">Flag bathroom if over</span><input type="number" min="3" max="30" id="lf-set-bathFlagThreshold" class="lf-set-input lf-set-num"><span class="lf-set-unit">/day</span></div>
             <div class="lf-set-row"><span class="lf-set-lbl">Morning meds at</span><input type="time" id="lf-set-medMorningTime" class="lf-set-input"></div>
             <div class="lf-set-row"><span class="lf-set-lbl">Evening meds at</span><input type="time" id="lf-set-medEveningTime" class="lf-set-input"></div>
@@ -6734,9 +6715,6 @@
       waterGoalMl: 3000,
       waterPortionMl: 250,
       waterSkipSnoozeMin: 15,
-      bathIntervalMin: 0,
-      bathRemOffMigrated: 0,  // one-time: zero the interval saved by old builds
-      bathSkipSnoozeMin: 10,
       bathFlagThreshold: 8,   // visits/day above this are flagged (typical adult range is ~6-8/day)
       bathFlagNotifiedDate: '',
       medMorningTime: '08:00',
@@ -6751,7 +6729,6 @@
       lastWakeTs: 0,
       lastSleepTs: 0,
       nextWaterDueTs: 0,
-      nextBathDueTs: 0,
       ntfyEnabled: false,
       ntfyTopic: '',            // auto-generated on first load if empty
       ntfyServer: 'https://ntfy.sh',
@@ -6774,20 +6751,6 @@
       S.ntfyTopic = 'standby-' + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 6);
       saveSettings();
     }
-    // One-time migration: bathroom reminders now default to OFF, but
-    // installs from before that change still carry the old 60-min interval
-    // in saved settings — which kept queuing hourly bathroom pushes to ntfy
-    // every day. Zero it once here; the Off/interval chips in Settings
-    // re-enable it deliberately. Note ntfy can't recall already-queued
-    // delayed messages, so pushes queued earlier today still drain before
-    // it goes fully quiet.
-    if(!S.bathRemOffMigrated){
-      S.bathRemOffMigrated = 1;
-      S.bathIntervalMin = 0;
-      S.nextBathDueTs = 0;
-      saveSettings();
-    }
-
     // ---------- IndexedDB event log ----------
     // One generic store keyed by autoIncrement id, indexed by type+ts, so
     // every stats view (daily/weekly/monthly, streaks, calendar) is just a
@@ -6840,6 +6803,27 @@
           tx.onerror = function(){ reject(tx.error); };
         });
       }).catch(function(){ return []; });
+    }
+    // Most recent timestamp for a given event type, across all history —
+    // used by the bathroom under-frequency flag, which needs to know how
+    // long it's been since the last visit regardless of calendar-day
+    // boundaries. Records of a given type share the same 'type' index key,
+    // so a cursor over that key falls back to primary-key order (insertion
+    // order, i.e. chronological since logEvent() always appends) — cheaper
+    // than scanning a wide ts range just to find the single latest entry.
+    function getLastEventTs(type){
+      return openDb().then(function(db){
+        return new Promise(function(resolve, reject){
+          var tx = db.transaction('events', 'readonly');
+          var idx = tx.objectStore('events').index('type');
+          var req = idx.openCursor(IDBKeyRange.only(type), 'prev');
+          req.onsuccess = function(ev){
+            var cur = ev.target.result;
+            resolve(cur ? cur.value.ts : 0);
+          };
+          req.onerror = function(){ reject(req.error); };
+        });
+      }).catch(function(){ return 0; });
     }
 
     // ---------- Tab switching ----------
@@ -7088,8 +7072,7 @@
 
     // ---------- Water / Bathroom reminders ----------
     var REM_META = {
-      water: { ico: '\u{1F4A7}', txt: 'Time to drink water.', intervalKey: 'waterIntervalMin', snoozeKey: 'waterSkipSnoozeMin', dueKey: 'nextWaterDueTs', doneLabel: '✓ Drank', ntfyTags: 'droplet' },
-      bath:  { ico: '\u{1F6BD}', txt: 'Bathroom Break', intervalKey: 'bathIntervalMin', snoozeKey: 'bathSkipSnoozeMin', dueKey: 'nextBathDueTs', doneLabel: 'Done', ntfyTags: 'toilet' }
+      water: { ico: '\u{1F4A7}', txt: 'Time to drink water.', intervalKey: 'waterIntervalMin', snoozeKey: 'waterSkipSnoozeMin', dueKey: 'nextWaterDueTs', doneLabel: '✓ Drank', ntfyTags: 'droplet' }
     };
     // Medicine reminders fire once at a fixed clock time (not on a repeating
     // interval like water/bath), and only if that dose isn't already logged
@@ -7199,11 +7182,6 @@
       for(var t = now + S.waterIntervalMin*60000; t < horizon; t += S.waterIntervalMin*60000){
         ntfyPublish('Time to drink water', '💧 Water reminder', (t-now)/1000, 'droplet');
       }
-      if(S.bathIntervalMin > 0){
-        for(var b = now + S.bathIntervalMin*60000; b < horizon; b += S.bathIntervalMin*60000){
-          ntfyPublish('Bathroom break', '🚽 Bathroom reminder', (b-now)/1000, 'toilet');
-        }
-      }
       Object.keys(MED_REM_META).forEach(function(type){
         var meta = MED_REM_META[type];
         var p = timeStrParts(S[meta.timeKey]);
@@ -7286,7 +7264,7 @@
       var qi = remQueue.indexOf(type);
       if(qi >= 0) remQueue.splice(qi, 1);
       logEvent(type, { skipped: false });
-      scheduleNext(type);            // reset this reminder's interval from now
+      if(REM_META[type]) scheduleNext(type); // reset this reminder's interval from now (water only — bath has no reminder)
       refreshTodayTotals();
       // Quick affordance flash on the card
       var card = document.getElementById(type === 'water' ? 'lf-card-water' : 'lf-card-bath');
@@ -7306,7 +7284,6 @@
       if(S.awake && document.visibilityState === 'visible'){
         var now = Date.now();
         var remTypes = ['water'];
-        if(S.bathIntervalMin > 0) remTypes.push('bath');
         remTypes.forEach(function(type){
           var meta = REM_META[type];
           if(S[meta.dueKey] && now >= S[meta.dueKey] && remActive !== type && remQueue.indexOf(type) === -1){
@@ -7355,7 +7332,6 @@
       // again after a reload with reminders already scheduled just resumes
       // from the persisted due timestamps.
       if(!S.nextWaterDueTs) scheduleNext('water');
-      if(!S.nextBathDueTs && S.bathIntervalMin > 0) scheduleNext('bath');
       if(!S.nextMedMorningDueTs) scheduleNextMedTime('medMorning');
       if(!S.nextMedEveningDueTs) scheduleNextMedTime('medEvening');
       // Ensures today's background ntfy queue exists not just on a fresh
@@ -7404,21 +7380,44 @@
     // Flags the Bathroom tile (and sends one push, once per day) once today's
     // visit count crosses the configured threshold. Default of 8/day sits at
     // the upper edge of typical adult urinary frequency — a gentle heads-up
-    // rather than a diagnosis, and fully adjustable in Settings.
+    // rather than a diagnosis, and fully adjustable in Settings. The other
+    // direction is a health flag too — at least one visit a day is expected,
+    // so a 2+ day dry spell (checked live off the last logged visit, not
+    // waiting for two full calendar days to close out) also flags the tile.
+    var BATH_LOW_MS = 2*86400000;
     function checkBathFlag(bathVisits){
       var card = document.getElementById('lf-card-bath');
       var sub = document.getElementById('lf-bath-sub');
       var over = bathVisits >= S.bathFlagThreshold;
-      if(card) card.classList.toggle('flag', over);
-      if(sub) sub.textContent = over ? 'visits today — ⚠️ frequent' : 'visits today';
       if(over){
+        if(card) card.classList.toggle('flag', true);
+        if(sub) sub.textContent = 'visits today — ⚠️ frequent';
         var todayKey = new Date().toDateString();
         if(S.bathFlagNotifiedDate !== todayKey){
           S.bathFlagNotifiedDate = todayKey;
           saveSettings();
           notify('\u{1F6BD} Frequent bathroom visits', 'That’s ' + bathVisits + ' today — worth keeping an eye on.', 'toilet,warning');
         }
+        return;
       }
+      if(bathVisits > 0){
+        if(card) card.classList.toggle('flag', false);
+        if(sub) sub.textContent = 'visits today';
+        return;
+      }
+      getLastEventTs('bath').then(function(lastTs){
+        var low = lastTs > 0 && (Date.now() - lastTs) >= BATH_LOW_MS;
+        if(card) card.classList.toggle('flag', low);
+        if(sub) sub.textContent = low ? 'visits today — ⚠️ none in 2+ days' : 'visits today';
+        if(low){
+          var todayKey2 = new Date().toDateString();
+          if(S.bathFlagNotifiedDate !== todayKey2){
+            S.bathFlagNotifiedDate = todayKey2;
+            saveSettings();
+            notify('\u{1F6BD} No bathroom visits', 'None logged in over 2 days — worth keeping an eye on.', 'toilet,warning');
+          }
+        }
+      });
     }
     // Guards against a stale response clobbering the display: a rapid
     // double-tap on Water/Bathroom fires two overlapping reads, and without
@@ -7457,7 +7456,6 @@
       if(!S.awake){ nv.textContent = '—'; ns.textContent = 'Resumes when you wake'; return; }
       var candidates = [];
       if(S.nextWaterDueTs) candidates.push({ type:'Water', ts:S.nextWaterDueTs });
-      if(S.nextBathDueTs && S.bathIntervalMin > 0) candidates.push({ type:'Bathroom', ts:S.nextBathDueTs });
       if(S.nextMedMorningDueTs) candidates.push({ type:MED_REM_META.medMorning.label, ts:S.nextMedMorningDueTs });
       if(S.nextMedEveningDueTs) candidates.push({ type:MED_REM_META.medEvening.label, ts:S.nextMedEveningDueTs });
       if(!candidates.length){ nv.textContent = '—'; ns.textContent = 'Scheduling…'; return; }
@@ -7591,11 +7589,6 @@
       for(var t = wakeT + S.waterIntervalMin*60000; t < sleepT; t += S.waterIntervalMin*60000){
         items.push({ label: 'Drink Water', time: new Date(t), type: 'water', ico: '\u{1F4A7}' });
       }
-      if(S.bathIntervalMin > 0){
-        for(var t2 = wakeT + S.bathIntervalMin*60000; t2 < sleepT; t2 += S.bathIntervalMin*60000){
-          items.push({ label: 'Bathroom', time: new Date(t2), type: 'bath', ico: '\u{1F6BD}' });
-        }
-      }
       // Medicine slots pair with 'medMorning'/'medEvening' tile events the
       // same way water slots pair with water logs, so the timeline shows
       // each dose as done / upcoming / missed.
@@ -7715,19 +7708,15 @@
       var pct = Math.min(100, Math.round((today.waterCount * S.waterPortionMl / S.waterGoalMl) * 100));
       var elWater = document.getElementById('lf-st-water'); if(elWater) elWater.textContent = pct + '%';
       var elBath = document.getElementById('lf-st-bath'); if(elBath) elBath.textContent = String(today.bathCount);
-      var elFasted = document.getElementById('lf-st-fasted'); if(elFasted) elFasted.textContent = today.fastedHours.toFixed(1) + 'h';
       var streak = computeStreak(buckets);
-      var elStreak = document.getElementById('lf-st-streak'); if(elStreak) elStreak.textContent = String(streak);
       var homeStreak = document.getElementById('lf-fast-streak');
       if(homeStreak) homeStreak.textContent = '\u{1F525} ' + streak + '-day streak';
     }
     function renderCharts(buckets){
       var waterVals = buckets.map(function(b){ return dayStatsFor(b).waterCount * S.waterPortionMl / 1000; });
       var bathVals  = buckets.map(function(b){ return dayStatsFor(b).bathCount; });
-      var fastVals  = buckets.map(function(b){ return dayStatsFor(b).fastedHours; });
       buildSpark('lf-chart-water', waterVals, waterVals.length-1);
       buildSpark('lf-chart-bath', bathVals, bathVals.length-1);
-      buildSpark('lf-chart-fast', fastVals, fastVals.length-1);
     }
     var lfStatsRange = 7;
     // Same stale-response guard as refreshTodayTotals: rapidly tapping
@@ -7804,13 +7793,13 @@
 
     // ---------- Settings tab ----------
     function populateSettingsUI(){
-      ['wakeTime','sleepTime','eatStart','eatEnd','waterIntervalMin','waterPortionMl','bathIntervalMin','bathFlagThreshold','medMorningTime','medEveningTime'].forEach(function(key){
+      ['wakeTime','sleepTime','eatStart','eatEnd','waterIntervalMin','waterPortionMl','bathFlagThreshold','medMorningTime','medEveningTime'].forEach(function(key){
         var el = document.getElementById('lf-set-' + key);
         if(el) el.value = S[key];
       });
       var goalEl = document.getElementById('lf-set-waterGoalL');
       if(goalEl) goalEl.value = (S.waterGoalMl/1000).toFixed(1);
-      ['waterIntervalMin', 'bathIntervalMin'].forEach(function(key){
+      ['waterIntervalMin'].forEach(function(key){
         var qp = document.getElementById('lf-quickpick-' + key);
         if(!qp) return;
         qp.querySelectorAll('.lf-qp-btn').forEach(function(b){
@@ -8224,7 +8213,7 @@
           updateNextReminderCard();
         });
       });
-      ['waterIntervalMin','waterPortionMl','bathIntervalMin','bathFlagThreshold'].forEach(function(key){
+      ['waterIntervalMin','waterPortionMl','bathFlagThreshold'].forEach(function(key){
         var el = document.getElementById('lf-set-' + key);
         if(el) el.addEventListener('change', function(){
           var v = parseFloat(el.value);
@@ -8236,7 +8225,7 @@
       });
       // Quick-pick chips (30m/45m/1h/1h30/2h) are a shortcut onto the same
       // interval fields above — clicking one just fills in that number.
-      ['waterIntervalMin', 'bathIntervalMin'].forEach(function(key){
+      ['waterIntervalMin'].forEach(function(key){
         var qp = document.getElementById('lf-quickpick-' + key);
         if(!qp) return;
         qp.querySelectorAll('.lf-qp-btn').forEach(function(b){
