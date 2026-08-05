@@ -2633,8 +2633,8 @@
   html.life-portrait #face-life .lf-conddial {
     position: relative;
     flex: 0 0 auto;
-    width: clamp(70px, 18cqh, 98px);
-    height: clamp(70px, 18cqh, 98px);
+    width: clamp(100px, 30cqh, 138px);
+    height: clamp(100px, 30cqh, 138px);
     /* Per-dial accent, so the bloom below matches the ring it sits in.
        Sea/feels are static classes; UV's is dynamic (renderMarine sets it
        from the UV level), so JS writes this same property for that one. */
@@ -2724,7 +2724,7 @@
     color: #fff;
     font-weight: 800;
     font-variant-numeric: tabular-nums;
-    font-size: clamp(35px, min(8cqh, 15cqw), 52px);
+    font-size: clamp(45px, min(11cqh, 19cqw), 66px);
     text-shadow: 0 0 14px color-mix(in srgb, var(--dial-ac) 45%, transparent);
   }
   /* "UV INDEX" used to run wide enough at this ring's compact size to touch
@@ -2736,32 +2736,7 @@
     letter-spacing: 0.01em;
     margin-top: 1px;
     white-space: nowrap;
-    font-size: clamp(13px, min(3.1cqh, 4.6cqw), 17px);
-  }
-  html.life-portrait #face-life .lf-condverdict {
-    /* flex:1 1 0 made sense sharing a row with the UV dial (fill the rest
-       of that row's width); now on its own row in the column layout, it
-       just needs its natural height. */
-    flex: 0 0 auto;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    gap: clamp(8px, 2.4cqw, 14px);
-    overflow: hidden;
-  }
-  html.life-portrait #face-life .lf-condverdict-ico { font-size: clamp(24px, 8.6cqh, 34px); line-height: 1; flex-shrink: 0; }
-  html.life-portrait #face-life .lf-condverdict-txt { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
-  html.life-portrait #face-life .lf-condverdict-hd {
-    color: #fff;
-    font-weight: 700;
-    font-size: clamp(28px, min(6.6cqh, 7.9cqw), 37px);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  html.life-portrait #face-life .lf-condverdict-sub {
-    color: var(--lf-teal);
-    font-weight: 500;
-    font-size: clamp(19px, min(4cqh, 5.3cqw), 25px);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-size: clamp(16px, min(4cqh, 6cqw), 22px);
   }
   html.life-portrait #face-life .lf-condstats {
     display: flex;
@@ -4188,13 +4163,6 @@
                   <span class="lf-condbest-lbl">Best time to go outside</span>
                   <span class="lf-condbest-val jm-besttime">&mdash;</span>
                   <span class="lf-condbest-sub jm-bestsub">&mdash;</span>
-                </div>
-              </div>
-              <div class="lf-condverdict">
-                <span class="lf-condverdict-ico jm-verdicon">&#x1F3D6;&#xFE0F;</span>
-                <div class="lf-condverdict-txt">
-                  <span class="lf-condverdict-hd jm-verdict-hd">&mdash;</span>
-                  <span class="lf-condverdict-sub jm-verdict-sub">&mdash;</span>
                 </div>
               </div>
               <div class="lf-condstats">
