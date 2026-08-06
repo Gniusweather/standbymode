@@ -2627,14 +2627,14 @@
        gap. A capped gap plus centering keeps them a fixed group regardless
        of how wide the panel actually renders. */
     justify-content: center;
-    gap: clamp(16px, 6cqw, 40px);
+    gap: clamp(10px, 3.4cqw, 24px);
     flex-shrink: 0;
   }
   html.life-portrait #face-life .lf-conddial {
     position: relative;
     flex: 0 0 auto;
-    width: clamp(100px, 30cqh, 138px);
-    height: clamp(100px, 30cqh, 138px);
+    width: clamp(78px, min(30cqh, 21cqw), 138px);
+    height: clamp(78px, min(30cqh, 21cqw), 138px);
     /* Per-dial accent, so the bloom below matches the ring it sits in.
        Sea/feels are static classes; UV's is dynamic (renderMarine sets it
        from the UV level), so JS writes this same property for that one. */
@@ -2642,6 +2642,7 @@
   }
   html.life-portrait #face-life .lf-conddial:has(.lf-condfill-sea) { --dial-ac: var(--lf-blue); }
   html.life-portrait #face-life .lf-conddial:has(.lf-condfill-feels) { --dial-ac: var(--lf-warm); }
+  html.life-portrait #face-life .lf-conddial:has(.lf-condfill-wind) { --dial-ac: var(--lf-red); }
   /* Soft bloom inside the ring. Animated on opacity ONLY — pulsing the
      drop-shadow filter on the stroke instead would re-rasterize the ring
      every frame, three rings at once, on a screen that stays open all day. */
@@ -2700,6 +2701,17 @@
     fill: none;
     stroke: var(--lf-warm);
     color: var(--lf-warm);
+    stroke-width: 10;
+    stroke-linecap: round;
+    stroke-dasharray: 327;
+    stroke-dashoffset: 327;
+    transition: stroke-dashoffset 0.9s ease;
+    filter: drop-shadow(0 0 9px currentColor);
+  }
+  html.life-portrait #face-life .lf-condfill-wind {
+    fill: none;
+    stroke: var(--lf-red);
+    color: var(--lf-red);
     stroke-width: 10;
     stroke-linecap: round;
     stroke-dasharray: 327;
@@ -4149,6 +4161,16 @@
                   <div class="lf-condcenter">
                     <span><span class="jm-feels">--</span>&deg;</span>
                     <span class="lf-conduvlbl">FEELS</span>
+                  </div>
+                </div>
+                <div class="lf-conddial">
+                  <svg class="lf-conduvsvg" viewBox="0 0 120 120">
+                    <circle class="lf-conduvtrack" cx="60" cy="60" r="52"/>
+                    <circle class="lf-conduvfill lf-condfill-wind" cx="60" cy="60" r="52"/>
+                  </svg>
+                  <div class="lf-condcenter">
+                    <span class="jm-windkt">--</span>
+                    <span class="lf-conduvlbl">WIND</span>
                   </div>
                 </div>
               </div>
@@ -5843,6 +5865,7 @@
     setAll('jm-windnow', kt != null
       ? kt + ' kt' + (wdir != null ? ' ' + degToCompass(wdir) : '')
       : '--');
+    setAll('jm-windkt', kt != null ? String(kt) : '--');
 
     // UV ring fill (0–12 scale)
     document.querySelectorAll('.jm-uvfill').forEach(function(el){
@@ -5867,6 +5890,14 @@
     });
     document.querySelectorAll('.lf-condfill-feels').forEach(function(el){
       var frac = feels != null ? Math.max(0, Math.min((feels - 24) / (42 - 24), 1)) : 0;
+      el.style.strokeDasharray = UV_CIRC.toFixed(1);
+      el.style.strokeDashoffset = (UV_CIRC * (1 - frac)).toFixed(1);
+    });
+    // Wind ring: same fixed-range treatment, 0-30kt (calm to strong
+    // breeze — matches outdoorVerdict()'s own 25kt "breezy & choppy"
+    // cutoff, so a near-full ring roughly lines up with that verdict).
+    document.querySelectorAll('.lf-condfill-wind').forEach(function(el){
+      var frac = kt != null ? Math.max(0, Math.min(kt / 30, 1)) : 0;
       el.style.strokeDasharray = UV_CIRC.toFixed(1);
       el.style.strokeDashoffset = (UV_CIRC * (1 - frac)).toFixed(1);
     });
