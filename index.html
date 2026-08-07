@@ -2620,7 +2620,7 @@
   }
   html.life-portrait #face-life .lf-condtop {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     /* space-between stretched the gap between dials to fill the panel's
        full width — fine on the narrow phones this was tuned on, but on a
        wider one it spread the three rings apart with a huge, oddly-shaped
@@ -2630,9 +2630,19 @@
     gap: clamp(10px, 3.4cqw, 24px);
     flex-shrink: 0;
   }
+  /* Ring + label as one column — the WHOOP-style layout keeps the label
+     outside the ring entirely (below it) rather than sharing the circle's
+     interior with the value, so the ring can stay a clean, mostly-empty
+     circle around the number. */
+  html.life-portrait #face-life .lf-condgroup {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(4px, 1cqh, 8px);
+  }
   html.life-portrait #face-life .lf-conddial {
     position: relative;
-    flex: 0 0 auto;
     width: clamp(78px, min(30cqh, 21cqw), 138px);
     height: clamp(78px, min(30cqh, 21cqw), 138px);
     /* Per-dial accent, so the bloom below matches the ring it sits in.
@@ -2688,7 +2698,7 @@
      just a fixed accent color instead of a level-based one. */
   html.life-portrait #face-life .lf-condfill-sea {
     fill: none;
-    stroke: var(--lf-blue);
+    stroke: url(#condGradSea);
     color: var(--lf-blue);
     stroke-width: 10;
     stroke-linecap: round;
@@ -2699,7 +2709,7 @@
   }
   html.life-portrait #face-life .lf-condfill-feels {
     fill: none;
-    stroke: var(--lf-warm);
+    stroke: url(#condGradFeels);
     color: var(--lf-warm);
     stroke-width: 10;
     stroke-linecap: round;
@@ -2710,7 +2720,7 @@
   }
   html.life-portrait #face-life .lf-condfill-wind {
     fill: none;
-    stroke: var(--lf-red);
+    stroke: url(#condGradWind);
     color: var(--lf-red);
     stroke-width: 10;
     stroke-linecap: round;
@@ -2729,9 +2739,9 @@
     line-height: 1;
     z-index: 1; /* above .lf-conddial::after's bloom */
   }
-  /* :first-child (not .jm-uv specifically) so the same rule sizes all three
-     dials' value line — UV's is a bare span, sea/feels wrap the number with
-     a degree sign, but each is still the first child of .lf-condcenter. */
+  /* :first-child (not .jm-uv specifically) so the same rule sizes all four
+     dials' value — UV/wind are bare spans, sea/feels wrap the number with
+     a degree sign, but each is still the sole child of .lf-condcenter. */
   html.life-portrait #face-life .lf-condcenter > span:first-child {
     color: #fff;
     font-weight: 800;
@@ -2739,14 +2749,15 @@
     font-size: clamp(45px, min(11cqh, 19cqw), 66px);
     text-shadow: 0 0 14px color-mix(in srgb, var(--dial-ac) 45%, transparent);
   }
-  /* "UV INDEX" used to run wide enough at this ring's compact size to touch
-     or overlap the stroke — shortened to "UV" (matching "SEA"/"FEELS")
-     rather than fighting the width with ever-tighter tracking. */
+  /* Now sits below the ring (in .lf-condgroup, a sibling of .lf-conddial,
+     not inside it) — the WHOOP-style layout gives the label its own line
+     under the circle instead of sharing the ring's interior with the
+     value, so brightened up from the panel's usual --lf-muted to stay
+     legible on its own at that smaller size. */
   html.life-portrait #face-life .lf-conduvlbl {
-    color: var(--lf-muted);
+    color: rgba(255,255,255,0.72);
     font-weight: 700;
-    letter-spacing: 0.01em;
-    margin-top: 1px;
+    letter-spacing: 0.02em;
     white-space: nowrap;
     font-size: clamp(16px, min(4cqh, 6cqw), 22px);
   }
@@ -4122,6 +4133,32 @@
                  sparklines need new ids wired into a couple of extra
                  buildSpark() calls — see renderMarine() below. Hidden
                  outside html.life-portrait, same as the weather hero above. -->
+            <!-- Shared gradient defs for the Outdoors gauges below (WHOOP-style
+                 dim-to-bright arc per ring) — a single hidden svg rather than
+                 duplicating <linearGradient> markup per dial, and referenced
+                 by id so it works the same whether the browser paints one
+                 ring or four. UV's stops are rewritten live in renderMarine()
+                 to track its level color; sea/feels/wind stay fixed. -->
+            <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+              <defs>
+                <linearGradient id="condGradUv" x1="0" y1="1" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#2a7d6b"/>
+                  <stop offset="100%" stop-color="#5ee6c8"/>
+                </linearGradient>
+                <linearGradient id="condGradSea" x1="0" y1="1" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#2f5fae"/>
+                  <stop offset="100%" stop-color="#8fc4ff"/>
+                </linearGradient>
+                <linearGradient id="condGradFeels" x1="0" y1="1" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#b5651d"/>
+                  <stop offset="100%" stop-color="#ffcf8a"/>
+                </linearGradient>
+                <linearGradient id="condGradWind" x1="0" y1="1" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#b0304a"/>
+                  <stop offset="100%" stop-color="#ff9aad"/>
+                </linearGradient>
+              </defs>
+            </svg>
             <div class="lf-condpanel" id="lf-condpanel">
               <div class="lf-cond-title">&#x1F3D6;&#xFE0F; Outdoors</div>
               <!-- Three dials, same animated-gauge ring markup/style as the
@@ -4133,45 +4170,53 @@
                    classes renderMarine() already sweeps for the text this
                    replaces. -->
               <div class="lf-condtop">
-                <div class="lf-conddial">
-                  <svg class="lf-conduvsvg" viewBox="0 0 120 120">
-                    <circle class="lf-conduvtrack" cx="60" cy="60" r="52"/>
-                    <circle class="lf-conduvfill jm-uvfill" cx="60" cy="60" r="52"/>
-                  </svg>
-                  <div class="lf-condcenter">
-                    <span class="jm-uv">--</span>
-                    <span class="lf-conduvlbl">UV</span>
+                <div class="lf-condgroup">
+                  <div class="lf-conddial">
+                    <svg class="lf-conduvsvg" viewBox="0 0 120 120">
+                      <circle class="lf-conduvtrack" cx="60" cy="60" r="52"/>
+                      <circle class="lf-conduvfill jm-uvfill" cx="60" cy="60" r="52"/>
+                    </svg>
+                    <div class="lf-condcenter">
+                      <span class="jm-uv">--</span>
+                    </div>
                   </div>
+                  <div class="lf-conduvlbl">UV</div>
                 </div>
-                <div class="lf-conddial">
-                  <svg class="lf-conduvsvg" viewBox="0 0 120 120">
-                    <circle class="lf-conduvtrack" cx="60" cy="60" r="52"/>
-                    <circle class="lf-conduvfill lf-condfill-sea" cx="60" cy="60" r="52"/>
-                  </svg>
-                  <div class="lf-condcenter">
-                    <span><span class="jm-watertemp">--</span>&deg;</span>
-                    <span class="lf-conduvlbl">SEA</span>
+                <div class="lf-condgroup">
+                  <div class="lf-conddial">
+                    <svg class="lf-conduvsvg" viewBox="0 0 120 120">
+                      <circle class="lf-conduvtrack" cx="60" cy="60" r="52"/>
+                      <circle class="lf-conduvfill lf-condfill-sea" cx="60" cy="60" r="52"/>
+                    </svg>
+                    <div class="lf-condcenter">
+                      <span><span class="jm-watertemp">--</span>&deg;</span>
+                    </div>
                   </div>
+                  <div class="lf-conduvlbl">SEA</div>
                 </div>
-                <div class="lf-conddial">
-                  <svg class="lf-conduvsvg" viewBox="0 0 120 120">
-                    <circle class="lf-conduvtrack" cx="60" cy="60" r="52"/>
-                    <circle class="lf-conduvfill lf-condfill-feels" cx="60" cy="60" r="52"/>
-                  </svg>
-                  <div class="lf-condcenter">
-                    <span><span class="jm-feels">--</span>&deg;</span>
-                    <span class="lf-conduvlbl">FEELS</span>
+                <div class="lf-condgroup">
+                  <div class="lf-conddial">
+                    <svg class="lf-conduvsvg" viewBox="0 0 120 120">
+                      <circle class="lf-conduvtrack" cx="60" cy="60" r="52"/>
+                      <circle class="lf-conduvfill lf-condfill-feels" cx="60" cy="60" r="52"/>
+                    </svg>
+                    <div class="lf-condcenter">
+                      <span><span class="jm-feels">--</span>&deg;</span>
+                    </div>
                   </div>
+                  <div class="lf-conduvlbl">FEELS</div>
                 </div>
-                <div class="lf-conddial">
-                  <svg class="lf-conduvsvg" viewBox="0 0 120 120">
-                    <circle class="lf-conduvtrack" cx="60" cy="60" r="52"/>
-                    <circle class="lf-conduvfill lf-condfill-wind" cx="60" cy="60" r="52"/>
-                  </svg>
-                  <div class="lf-condcenter">
-                    <span class="jm-windkt">--</span>
-                    <span class="lf-conduvlbl">WIND</span>
+                <div class="lf-condgroup">
+                  <div class="lf-conddial">
+                    <svg class="lf-conduvsvg" viewBox="0 0 120 120">
+                      <circle class="lf-conduvtrack" cx="60" cy="60" r="52"/>
+                      <circle class="lf-conduvfill lf-condfill-wind" cx="60" cy="60" r="52"/>
+                    </svg>
+                    <div class="lf-condcenter">
+                      <span class="jm-windkt">--</span>
+                    </div>
                   </div>
+                  <div class="lf-conduvlbl">WIND</div>
                 </div>
               </div>
               <!-- Right under the dial row (and specifically the SEA gauge,
@@ -5867,12 +5912,21 @@
       : '--');
     setAll('jm-windkt', kt != null ? String(kt) : '--');
 
-    // UV ring fill (0–12 scale)
+    // UV ring fill (0–12 scale). The Life-portrait ring gets the same
+    // dim-to-bright gradient treatment as sea/feels/wind (via the shared
+    // #condGradUv def, whose stops are rewritten below to track the
+    // current level color) — the Marine face's own ring keeps the plain
+    // solid level color it always has.
+    var uvStops = document.querySelectorAll('#condGradUv stop');
+    if(uvStops.length === 2){
+      uvStops[0].setAttribute('stop-color', 'color-mix(in srgb, ' + lv.col + ' 45%, black)');
+      uvStops[1].setAttribute('stop-color', lv.col);
+    }
     document.querySelectorAll('.jm-uvfill').forEach(function(el){
       var frac = uv != null ? Math.min(uv/12, 1) : 0;
       el.style.strokeDasharray = UV_CIRC.toFixed(1);
       el.style.strokeDashoffset = (UV_CIRC * (1 - frac)).toFixed(1);
-      el.style.stroke = lv.col;
+      el.style.stroke = el.closest('#face-life') ? 'url(#condGradUv)' : lv.col;
       // Drives the ring's drop-shadow (currentColor) and, via the dial
       // wrapper, the bloom + number glow behind it — see --dial-ac.
       el.style.color = lv.col;
