@@ -5368,6 +5368,7 @@
         var gustKt=data.gust_kt;
         var feels=feelLike(data.temp_c, data.rh, data.wind_ms);
         var actualTemp=Math.round(data.temp_c);
+        knmiFeelsC = feels;
         setAll('j-temp', feels+'°');
         setAll('j-actualtemp', actualTemp+'°');
         setAll('j-wico', cloudIcon(data.cloud_octa, data.precip_10m));
@@ -5489,6 +5490,12 @@
 
   // ---------- Faces 7 & 8: Sun/Moon + Marine (Bonaire) ----------
   var astroData = null;
+  // Bonaire's own live-obs feels-like (KNMI temp/humidity/wind via
+  // feelLike() above), kept separate from astroData because astroData is
+  // deliberately Curaçao's forecast (see loadAstroMarine()) — the Life
+  // face's Outdoors panel prefers this real Bonaire number for its FEELS
+  // gauge specifically, set in loadWeather()'s KNMI branch.
+  var knmiFeelsC = null;
   var lastMoonKey = '';
   var arcLen = 0;
   const ARC = { cx:100, cy:113.17, r:105.17, a0:-153.35*Math.PI/180, a1:-26.65*Math.PI/180, vbW:200, vbH:72 };
@@ -5905,6 +5912,19 @@
     var lv = uvLevel(uv);
     setAll('jm-uvlevel', lv.txt);
     setAll('jm-feels', feels != null ? String(feels) : '--');
+    // The Life face's own FEELS gauge prefers Bonaire's real live-obs
+    // number (knmiFeelsC, from loadWeather()'s KNMI branch) over the rest
+    // of this Curaçao-sourced astroData — apparent temperature is exactly
+    // the kind of hyperlocal, humidity/wind-driven number where "a nearby
+    // island's forecast" and "this island's live station reading" can
+    // genuinely disagree by several degrees. Falls back to astroData's own
+    // feels if KNMI hasn't loaded yet (e.g. first paint, or its proxies
+    // are all down this session). Marine's own "feels" line is untouched.
+    var lifeFeelsEl = document.querySelector('#face-life .jm-feels');
+    if(lifeFeelsEl){
+      var lifeFeels = knmiFeelsC != null ? knmiFeelsC : feels;
+      lifeFeelsEl.textContent = lifeFeels != null ? String(lifeFeels) : '--';
+    }
     setAll('jm-watertemp', astroData.seaTemp != null ? String(Math.round(astroData.seaTemp)) : '--');
     var wdir = c.wind_direction_10m != null ? c.wind_direction_10m : null;
     setAll('jm-windnow', kt != null
@@ -5943,7 +5963,12 @@
       el.style.strokeDashoffset = (UV_CIRC * (1 - frac)).toFixed(1);
     });
     document.querySelectorAll('.lf-condfill-feels').forEach(function(el){
-      var frac = feels != null ? Math.max(0, Math.min((feels - 24) / (42 - 24), 1)) : 0;
+      // Only ever rendered inside the Life-portrait Outdoors panel (unlike
+      // .jm-uvfill, this class isn't shared with Marine's own markup), so
+      // it's safe to fill it against the same Bonaire-preferring value the
+      // text above just used, keeping the ring and the number in sync.
+      var fv = knmiFeelsC != null ? knmiFeelsC : feels;
+      var frac = fv != null ? Math.max(0, Math.min((fv - 24) / (42 - 24), 1)) : 0;
       el.style.strokeDasharray = UV_CIRC.toFixed(1);
       el.style.strokeDashoffset = (UV_CIRC * (1 - frac)).toFixed(1);
     });
