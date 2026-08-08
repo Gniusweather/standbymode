@@ -5369,6 +5369,7 @@
         var feels=feelLike(data.temp_c, data.rh, data.wind_ms);
         var actualTemp=Math.round(data.temp_c);
         knmiFeelsC = feels;
+        knmiFeelsTs = Date.now();
         setAll('j-temp', feels+'°');
         setAll('j-actualtemp', actualTemp+'°');
         setAll('j-wico', cloudIcon(data.cloud_octa, data.precip_10m));
@@ -5495,7 +5496,20 @@
   // deliberately Curaçao's forecast (see loadAstroMarine()) — the Life
   // face's Outdoors panel prefers this real Bonaire number for its FEELS
   // gauge specifically, set in loadWeather()'s KNMI branch.
+  // Timestamped because KNMI reaches us through CORS proxies that do go
+  // down (hence fetchKnmiPage()'s whole bench-and-retry dance, and the
+  // Open-Meteo fallback right after it). Every other tile self-heals on
+  // that fallback; without an age check this one value would instead
+  // freeze at whatever KNMI last reported and quietly stay there for
+  // hours. loadWeather() re-runs every 10 min, so this window tolerates
+  // ~4 consecutive failures before handing the gauge back to astroData.
   var knmiFeelsC = null;
+  var knmiFeelsTs = 0;
+  var KNMI_FEELS_MAX_AGE_MS = 45*60*1000;
+  function bonaireFeels(){
+    return (knmiFeelsC != null && Date.now() - knmiFeelsTs < KNMI_FEELS_MAX_AGE_MS)
+      ? knmiFeelsC : null;
+  }
   var lastMoonKey = '';
   var arcLen = 0;
   const ARC = { cx:100, cy:113.17, r:105.17, a0:-153.35*Math.PI/180, a1:-26.65*Math.PI/180, vbW:200, vbH:72 };
@@ -5920,9 +5934,10 @@
     // genuinely disagree by several degrees. Falls back to astroData's own
     // feels if KNMI hasn't loaded yet (e.g. first paint, or its proxies
     // are all down this session). Marine's own "feels" line is untouched.
+    var bf = bonaireFeels();
     var lifeFeelsEl = document.querySelector('#face-life .jm-feels');
     if(lifeFeelsEl){
-      var lifeFeels = knmiFeelsC != null ? knmiFeelsC : feels;
+      var lifeFeels = bf != null ? bf : feels;
       lifeFeelsEl.textContent = lifeFeels != null ? String(lifeFeels) : '--';
     }
     setAll('jm-watertemp', astroData.seaTemp != null ? String(Math.round(astroData.seaTemp)) : '--');
@@ -5967,7 +5982,7 @@
       // .jm-uvfill, this class isn't shared with Marine's own markup), so
       // it's safe to fill it against the same Bonaire-preferring value the
       // text above just used, keeping the ring and the number in sync.
-      var fv = knmiFeelsC != null ? knmiFeelsC : feels;
+      var fv = bf != null ? bf : feels;
       var frac = fv != null ? Math.max(0, Math.min((fv - 24) / (42 - 24), 1)) : 0;
       el.style.strokeDasharray = UV_CIRC.toFixed(1);
       el.style.strokeDashoffset = (UV_CIRC * (1 - frac)).toFixed(1);
@@ -7870,6 +7885,22 @@
     }
 
     // ---------- Settings tab ----------
+    // A number input's min/max are advisory only — the browser flags an
+    // out-of-range value as :invalid but still hands it to us on change,
+    // so every one of these fields has to clamp for itself. Left unchecked
+    // that isn't cosmetic: a water interval of 0.1 min would make
+    // scheduleDayNtfy() loop ~10k times firing an ntfy POST per iteration
+    // (a self-inflicted flood of pushes, and a long freeze building it).
+    // Reads the bounds off the element rather than duplicating them here,
+    // so the HTML stays the single source of truth. Returns null for a
+    // blank/non-numeric entry, meaning "leave the setting alone".
+    function clampToInput(el, v){
+      if(v == null || isNaN(v)) return null;
+      var lo = parseFloat(el.min), hi = parseFloat(el.max);
+      if(!isNaN(lo)) v = Math.max(lo, v);
+      if(!isNaN(hi)) v = Math.min(hi, v);
+      return v;
+    }
     function populateSettingsUI(){
       ['wakeTime','sleepTime','eatStart','eatEnd','waterIntervalMin','waterPortionMl','bathFlagThreshold','medMorningTime','medEveningTime'].forEach(function(key){
         var el = document.getElementById('lf-set-' + key);
@@ -8294,10 +8325,10 @@
       ['waterIntervalMin','waterPortionMl','bathFlagThreshold'].forEach(function(key){
         var el = document.getElementById('lf-set-' + key);
         if(el) el.addEventListener('change', function(){
-          var v = parseFloat(el.value);
-          if(!isNaN(v) && v > 0) S[key] = v;
+          var v = clampToInput(el, parseFloat(el.value));
+          if(v != null) S[key] = v;
           saveSettings();
-          populateSettingsUI(); // syncs the quick-pick chip highlight to the typed value
+          populateSettingsUI(); // syncs the quick-pick chip highlight (and the clamped value) back into the field
           refreshTodayTotals(); // also re-evaluates the bathroom flag under the new threshold
         });
       });
@@ -8317,9 +8348,10 @@
       });
       var goalEl = document.getElementById('lf-set-waterGoalL');
       if(goalEl) goalEl.addEventListener('change', function(){
-        var v = parseFloat(goalEl.value);
-        if(!isNaN(v) && v > 0) S.waterGoalMl = Math.round(v*1000);
+        var v = clampToInput(goalEl, parseFloat(goalEl.value));
+        if(v != null) S.waterGoalMl = Math.round(v*1000);
         saveSettings();
+        populateSettingsUI(); // reflect the clamped value back into the field
         refreshTodayTotals();
       });
       var notifEl = document.getElementById('lf-set-notifications');
