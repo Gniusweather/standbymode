@@ -2797,11 +2797,14 @@
      .lf-condbest's icon+stacked-text pattern — three of those would cost
      far more height than this panel has spare, and each row here only
      ever holds one short fact (a day + an hour range), so a single line
-     is enough. */
+     is enough. Each row carries a data-accent (gold/warm/rain) that tints
+     its icon badge and value pill, so the three facts read as distinct
+     at a glance instead of one flat grey list — a cheap, no-extra-height
+     way to make the section feel designed rather than just dense text. */
   html.life-portrait #face-life .lf-condweek {
     display: flex;
     flex-direction: column;
-    gap: clamp(0px, 0.2cqh, 2px);
+    gap: clamp(1px, 0.5cqh, 4px);
     flex-shrink: 0;
   }
   html.life-portrait #face-life .lf-condweek-title {
@@ -2810,35 +2813,54 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
     font-size: clamp(20px, min(4cqh, 5cqw), 23px);
+    margin-bottom: clamp(1px, 0.4cqh, 3px);
   }
   html.life-portrait #face-life .lf-condweek-row {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: clamp(6px, 1.8cqw, 10px);
   }
+  /* A small round tinted badge behind the emoji, rather than the bare
+     glyph floating on the panel's own background — the same "dial" idea
+     as the gauges above, just flattened to a chip since there's no ring
+     progress to show here. */
   html.life-portrait #face-life .lf-condweek-ico {
-    font-size: clamp(20px, min(4cqh, 5cqw), 23px);
     flex-shrink: 0;
+    width: clamp(24px, 6.4cqh, 32px);
+    height: clamp(24px, 6.4cqh, 32px);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(13px, min(3.2cqh, 4cqw), 17px);
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
   }
+  html.life-portrait #face-life .lf-condweek-row[data-accent="gold"] { --accent: #ffd84d; }
+  html.life-portrait #face-life .lf-condweek-row[data-accent="warm"] { --accent: var(--lf-warm); }
+  html.life-portrait #face-life .lf-condweek-row[data-accent="rain"] { --accent: var(--lf-blue); }
   html.life-portrait #face-life .lf-condweek-lbl {
     color: var(--lf-muted);
     font-weight: 600;
     flex-shrink: 0;
     white-space: nowrap;
-    /* "Most rain" is the widest label — the previous clamp ceiling (72px)
-       was narrower than it needed at this font size, so it wrapped onto a
-       second line and roughly doubled that row's height. Widened along
-       with the font bump below so it still fits on one line. */
-    width: clamp(98px, 25cqw, 128px);
-    font-size: clamp(20px, min(3.8cqh, 4.6cqw), 22px);
+    font-size: clamp(19px, min(3.6cqh, 4.4cqw), 21px);
   }
+  /* Pushed to the row's far right by the label's own natural width (no
+     fixed width to tune against the longest label anymore) and given a
+     tinted pill background matching the row's accent, so the fact itself
+     — not just its icon — carries the color coding. */
   html.life-portrait #face-life .lf-condweek-val {
-    color: #fff;
+    margin-left: auto;
+    color: color-mix(in srgb, var(--accent) 75%, white);
     font-weight: 700;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: clamp(20px, min(3.8cqh, 4.6cqw), 22px);
+    max-width: 60cqw;
+    padding: clamp(1px, 0.4cqh, 3px) clamp(6px, 1.8cqw, 10px);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    font-size: clamp(18px, min(3.4cqh, 4.1cqw), 20px);
   }
   html.life-portrait #face-life .lf-wsbtn {
     padding: clamp(2px, 0.6cqh, 5px) clamp(4px, 1cqw, 8px);
@@ -4243,17 +4265,17 @@
                    same as the rest of this panel just starting from "—". -->
               <div class="lf-condweek" id="lf-week">
                 <div class="lf-condweek-title">&#x1F4C5; This week</div>
-                <div class="lf-condweek-row">
+                <div class="lf-condweek-row" data-accent="gold">
                   <span class="lf-condweek-ico" aria-hidden="true">&#x1F3C6;</span>
                   <span class="lf-condweek-lbl">Best day</span>
                   <span class="lf-condweek-val" id="lf-week-best">&mdash;</span>
                 </div>
-                <div class="lf-condweek-row">
+                <div class="lf-condweek-row" data-accent="warm">
                   <span class="lf-condweek-ico" aria-hidden="true">&#x1F321;&#xFE0F;</span>
                   <span class="lf-condweek-lbl">Warmest</span>
                   <span class="lf-condweek-val" id="lf-week-warm">&mdash;</span>
                 </div>
-                <div class="lf-condweek-row">
+                <div class="lf-condweek-row" data-accent="rain">
                   <span class="lf-condweek-ico" aria-hidden="true">&#x1F327;&#xFE0F;</span>
                   <span class="lf-condweek-lbl">Most rain</span>
                   <span class="lf-condweek-val" id="lf-week-rain">&mdash;</span>
@@ -5912,6 +5934,21 @@
 
   var UV_CIRC = 2 * Math.PI * 52;
 
+  // Fills the Sea dial's ring against the same 24-32°C comfortable-range
+  // scale renderMarine() uses for it — its own function (not just inline
+  // in renderMarine()) so loadSeaTemp() can call it too the moment sea
+  // temperature actually arrives, since that's a separate, slower
+  // marine-api fetch that resolves after renderMarine() has already run.
+  function updateSeaRing(){
+    if(!astroData) return;
+    var t = astroData.seaTemp;
+    var frac = t != null ? Math.max(0, Math.min((t - 24) / (32 - 24), 1)) : 0;
+    document.querySelectorAll('.lf-condfill-sea').forEach(function(el){
+      el.style.strokeDasharray = UV_CIRC.toFixed(1);
+      el.style.strokeDashoffset = (UV_CIRC * (1 - frac)).toFixed(1);
+    });
+  }
+
   function renderMarine(){
     if(!astroData) return;
     var marineEl = document.querySelector('.f-marine');
@@ -5968,15 +6005,15 @@
       var dial = el.closest('.lf-conddial');
       if(dial) dial.style.setProperty('--dial-ac', lv.col);
     });
-    // Sea/feels rings: same animated-gauge treatment as UV, against a
-    // fixed comfortable-range scale rather than UV's real 0-12 index,
-    // since neither temperature has an equivalent natural ceiling.
-    document.querySelectorAll('.lf-condfill-sea').forEach(function(el){
-      var t = astroData.seaTemp;
-      var frac = t != null ? Math.max(0, Math.min((t - 24) / (32 - 24), 1)) : 0;
-      el.style.strokeDasharray = UV_CIRC.toFixed(1);
-      el.style.strokeDashoffset = (UV_CIRC * (1 - frac)).toFixed(1);
-    });
+    // Sea ring: same animated-gauge treatment as UV, against a fixed
+    // comfortable-range scale rather than UV's real 0-12 index, since sea
+    // temperature has no equivalent natural ceiling. Factored out to its
+    // own function (see below) because loadSeaTemp() also needs to fill
+    // it — sea temp comes from a separate, slower marine-api call that
+    // resolves well after this render pass, so without a second call the
+    // ring stayed permanently empty (0%) even though the number next to
+    // it updated fine.
+    updateSeaRing();
     document.querySelectorAll('.lf-condfill-feels').forEach(function(el){
       // Only ever rendered inside the Life-portrait Outdoors panel (unlike
       // .jm-uvfill, this class isn't shared with Marine's own markup), so
@@ -6087,6 +6124,7 @@
       if(st != null && astroData){
         astroData.seaTemp = st;
         setAll('jm-watertemp', String(Math.round(st)));
+        updateSeaRing();
       }
     }catch(e){ /* keep the air-temp fallback */ }
   }
@@ -7098,7 +7136,7 @@
         }
       });
     }
-    var _fastEls = null, _lastWinEndTs = null, _lastWinEndStr = '';
+    var _fastEls = null, _lastWinEndTs = null, _lastWinEndStr = null;
     function updateFastingRing(){
       if(!faceEl) return;
       var now = new Date();
@@ -7134,13 +7172,30 @@
       }
       // toLocaleTimeString spins up Intl formatting on every call; the
       // window boundary only moves a couple of times a day, so cache it.
+      // The very first call on a cold V8 pays a one-time ICU warm-up tax
+      // on top of that — measured at ~90ms under a throttled CPU profile,
+      // making it the single biggest JS cost in Face 1's whole startup
+      // path despite the function around it being otherwise trivial.
+      // Deferred one tick (subEl already shows "—" until then, so this is
+      // imperceptible) so that warm-up lands after first paint instead of
+      // blocking it; every later boundary change reuses the now-warm
+      // formatter and stays fully synchronous.
       if(subEl){
         var wEnd = f.winEnd.getTime();
         if(wEnd !== _lastWinEndTs){
           _lastWinEndTs = wEnd;
-          _lastWinEndStr = f.winEnd.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+          if(_lastWinEndStr === null){
+            var eatingNow = f.eating;
+            setTimeout(function(){
+              if(_lastWinEndTs !== wEnd) return; // window moved on before this fired — stale, skip
+              _lastWinEndStr = new Date(wEnd).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+              if(subEl) subEl.textContent = (eatingNow ? 'Window closes ' : 'Eating opens ') + _lastWinEndStr;
+            }, 0);
+          } else {
+            _lastWinEndStr = f.winEnd.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+          }
         }
-        subEl.textContent = (f.eating ? 'Window closes ' : 'Eating opens ') + _lastWinEndStr;
+        if(_lastWinEndStr != null) subEl.textContent = (f.eating ? 'Window closes ' : 'Eating opens ') + _lastWinEndStr;
       }
       if(remainEl) remainEl.textContent = fmtHM(f.remainMs) + ' remaining';
       if(iconEl) iconEl.textContent = f.eating ? '\u{1F37D}\u{FE0F}' : '⏳';
