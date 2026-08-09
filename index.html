@@ -8471,7 +8471,17 @@
       var ntfyTopicEl = document.getElementById('lf-set-ntfyTopic');
       if(ntfyTopicEl) ntfyTopicEl.addEventListener('change', function(){
         var v = (ntfyTopicEl.value || '').trim().replace(/[^a-zA-Z0-9_\-]/g, '');
-        if(v){ S.ntfyTopic = v; S.ntfyScheduledDate = ''; saveSettings(); populateSettingsUI(); }
+        if(v){
+          S.ntfyTopic = v; S.ntfyScheduledDate = ''; saveSettings(); populateSettingsUI();
+        } else {
+          // Blank (or symbols-only, all stripped) leaves S.ntfyTopic — and
+          // real push delivery — untouched, but the field itself was
+          // already emptied by whatever the user typed. Without this the
+          // field silently shows blank while the old topic quietly stays
+          // live underneath, which reads as "I cleared it" when nothing
+          // was actually cleared. Snap the field back to the real value.
+          populateSettingsUI();
+        }
       });
       var subBtn = document.getElementById('lf-ntfy-subscribe');
       if(subBtn) subBtn.addEventListener('click', function(){
