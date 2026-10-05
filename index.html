@@ -4803,6 +4803,47 @@
       if(list[i].textContent !== s) list[i].textContent = s;
     }
   }
+  // Life dashboard + Weather dashboard (face 6) stay on KNMI Bonaire.
+  // Every other face that shares .j-* tiles uses Open-Meteo for the phone location.
+  function isKnmiFace(el){ return !!(el.closest && el.closest('.f-life, .f-weather')); }
+  function setKnmi(cls, text){
+    var s = String(text), list = byClass(cls);
+    for(var i = 0; i < list.length; i++){
+      if(!isKnmiFace(list[i])) continue;
+      if(list[i].textContent !== s) list[i].textContent = s;
+    }
+  }
+  function setLoc(cls, text){
+    var s = String(text), list = byClass(cls);
+    for(var i = 0; i < list.length; i++){
+      if(isKnmiFace(list[i])) continue;
+      if(list[i].textContent !== s) list[i].textContent = s;
+    }
+  }
+  function setBarKnmi(cls, pct){
+    var list = byClass(cls), w = Math.min(100,Math.max(0,pct))+'%';
+    for(var i=0;i<list.length;i++) if(isKnmiFace(list[i])) list[i].style.width = w;
+  }
+  function setBarLoc(cls, pct){
+    var list = byClass(cls), w = Math.min(100,Math.max(0,pct))+'%';
+    for(var i=0;i<list.length;i++) if(!isKnmiFace(list[i])) list[i].style.width = w;
+  }
+  function setOctaKnmi(octa){
+    var wraps = byClass('j-octa'), filled = octa!=null?Math.round(octa):0;
+    for(var w=0; w<wraps.length; w++){
+      if(!isKnmiFace(wraps[w])) continue;
+      var segs = wraps[w]._segs || (wraps[w]._segs = wraps[w].querySelectorAll('.fw-oseg'));
+      for(var i=0;i<segs.length;i++) segs[i].classList.toggle('filled', i<filled);
+    }
+  }
+  function setOctaLoc(octa){
+    var wraps = byClass('j-octa'), filled = octa!=null?Math.round(octa):0;
+    for(var w=0; w<wraps.length; w++){
+      if(isKnmiFace(wraps[w])) continue;
+      var segs = wraps[w]._segs || (wraps[w]._segs = wraps[w].querySelectorAll('.fw-oseg'));
+      for(var i=0;i<segs.length;i++) segs[i].classList.toggle('filled', i<filled);
+    }
+  }
 
   // ---------- Clock ----------
   const handH = document.getElementById('hand-h');
@@ -5381,6 +5422,22 @@
   }
 
   async function loadWeather(){
+    if(window._locLat == null && navigator.geolocation){
+      try{
+        await new Promise(function(resolve){
+          var done=false;
+          function finish(){ if(!done){ done=true; resolve(); } }
+          navigator.geolocation.getCurrentPosition(function(pos){
+            window._locLat = pos.coords.latitude.toFixed(2);
+            window._locLon = pos.coords.longitude.toFixed(2);
+            window._locName = 'Your location';
+            finish();
+          }, finish, {enableHighAccuracy:false, timeout:6000, maximumAge:600000});
+          setTimeout(finish, 6500);
+        });
+      }catch(e){}
+    }
+
     let knmiOk=false, omOk=false;
     try{
       const raw=await fetchKnmiPage();
@@ -5392,49 +5449,48 @@
         var actualTemp=Math.round(data.temp_c);
         knmiFeelsC = feels;
         knmiFeelsTs = Date.now();
-        setAll('j-temp', feels+'°');
-        setAll('j-actualtemp', actualTemp+'°');
-        setAll('j-wico', cloudIcon(data.cloud_octa, data.precip_10m));
-        setAll('j-wtext', cloudText(data.cloud_octa, data.precip_10m));
-        setSkyMood(data.cloud_octa, data.precip_10m);
-        setAll('j-wind', windKt!=null ? windKt+' kt' : '--');
-        setAll('j-windbft', bft(data.wind_ms));
-        setBarAll('j-bwind', windKt!=null ? windKt/60*100 : 0);
-        setAll('j-gust', gustKt!=null ? gustKt+' kt' : '--');
-        setAll('j-gustsub', gustKt!=null&&windKt!=null ? '+'+(gustKt-windKt)+' kt' : '');
-        setBarAll('j-bgust', gustKt!=null ? gustKt/60*100 : 0);
-        setAll('j-winddir', data.wind_dir!=null ? degToCompass(data.wind_dir) : '--');
-        setAll('j-winddeg', data.wind_dir!=null ? Math.round(data.wind_dir)+'° from N' : '');
-        document.querySelectorAll('.j-warrow').forEach(function(el){
+        setKnmi('j-temp', feels+'°');
+        setKnmi('j-actualtemp', actualTemp+'°');
+        setKnmi('j-wico', cloudIcon(data.cloud_octa, data.precip_10m));
+        setKnmi('j-wtext', cloudText(data.cloud_octa, data.precip_10m));
+        setKnmi('j-wind', windKt!=null ? windKt+' kt' : '--');
+        setKnmi('j-windbft', bft(data.wind_ms));
+        setBarKnmi('j-bwind', windKt!=null ? windKt/60*100 : 0);
+        setKnmi('j-gust', gustKt!=null ? gustKt+' kt' : '--');
+        setKnmi('j-gustsub', gustKt!=null&&windKt!=null ? '+'+(gustKt-windKt)+' kt' : '');
+        setBarKnmi('j-bgust', gustKt!=null ? gustKt/60*100 : 0);
+        setKnmi('j-winddir', data.wind_dir!=null ? degToCompass(data.wind_dir) : '--');
+        setKnmi('j-winddeg', data.wind_dir!=null ? Math.round(data.wind_dir)+'° from N' : '');
+        document.querySelectorAll('.f-life .j-warrow, .f-weather .j-warrow').forEach(function(el){
           el.style.transform='rotate('+(data.wind_dir||0)+'deg)';
         });
-        setAll('j-rh', data.rh!=null ? Math.round(data.rh)+'%' : '--%');
-        setBarAll('j-brh', data.rh!=null ? data.rh : 0);
-        setAll('j-dew', data.dew_c!=null ? data.dew_c.toFixed(1)+'°' : '--°');
-        setAll('j-feels', feels!=actualTemp ? 'Feels '+feels+'°' : '');
-        setAll('j-slp', data.slp!=null ? Math.round(data.slp)+' hPa' : '--');
-        setAll('j-slpstate', slpState(data.slp) + slpTrend(data.slp, 'knmi'));
-        setAll('j-vis', fmtVis(data.vis_m));
-        setAll('j-visqual', visQual(data.vis_m));
-        setAll('j-cloud', data.cloud_octa!=null ? data.cloud_octa+'/8' : '--');
-        setOcta(data.cloud_octa);
-        setAll('j-precip', data.precip_10m!=null ? data.precip_10m.toFixed(1)+' mm' : '--');
-        setBarAll('j-bprecip', data.precip_10m!=null ? data.precip_10m/5*100 : 0);
-        setAll('j-rad', data.radiation!=null ? Math.round(data.radiation)+' W/m²' : '--');
-        setAll('j-radsub', data.radiation!=null ? (data.radiation>800?'Intense':data.radiation>400?'Moderate':data.radiation>50?'Low':'Minimal') : '');
-        setBarAll('j-brad', data.radiation!=null ? data.radiation/1200*100 : 0);
+        setKnmi('j-rh', data.rh!=null ? Math.round(data.rh)+'%' : '--%');
+        setBarKnmi('j-brh', data.rh!=null ? data.rh : 0);
+        setKnmi('j-dew', data.dew_c!=null ? data.dew_c.toFixed(1)+'°' : '--°');
+        setKnmi('j-feels', feels!=actualTemp ? 'Feels '+feels+'°' : '');
+        setKnmi('j-slp', data.slp!=null ? Math.round(data.slp)+' hPa' : '--');
+        setKnmi('j-slpstate', slpState(data.slp) + slpTrend(data.slp, 'knmi'));
+        setKnmi('j-vis', fmtVis(data.vis_m));
+        setKnmi('j-visqual', visQual(data.vis_m));
+        setKnmi('j-cloud', data.cloud_octa!=null ? data.cloud_octa+'/8' : '--');
+        setOctaKnmi(data.cloud_octa);
+        setKnmi('j-precip', data.precip_10m!=null ? data.precip_10m.toFixed(1)+' mm' : '--');
+        setBarKnmi('j-bprecip', data.precip_10m!=null ? data.precip_10m/5*100 : 0);
+        setKnmi('j-rad', data.radiation!=null ? Math.round(data.radiation)+' W/m²' : '--');
+        setKnmi('j-radsub', data.radiation!=null ? (data.radiation>800?'Intense':data.radiation>400?'Moderate':data.radiation>50?'Low':'Minimal') : '');
+        setBarKnmi('j-brad', data.radiation!=null ? data.radiation/1200*100 : 0);
         // Show only HH:MM UTC, not the full date string (date is shown on the left)
         var obsShort = data.time ? (data.time.match(/\d{2}:\d{2}\s*UTC/i)||[data.time])[0] : '';
-        setAll('j-obstime', obsShort);
-        document.querySelectorAll('.j-obssep').forEach(function(el){ el.style.display = obsShort ? '' : 'none'; });
-        setAll('j-place', 'Bonaire · KNMI');
+        setKnmi('j-obstime', obsShort);
+        document.querySelectorAll('.f-life .j-obssep, .f-weather .j-obssep').forEach(function(el){ el.style.display = obsShort ? '' : 'none'; });
+        setKnmi('j-place', 'Bonaire · KNMI');
         knmiOk=true;
       }
     }catch(e){}
 
-    if(!knmiOk){
+    if(true){ // other faces: Open-Meteo, never overwrite Life / face 6
       try{
-        const url='https://api.open-meteo.com/v1/forecast?latitude=12.17&longitude=-68.99'
+        const url='https://api.open-meteo.com/v1/forecast?latitude='+(window._locLat||12.17)+'&longitude='+(window._locLon||-68.99)+''
           +'&current=temperature_2m,apparent_temperature,weather_code,'
           +'wind_speed_10m,wind_direction_10m,wind_gusts_10m,'
           +'relative_humidity_2m,dew_point_2m,precipitation,'
@@ -5457,47 +5513,47 @@
         var slp=c.surface_pressure!=null?Math.round(c.surface_pressure):null;
         var vis=c.visibility!=null?c.visibility:null;
         var rad=c.shortwave_radiation!=null?Math.round(c.shortwave_radiation):null;
-        setAll('j-temp', feels+'°');
-        setAll('j-actualtemp', actual+'°');
-        setAll('j-wico', cloudIcon(cloudOcta, precip));
-        setAll('j-wtext', wmoText(fc));
+        setLoc('j-temp', feels+'°');
+        setLoc('j-actualtemp', actual+'°');
+        setLoc('j-wico', cloudIcon(cloudOcta, precip));
+        setLoc('j-wtext', wmoText(fc));
         setSkyMood(cloudOcta, precip);
-        setAll('j-feels', feels!=actual ? 'Feels '+feels+'°' : '');
-        setAll('j-wind', windKt!=null ? windKt+' kt' : '--');
-        setBarAll('j-bwind', windKt!=null ? windKt/60*100 : 0);
-        setAll('j-gust', gustKt!=null ? gustKt+' kt' : '--');
-        setAll('j-gustsub', gustKt!=null&&windKt!=null ? '+'+(gustKt-windKt)+' kt above avg' : '');
-        setBarAll('j-bgust', gustKt!=null ? gustKt/60*100 : 0);
-        setAll('j-winddir', wdir!=null ? degToCompass(wdir) : '--');
-        setAll('j-winddeg', wdir!=null ? wdir+'° from N' : '');
-        document.querySelectorAll('.j-warrow').forEach(function(el){ el.style.transform='rotate('+(wdir||0)+'deg)'; });
-        setAll('j-rh', rh!=null ? rh+'%' : '--%');
-        setBarAll('j-brh', rh!=null ? rh : 0);
-        setAll('j-dew', dew!=null ? dew+'°' : '--°');
-        setAll('j-cloud', cloudOcta!=null ? cloudOcta+'/8' : '--');
-        setOcta(cloudOcta);
-        setAll('j-precip', precip!=null ? precip.toFixed(1)+' mm' : '--');
-        setBarAll('j-bprecip', precip!=null ? precip/5*100 : 0);
-        setAll('j-slp', slp!=null ? slp+' hPa' : '--');
-        setAll('j-slpstate', slpState(slp) + slpTrend(slp, 'om'));
-        setAll('j-vis', fmtVis(vis));
-        setAll('j-visqual', visQual(vis));
-        setAll('j-rad', rad!=null ? rad+' W/m²' : '--');
-        setAll('j-radsub', rad!=null ? (rad>800?'Intense':rad>400?'Moderate':rad>50?'Low':'Minimal') : '');
-        setBarAll('j-brad', rad!=null ? rad/1200*100 : 0);
-        setAll('j-windbft', bft(windKt!=null ? windKt/1.94384 : null));
-        setAll('j-place', 'Bonaire · Open-Meteo');
+        setLoc('j-feels', feels!=actual ? 'Feels '+feels+'°' : '');
+        setLoc('j-wind', windKt!=null ? windKt+' kt' : '--');
+        setBarLoc('j-bwind', windKt!=null ? windKt/60*100 : 0);
+        setLoc('j-gust', gustKt!=null ? gustKt+' kt' : '--');
+        setLoc('j-gustsub', gustKt!=null&&windKt!=null ? '+'+(gustKt-windKt)+' kt above avg' : '');
+        setBarLoc('j-bgust', gustKt!=null ? gustKt/60*100 : 0);
+        setLoc('j-winddir', wdir!=null ? degToCompass(wdir) : '--');
+        setLoc('j-winddeg', wdir!=null ? wdir+'° from N' : '');
+        document.querySelectorAll('.j-warrow').forEach(function(el){ if(!isKnmiFace(el)) el.style.transform='rotate('+(wdir||0)+'deg)'; });
+        setLoc('j-rh', rh!=null ? rh+'%' : '--%');
+        setBarLoc('j-brh', rh!=null ? rh : 0);
+        setLoc('j-dew', dew!=null ? dew+'°' : '--°');
+        setLoc('j-cloud', cloudOcta!=null ? cloudOcta+'/8' : '--');
+        setOctaLoc(cloudOcta);
+        setLoc('j-precip', precip!=null ? precip.toFixed(1)+' mm' : '--');
+        setBarLoc('j-bprecip', precip!=null ? precip/5*100 : 0);
+        setLoc('j-slp', slp!=null ? slp+' hPa' : '--');
+        setLoc('j-slpstate', slpState(slp) + slpTrend(slp, 'om'));
+        setLoc('j-vis', fmtVis(vis));
+        setLoc('j-visqual', visQual(vis));
+        setLoc('j-rad', rad!=null ? rad+' W/m²' : '--');
+        setLoc('j-radsub', rad!=null ? (rad>800?'Intense':rad>400?'Moderate':rad>50?'Low':'Minimal') : '');
+        setBarLoc('j-brad', rad!=null ? rad/1200*100 : 0);
+        setLoc('j-windbft', bft(windKt!=null ? windKt/1.94384 : null));
+        setLoc('j-place', (window._locName||'Your location')+' · Open-Meteo');
         omOk=true;
       }catch(e){
-        setAll('j-temp', '--°');
-        setAll('j-wind', '-- kt');
-        setAll('j-place', 'Bonaire');
+        setLoc('j-temp', '--°');
+        setLoc('j-wind', '-- kt');
+        setLoc('j-place', 'Open-Meteo');
       }
     }
 
     // UV index + Saharan dust from Open-Meteo (KNMI doesn't provide these)
     try{
-      const aq=await fetchAirQuality(12.17,-68.99);
+      const aq=await fetchAirQuality(window._locLat||12.17, window._locLon||-68.99);
       var uv = aq.uv!=null ? Math.round(aq.uv) : null;
       setAll('j-uv', uv!=null ? String(uv) : '--');
       setAll('j-uvsub', uvLabel(aq.uv));
@@ -5658,11 +5714,11 @@
       var f = (1 - Math.cos(p*2*Math.PI))/2;
       var path = document.getElementById('fa-moonlitpath');
       if(path) path.setAttribute('d', moonLitPath(48, f, p < 0.5));
-      setAll('ja-moonname', moonName(p));
-      setAll('ja-moonpct', String(Math.round(f*100)));
+      setLoc('ja-moonname', moonName(p));
+      setLoc('ja-moonpct', String(Math.round(f*100)));
       // Countdown to the next full moon (phase 0.5), in whole days
       var toFull = ((0.5 - p + 1) % 1) * 29.530588853;
-      setAll('ja-moonnext',
+      setLoc('ja-moonnext',
         (p >= 0.48 && p < 0.52) ? 'Full moon tonight' :
         toFull < 1.5 ? 'Full moon tomorrow' :
         'Full moon in ' + Math.round(toFull) + ' days');
@@ -5690,8 +5746,8 @@
     if(now < sr){ nextEv = sr; lbl = 'Sunrise in'; }
     else if(now < ss){ nextEv = ss; lbl = (ss - now <= 3600000) ? 'Golden hour' : 'Sunset in'; }
     else { nextEv = srNext || sr; lbl = 'Sunrise in'; }
-    setAll('ja-nextlbl', lbl);
-    setAll('ja-countdown', fmtDur(nextEv - now));
+    setLoc('ja-nextlbl', lbl);
+    setLoc('ja-countdown', fmtDur(nextEv - now));
     // Pulse whichever chip (sunrise/sunset) golden hour is currently near —
     // reuses the same 45-min window as the ambient golden-hour bloom.
     var sunriseChip = document.getElementById('fa-chip-sunrise');
@@ -5702,8 +5758,8 @@
     if(sunsetChip)  sunsetChip.classList.toggle('golden-now', nearSunset);
     // Rain nowcast
     var nc = rainNowcast();
-    setAll('ja-nowcast', nc.txt);
-    setAll('ja-nowico', nc.rain ? '🌧️' : '🌤️');
+    setLoc('ja-nowcast', nc.txt);
+    setLoc('ja-nowico', nc.rain ? '🌧️' : '🌤️');
   }
 
   function hourIndexNow(times){
@@ -5959,10 +6015,10 @@
     var kt = c.wind_speed_10m != null ? Math.round(c.wind_speed_10m) : null;
     var rainProb = c.precipitation_probability != null ? c.precipitation_probability : null;
 
-    setAll('jm-uv', uv != null ? String(Math.round(uv)) : '--');
+    setLoc('jm-uv', uv != null ? String(Math.round(uv)) : '--');
     var lv = uvLevel(uv);
-    setAll('jm-uvlevel', lv.txt);
-    setAll('jm-feels', feels != null ? String(feels) : '--');
+    setLoc('jm-uvlevel', lv.txt);
+    setLoc('jm-feels', feels != null ? String(feels) : '--');
     // The Life face's own FEELS gauge prefers Bonaire's real live-obs
     // number (knmiFeelsC, from loadWeather()'s KNMI branch) over the rest
     // of this Curaçao-sourced astroData — apparent temperature is exactly
@@ -5977,12 +6033,12 @@
       var lifeFeels = bf != null ? bf : feels;
       lifeFeelsEl.textContent = lifeFeels != null ? String(lifeFeels) : '--';
     }
-    setAll('jm-watertemp', astroData.seaTemp != null ? String(Math.round(astroData.seaTemp)) : '--');
+    setLoc('jm-watertemp', astroData.seaTemp != null ? String(Math.round(astroData.seaTemp)) : '--');
     var wdir = c.wind_direction_10m != null ? c.wind_direction_10m : null;
-    setAll('jm-windnow', kt != null
+    setLoc('jm-windnow', kt != null
       ? kt + ' kt' + (wdir != null ? ' ' + degToCompass(wdir) : '')
       : '--');
-    setAll('jm-windkt', kt != null ? String(kt) : '--');
+    setLoc('jm-windkt', kt != null ? String(kt) : '--');
 
     // UV ring fill (0–12 scale). The Life-portrait ring gets the same
     // dim-to-bright gradient treatment as sea/feels/wind (via the shared
@@ -6034,20 +6090,20 @@
     });
 
     var v = outdoorVerdict(uv, kt, feels, rainProb);
-    setAll('jm-verdicon', v.ico);
-    setAll('jm-verdict-hd', v.hd);
-    setAll('jm-verdict-sub', v.sub);
+    setLoc('jm-verdicon', v.ico);
+    setLoc('jm-verdict-hd', v.hd);
+    setLoc('jm-verdict-sub', v.sub);
 
     var hh = astroData.hourly;
     if(hh && hh.time){
       var i0 = hourIndexNow(hh.time);
       var bw = bestOutsideWindow(hh, i0);
       if(bw){
-        setAll('jm-besttime', bw.isNow ? 'Now — ' + bw.time : bw.time);
-        setAll('jm-bestsub', bw.sub);
+        setLoc('jm-besttime', bw.isNow ? 'Now — ' + bw.time : bw.time);
+        setLoc('jm-bestsub', bw.sub);
       } else {
-        setAll('jm-besttime', 'Tomorrow AM');
-        setAll('jm-bestsub', 'Sun is down for today');
+        setLoc('jm-besttime', 'Tomorrow AM');
+        setLoc('jm-bestsub', 'Sun is down for today');
       }
       var comfort = bestWindowComfort(hh, i0);
       if(comfort) buildSpark('fm-bestspark', comfort.vals, comfort.peakIdx);
@@ -6055,8 +6111,8 @@
       var winds = (hh.wind_speed_10m || []).slice(i0, i0+24).filter(function(x){ return x != null; });
       buildSpark('fm-uvspark', uvs);
       buildSpark('fm-windspark', winds);
-      if(uvs.length) setAll('jm-uvrange', 'peak ' + Math.round(Math.max.apply(null, uvs)));
-      if(winds.length) setAll('jm-windrange', Math.round(Math.min.apply(null,winds))+'–'+Math.round(Math.max.apply(null,winds))+' kt');
+      if(uvs.length) setLoc('jm-uvrange', 'peak ' + Math.round(Math.max.apply(null, uvs)));
+      if(winds.length) setLoc('jm-windrange', Math.round(Math.min.apply(null,winds))+'–'+Math.round(Math.max.apply(null,winds))+' kt');
     }
     renderWeekSummary();
   }
