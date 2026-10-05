@@ -5178,7 +5178,7 @@
       ['Gusts',/Gusts[^0-9-]*([\d.]+)/i],
       ['Cloud cover',/Cloud cover[^0-9-]*([\d.]+)/i],
       ['Radiation',/Radiation(?:[^)]+\)\s*|[^0-9-]+)([\d.]+)/i],
-      ['Precipitation',/Precipitation(?:[^)]+\)\s*|[^0-9-]+)([\d.]+)/i],
+      ['Precipitation',/Precipitation[\s\S]{0,40}?(?:min\)?|10\s*min)\s*([\d.]+)/i],
       ['Relative humidity',/Relative humidity[^0-9-]*([\d.]+)/i],
       ['Temperature (°C)',/Temperature[^0-9-]*(-?[\d.]+)/i],
       ['Dewpoint',/Dewpoint[^0-9-]*(-?[\d.]+)/i],
