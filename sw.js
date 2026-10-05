@@ -5,7 +5,7 @@
    requests (weather APIs, CORS proxies) are passed through untouched so
    live data is never staled. */
 
-const CACHE = 'standby-v117';
+const CACHE = 'standby-v118';
 const ASSETS = [
   './',
   './index.html',
